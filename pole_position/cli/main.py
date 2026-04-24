@@ -8,17 +8,17 @@ def main() -> None:
     args = sys.argv[1:]
 
     if not args:
-        print("Usage: poleposition <command> [options]")
+        print("Usage: polepos <command> [options]")
         print("")
         print("Commands:")
-        print("  startproject <project_name> [--install]")
+        print("  start <project_name> [--install]")
         print("  version")
         raise SystemExit(1)
 
     command = args[0]
     command_args = args[1:]
 
-    if command == "startproject":
+    if command in {"start", "startproject"}:
         run_startproject(command_args)
         return
 

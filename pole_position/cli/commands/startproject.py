@@ -8,7 +8,7 @@ from pole_position.cli.services.project_name import (
 )
 
 
-USAGE = "Usage: poleposition startproject <project_name> [--install]"
+USAGE = "Usage: polepos start <project_name> [--install]"
 
 
 def run(args: list[str]) -> None:
@@ -22,6 +22,11 @@ def run(args: list[str]) -> None:
             filtered_args.append(arg)
 
     if not filtered_args:
+        print(USAGE)
+        raise SystemExit(1)
+    
+    if len(filtered_args) > 1:
+        print(f"Unexpected argument: {filtered_args[1]}")
         print(USAGE)
         raise SystemExit(1)
 
