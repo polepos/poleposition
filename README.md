@@ -7,7 +7,7 @@ Create a clean, structured API project in seconds with built-in logging, configu
 Create a new project:
 
 ```bash
-poleposition startproject myapp --install
+polepos start myapp --install
 ```
 [![PyPI version](https://img.shields.io/pypi/v/poleposition)](https://pypi.org/project/poleposition)
 [![Python](https://img.shields.io/pypi/pyversions/poleposition)](https://pypi.org/project/poleposition)
@@ -18,7 +18,7 @@ poleposition startproject myapp --install
 ## Example output
 
 ```bash
-$ poleposition startproject myapp --install
+$ polepos start myapp --install
 Created project: myapp
 
 Installing project dependencies with uv...
@@ -78,7 +78,7 @@ pip install poleposition
 ## Quick example
 
 ```bash
-poleposition startproject myapp --install
+polepos start myapp --install
 cd myapp
 
 uv run fastapi dev src/myapp/main.py
@@ -97,7 +97,7 @@ http://127.0.0.1:8000/docs
 ### One-command setup (recommended)
 
 ```bash
-poleposition startproject myapp --install
+polepos start myapp --install
 cd myapp
 
 uv run fastapi dev src/myapp/main.py
@@ -106,7 +106,7 @@ uv run fastapi dev src/myapp/main.py
 ### Manual setup
 
 ```bash
-poleposition startproject myapp
+polepos start myapp
 cd myapp
 
 cp .env.example .env
@@ -120,8 +120,8 @@ uv run fastapi dev src/myapp/main.py
 ## CLI
 
 ```bash
-poleposition startproject <name> [--install]
-poleposition version
+polepos start <name> [--install]
+polepos version
 ```
 
 ---
