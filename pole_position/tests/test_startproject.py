@@ -73,6 +73,70 @@ def test_package_name_normalization(tmp_path: Path):
     assert (tmp_path / "my-app").exists()
     assert (tmp_path / "my-app" / "src" / "my_app").exists()
 
+
+def test_generated_project_uses_enterprise_template_layout(tmp_path: Path):
+    result = run_cli(tmp_path, "start", "myapp")
+
+    assert result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    package_root = project_root / "src" / "myapp"
+
+    expected_paths = [
+        package_root / "settings.py",
+        package_root / "bootstrap" / "logging.py",
+        package_root / "bootstrap" / "errors.py",
+        package_root / "bootstrap" / "middleware.py",
+        package_root / "bootstrap" / "lifespan.py",
+        package_root / "api" / "deps.py",
+        package_root / "db" / "session.py",
+        package_root / "db" / "base.py",
+        package_root / "domain" / "exceptions.py",
+        package_root / "modules" / "status" / "router.py",
+        package_root / "modules" / "status" / "service.py",
+        package_root / "modules" / "races" / "model.py",
+        package_root / "modules" / "races" / "repository.py",
+        package_root / "modules" / "races" / "router.py",
+        project_root / "tests" / "conftest.py",
+        project_root / "tests" / "integration" / "test_status.py",
+        project_root / "tests" / "integration" / "test_races.py",
+        project_root / "tests" / "unit" / "test_race_service.py",
+    ]
+
+    for path in expected_paths:
+        assert path.exists(), f"Expected generated file is missing: {path}"
+
+
+def test_generated_project_does_not_copy_pycache(tmp_path: Path):
+    result = run_cli(tmp_path, "start", "myapp")
+
+    assert result.returncode == 0
+    generated_pycache = list((tmp_path / "myapp").rglob("__pycache__"))
+
+    assert generated_pycache == []
+
+
+def test_generated_project_renders_database_and_module_placeholders(tmp_path: Path):
+    result = run_cli(tmp_path, "start", "demo-app")
+
+    assert result.returncode == 0
+
+    project_root = tmp_path / "demo-app"
+    package_root = project_root / "src" / "demo_app"
+
+    env_example = (project_root / ".env.example").read_text(encoding="utf-8")
+    app_module = (package_root / "app.py").read_text(encoding="utf-8")
+    status_service = (
+        package_root / "modules" / "status" / "service.py"
+    ).read_text(encoding="utf-8")
+
+    assert "DATABASE_URL=sqlite:///./poleposition.db" in env_example
+    assert "from demo_app.api.router import api_router" in app_module
+    assert "from demo_app.settings import get_settings" in app_module
+    assert "from demo_app import __version__" in status_service
+    assert "{{project" not in app_module
+    assert "{{project" not in status_service
+
 def test_install_flag(tmp_path: Path):
     from pole_position.cli.commands.startproject import run
 

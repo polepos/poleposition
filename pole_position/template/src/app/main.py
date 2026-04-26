@@ -1,3 +1,3 @@
-from {{project_name}}.app import app
+from {{project_import_name}}.app import app
 
 __all__ = ["app"]

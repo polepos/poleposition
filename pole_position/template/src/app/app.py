@@ -1,28 +1,15 @@
-import logging
-from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
 
-from {{project_name}}.api.router import api_router
-from {{project_name}}.core.config import settings
-from {{project_name}}.core.logging import setup_logging
+from {{project_import_name}}.api.router import api_router
+from {{project_import_name}}.bootstrap.errors import add_exception_handlers
+from {{project_import_name}}.bootstrap.lifespan import lifespan
+from {{project_import_name}}.bootstrap.logging import setup_logging
+from {{project_import_name}}.bootstrap.middleware import add_middleware
+from {{project_import_name}}.settings import get_settings
 
 
+settings = get_settings()
 setup_logging(log_level=settings.log_level)
-logger = logging.getLogger(__name__)
-
-
-@asynccontextmanager
-async def lifespan(application: FastAPI):
-    logger.info(
-        "Application starting",
-        extra={
-            "app_name": settings.app_name,
-            "environment": settings.app_env,
-        },
-    )
-    yield
-    logger.info("Application shutting down")
 
 
 def create_app() -> FastAPI:
@@ -31,6 +18,8 @@ def create_app() -> FastAPI:
         debug=settings.app_debug,
         lifespan=lifespan,
     )
+    add_middleware(application)
+    add_exception_handlers(application)
     application.include_router(api_router, prefix=settings.api_v1_prefix)
     return application
 

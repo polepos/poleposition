@@ -149,13 +149,17 @@ myapp/
 │  └─ myapp/
 │     ├─ main.py
 │     ├─ app.py
+│     ├─ settings.py
+│     ├─ bootstrap/
 │     ├─ api/
-│     │  └─ routes/
-│     │     └─ status.py
-│     └─ core/
-│        ├─ config.py
-│        └─ logging.py
+│     ├─ db/
+│     ├─ domain/
+│     └─ modules/
+│        ├─ status/
+│        └─ races/
 └─ tests/
+   ├─ integration/
+   └─ unit/
 ```
 
 ---
@@ -173,7 +177,9 @@ GET /api/v1/status
   "status": "ok",
   "service": "myapp",
   "environment": "development",
-  "version": "0.1.0"
+  "version": "0.1.0",
+  "uptime_seconds": 12,
+  "timestamp": "2026-04-26T12:00:00Z"
 }
 ```
 

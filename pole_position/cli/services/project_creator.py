@@ -17,7 +17,11 @@ def create_project(
     if not template_dir.exists():
         raise RuntimeError(f"Template directory not found: {template_dir}")
 
-    shutil.copytree(template_dir, project_path)
+    shutil.copytree(
+        template_dir,
+        project_path,
+        ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
+    )
 
     _rename_source_package(
         project_path=project_path,

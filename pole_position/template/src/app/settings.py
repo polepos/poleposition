@@ -1,3 +1,6 @@
+from functools import lru_cache
+
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -7,6 +10,7 @@ class Settings(BaseSettings):
     app_debug: bool = True
     log_level: str = "INFO"
     api_v1_prefix: str = "/api/v1"
+    database_url: str = Field(default="sqlite:///./poleposition.db")
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -16,4 +20,6 @@ class Settings(BaseSettings):
     )
 
 
-settings = Settings()
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
