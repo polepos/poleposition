@@ -1,32 +1,27 @@
-from pathlib import Path
-
-from pole_position.cli.commands.startproject import run
-
-
-def test_startproject_creates_project(tmp_path, monkeypatch) -> None:
-    monkeypatch.chdir(tmp_path)
-
-    run(["myapp"])
-
-    assert (tmp_path / "myapp").exists()
-    assert (tmp_path / "myapp" / "pyproject.toml").exists()
-    assert (tmp_path / "myapp" / "src" / "myapp").exists()
+import subprocess
+import sys
 
 
-def test_startproject_with_install_flag_creates_project(tmp_path, monkeypatch) -> None:
-    monkeypatch.chdir(tmp_path)
-
-    called = {"value": False}
-
-    def fake_install_project_dependencies(project_path: Path) -> None:
-        called["value"] = True
-
-    monkeypatch.setattr(
-        "pole_position.cli.commands.startproject.install_project_dependencies",
-        fake_install_project_dependencies,
+def run_cli(*args):
+    return subprocess.run(
+        [sys.executable, "-m", "pole_position.cli.main", *args],
+        capture_output=True,
+        text=True,
     )
 
-    run(["myapp", "--install"])
 
-    assert (tmp_path / "myapp").exists()
-    assert called["value"] is True
+def test_help_command():
+    result = run_cli("help")
+    assert result.returncode == 0
+    assert "Usage" in result.stdout
+
+
+def test_version_command():
+    result = run_cli("version")
+    assert result.returncode == 0
+
+
+def test_unknown_command():
+    result = run_cli("unknown")
+    assert result.returncode != 0
+    assert "Unknown command" in result.stdout

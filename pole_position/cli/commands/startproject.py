@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from pole_position.cli.command import Command
 from pole_position.cli.services.installer import install_project_dependencies
 from pole_position.cli.services.project_creator import create_project
 from pole_position.cli.services.project_name import (
@@ -71,3 +72,11 @@ def run(args: list[str]) -> None:
         print("  uv sync")
 
     print(f"  uv run fastapi dev src/{package_name}/main.py")
+
+
+command = Command(
+    name="start",
+    aliases=("startproject",),
+    handler=run,
+    description="Create a new FastAPI project",
+)

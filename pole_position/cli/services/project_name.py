@@ -18,6 +18,9 @@ def validate_project_name(project_name: str) -> None:
     if not raw_name:
         raise ValueError("Project name cannot be empty.")
 
+    if any(char.isspace() for char in raw_name):
+        raise ValueError("Project name cannot contain whitespace.")
+
     package_name = normalize_package_name(raw_name)
 
     if not package_name:
