@@ -111,3 +111,14 @@ def test_add_module_requires_poleposition_project(tmp_path: Path):
 
     assert result.returncode != 0
     assert "does not look like a PolePosition project" in result.stdout
+
+
+def test_add_module_works_from_nested_directory(tmp_path: Path):
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    nested_dir = tmp_path / "myapp" / "src" / "myapp"
+    result = run_cli(nested_dir, "add", "module", "garage")
+
+    assert result.returncode == 0
+    assert (tmp_path / "myapp" / "src" / "myapp" / "modules" / "garage" / "router.py").exists()

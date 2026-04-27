@@ -67,6 +67,8 @@ PolePosition removes that overhead by providing a clean, production-ready starti
 
 ## Installation
 
+PolePosition follows a `uv`-first workflow for installation, dependency sync, migrations, and local development.
+
 ```bash
 uv tool install poleposition
 ```
@@ -130,8 +132,23 @@ cd myapp
 
 cp .env.example .env
 uv sync
+alembic upgrade head
 
 uv run fastapi dev src/myapp/main.py
+```
+
+### Add modules
+
+```bash
+polepos add module garage
+```
+
+### Database commands
+
+```bash
+polepos db upgrade
+polepos db revision -m "add garage table"
+polepos db downgrade -1
 ```
 
 ### Help and version
@@ -149,6 +166,10 @@ polepos version
 polepos help
 polepos start <name> [--install]
 polepos startproject <name> [--install]
+polepos add module <name>
+polepos db upgrade [target]
+polepos db revision -m "<message>"
+polepos db downgrade <target>
 polepos version
 ```
 
@@ -221,7 +242,7 @@ The CLI is intentionally lightweight and avoids heavy templating engines.
 * [x] `polepos add module`
 * [x] Alembic and database migrations
 * [ ] Docker support
-* [ ] `polepos db ...` commands
+* [x] `polepos db ...` commands
 * [ ] JSON logging support
 * [ ] Auth foundation
 * [ ] Production-ready presets

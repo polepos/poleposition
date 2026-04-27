@@ -1,9 +1,11 @@
 from pathlib import Path
 
+from pole_position.cli.services.project_locator import find_package_root, find_project_root
+
 
 def add_module(module_name: str, cwd: Path | None = None) -> None:
-    project_root = cwd or Path.cwd()
-    package_root = _find_package_root(project_root)
+    project_root = find_project_root(cwd)
+    package_root = find_package_root(cwd)
     package_name = package_root.name
     modules_root = package_root / "modules"
     module_root = modules_root / module_name
@@ -16,23 +18,6 @@ def add_module(module_name: str, cwd: Path | None = None) -> None:
     _update_modules_init(modules_root / "__init__.py", module_name)
     _update_api_router(package_root / "api" / "router.py", package_name, module_name)
     _update_db_models(package_root / "db" / "models.py", package_name, module_name)
-
-
-def _find_package_root(project_root: Path) -> Path:
-    src_root = project_root / "src"
-    if not src_root.exists():
-        raise RuntimeError("Current directory does not look like a PolePosition project.")
-
-    candidates = [
-        path
-        for path in src_root.iterdir()
-        if path.is_dir() and (path / "api" / "router.py").exists() and (path / "modules").exists()
-    ]
-
-    if len(candidates) != 1:
-        raise RuntimeError("Could not determine the application package under src/.")
-
-    return candidates[0]
 
 
 def _write_module_files(module_root: Path, package_name: str, module_name: str) -> None:
