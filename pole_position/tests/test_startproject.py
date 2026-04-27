@@ -167,6 +167,23 @@ def test_generated_project_includes_alembic_support(tmp_path: Path):
     assert 'alembic revision --autogenerate -m "add garage table"' in readme
     assert "{{project" not in migrations_env
 
+
+def test_generated_project_is_migration_first(tmp_path: Path):
+    result = run_cli(tmp_path, "start", "demo-app")
+
+    assert result.returncode == 0
+
+    project_root = tmp_path / "demo-app"
+    package_root = project_root / "src" / "demo_app"
+
+    lifespan = (package_root / "bootstrap" / "lifespan.py").read_text(encoding="utf-8")
+    readme = (project_root / "README.md").read_text(encoding="utf-8")
+
+    assert "Base.metadata.create_all" not in lifespan
+    assert "import_models()" in lifespan
+    assert "alembic upgrade head" in result.stdout
+    assert "alembic upgrade head" in readme
+
 def test_install_flag(tmp_path: Path):
     from pole_position.cli.commands.startproject import run
 
