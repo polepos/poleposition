@@ -71,6 +71,7 @@ def run(args: list[str]) -> None:
     if not install:
         print("  uv sync")
 
+    print("  alembic upgrade head")
     print(f"  uv run fastapi dev src/{package_name}/main.py")
 
 

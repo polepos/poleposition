@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 
 from {{project_import_name}}.app import create_app
 from {{project_import_name}}.db.base import Base
+from {{project_import_name}}.db.models import import_models
 from {{project_import_name}}.db.session import get_engine, get_session_factory
 from {{project_import_name}}.settings import get_settings
 
@@ -29,6 +30,8 @@ def reset_state(monkeypatch: pytest.MonkeyPatch, tmp_path):
 
 @pytest.fixture
 def client() -> TestClient:
+    import_models()
+    Base.metadata.create_all(bind=get_engine())
     app = create_app()
     with TestClient(app) as test_client:
         yield test_client

@@ -27,6 +27,7 @@ Dependencies installed successfully.
 Next steps:
   cd myapp
   cp .env.example .env
+  alembic upgrade head
   uv run fastapi dev src/myapp/main.py
 ```
 
@@ -40,6 +41,7 @@ PolePosition provides:
 
 * A scalable project structure
 * Environment-based configuration
+* Alembic-based database migrations
 * Built-in logging
 * Testing setup
 * Module-oriented organization for growing codebases
@@ -83,8 +85,16 @@ pip install poleposition
 polepos start myapp --install
 cd myapp
 cp .env.example .env
+alembic upgrade head
 
 uv run fastapi dev src/myapp/main.py
+```
+
+Create and run migrations:
+
+```bash
+alembic upgrade head
+alembic revision --autogenerate -m "add garage table"
 ```
 
 Open your API documentation:
@@ -148,6 +158,9 @@ polepos version
 
 ```text
 myapp/
+├─ alembic.ini
+├─ migrations/
+│  └─ versions/
 ├─ pyproject.toml
 ├─ .env.example
 ├─ src/
@@ -206,7 +219,7 @@ The CLI is intentionally lightweight and avoids heavy templating engines.
 
 * [x] Project name validation
 * [x] `polepos add module`
-* [ ] Alembic and database migrations
+* [x] Alembic and database migrations
 * [ ] Docker support
 * [ ] `polepos db ...` commands
 * [ ] JSON logging support

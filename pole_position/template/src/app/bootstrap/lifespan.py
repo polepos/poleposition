@@ -4,9 +4,7 @@ from datetime import datetime, timezone
 
 from fastapi import FastAPI
 
-from {{project_import_name}}.db.base import Base
 from {{project_import_name}}.db.models import import_models
-from {{project_import_name}}.db.session import get_engine
 from {{project_import_name}}.settings import get_settings
 
 
@@ -19,7 +17,6 @@ async def lifespan(app: FastAPI):
     app.state.started_at = datetime.now(timezone.utc)
 
     import_models()
-    Base.metadata.create_all(bind=get_engine())
 
     logger.info(
         "Application starting",

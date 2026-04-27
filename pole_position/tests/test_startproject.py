@@ -83,6 +83,11 @@ def test_generated_project_uses_enterprise_template_layout(tmp_path: Path):
     package_root = project_root / "src" / "myapp"
 
     expected_paths = [
+        project_root / "alembic.ini",
+        project_root / "migrations" / "env.py",
+        project_root / "migrations" / "script.py.mako",
+        project_root / "migrations" / "versions" / "__init__.py",
+        project_root / "migrations" / "versions" / "0001_create_races_table.py",
         package_root / "settings.py",
         package_root / "bootstrap" / "logging.py",
         package_root / "bootstrap" / "errors.py",
@@ -136,6 +141,31 @@ def test_generated_project_renders_database_and_module_placeholders(tmp_path: Pa
     assert "from demo_app import __version__" in status_service
     assert "{{project" not in app_module
     assert "{{project" not in status_service
+
+
+def test_generated_project_includes_alembic_support(tmp_path: Path):
+    result = run_cli(tmp_path, "start", "demo-app")
+
+    assert result.returncode == 0
+
+    project_root = tmp_path / "demo-app"
+    pyproject = (project_root / "pyproject.toml").read_text(encoding="utf-8")
+    migrations_env = (project_root / "migrations" / "env.py").read_text(encoding="utf-8")
+    initial_migration = (
+        project_root / "migrations" / "versions" / "0001_create_races_table.py"
+    ).read_text(encoding="utf-8")
+    readme = (project_root / "README.md").read_text(encoding="utf-8")
+
+    assert '"alembic>=' in pyproject
+    assert "from demo_app.db.base import Base" in migrations_env
+    assert "from demo_app.db.models import import_models" in migrations_env
+    assert "from demo_app.settings import get_settings" in migrations_env
+    assert "target_metadata = Base.metadata" in migrations_env
+    assert "alembic upgrade head" in readme
+    assert 'op.create_table(' in initial_migration
+    assert '"races"' in initial_migration
+    assert 'alembic revision --autogenerate -m "add garage table"' in readme
+    assert "{{project" not in migrations_env
 
 def test_install_flag(tmp_path: Path):
     from pole_position.cli.commands.startproject import run
