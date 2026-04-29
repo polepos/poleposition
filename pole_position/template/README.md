@@ -12,6 +12,21 @@ uv run python -m {{project_import_name}}.run
 ```
 {{no_bytecode_readme_note}}
 
+## Docker
+
+Start the generated project with Docker and PostgreSQL:
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+Apply migrations from the app container:
+
+```bash
+docker compose run --rm app uv run alembic upgrade head
+```
+
 ## Database Migrations
 
 ```bash

@@ -44,6 +44,7 @@ include = ["pole_position*"]
 [tool.setuptools.package-data]
 pole_position = [
     "template/**/*",
+    "template/.dockerignore",
     "template/.env.example",
     "template/.gitignore",
 ]

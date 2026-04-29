@@ -84,6 +84,9 @@ def test_generated_project_uses_enterprise_template_layout(tmp_path: Path):
     package_root = project_root / "src" / "myapp"
 
     expected_paths = [
+        project_root / "Dockerfile",
+        project_root / ".dockerignore",
+        project_root / "compose.yaml",
         project_root / "alembic.ini",
         project_root / ".gitignore",
         project_root / "migrations" / "env.py",
@@ -136,6 +139,10 @@ def test_generated_project_renders_database_and_module_placeholders(tmp_path: Pa
     app_module = (package_root / "app.py").read_text(encoding="utf-8")
     run_module = (package_root / "run.py").read_text(encoding="utf-8")
     settings_module = (package_root / "settings.py").read_text(encoding="utf-8")
+    pyproject = (project_root / "pyproject.toml").read_text(encoding="utf-8")
+    dockerfile = (project_root / "Dockerfile").read_text(encoding="utf-8")
+    dockerignore = (project_root / ".dockerignore").read_text(encoding="utf-8")
+    compose_file = (project_root / "compose.yaml").read_text(encoding="utf-8")
     logging_module = (package_root / "bootstrap" / "logging.py").read_text(encoding="utf-8")
     lifespan = (package_root / "bootstrap" / "lifespan.py").read_text(encoding="utf-8")
     tests_conftest = (project_root / "tests" / "conftest.py").read_text(encoding="utf-8")
@@ -144,6 +151,9 @@ def test_generated_project_renders_database_and_module_placeholders(tmp_path: Pa
     ).read_text(encoding="utf-8")
 
     assert "DATABASE_URL=sqlite:///./poleposition.db" in env_example
+    assert "POSTGRES_DB=app" in env_example
+    assert "POSTGRES_USER=postgres" in env_example
+    assert "POSTGRES_PASSWORD=postgres" in env_example
     assert "APP_HOST=127.0.0.1" in env_example
     assert "UVICORN_WORKERS=1" in env_example
     assert "# UVICORN_USE_COLORS=" in env_example
@@ -151,6 +161,15 @@ def test_generated_project_renders_database_and_module_placeholders(tmp_path: Pa
     assert "# UVICORN_LIMIT_CONCURRENCY=" in env_example
     assert "# UVICORN_LIMIT_MAX_REQUESTS=" in env_example
     assert "UVICORN_LIMIT_MAX_REQUESTS_JITTER=0" in env_example
+    assert '"psycopg[binary]>=' in pyproject
+    assert 'CMD ["uv", "run", "python", "-m", "demo_app.run"]' in dockerfile
+    assert "RUN uv sync --no-dev" in dockerfile
+    assert ".venv" in dockerignore
+    assert "poleposition.db" in dockerignore
+    assert "services:" in compose_file
+    assert "image: postgres:16" in compose_file
+    assert "DATABASE_URL: postgresql+psycopg://" in compose_file
+    assert 'APP_HOST: 0.0.0.0' in compose_file
     assert "from demo_app.api.router import api_router" in app_module
     assert 'uvicorn.run(' in run_module
     assert '"demo_app.main:app"' in run_module
@@ -208,6 +227,18 @@ def test_generated_project_includes_alembic_support(tmp_path: Path):
     assert '"races"' in initial_migration
     assert 'alembic revision --autogenerate -m "add garage table"' in readme
     assert "{{project" not in migrations_env
+
+
+def test_generated_project_includes_docker_workflow_docs(tmp_path: Path):
+    result = run_cli(tmp_path, "start", "demo-app")
+
+    assert result.returncode == 0
+
+    project_root = tmp_path / "demo-app"
+    readme = (project_root / "README.md").read_text(encoding="utf-8")
+
+    assert "docker compose up --build" in readme
+    assert "docker compose run --rm app uv run alembic upgrade head" in readme
 
 
 def test_generated_project_is_migration_first(tmp_path: Path):
@@ -281,9 +312,11 @@ def test_packaging_includes_hidden_template_files() -> None:
 
     assert "template/.env.example" in package_data
     assert "template/.gitignore" in package_data
+    assert "template/.dockerignore" in package_data
     assert "template/**/__pycache__/*" in exclude_package_data
     assert "template/**/*.pyc" in exclude_package_data
     assert "recursive-include pole_position/template *" in manifest
+    assert "include pole_position/template/.dockerignore" in manifest
     assert "include pole_position/template/.env.example" in manifest
     assert "include pole_position/template/.gitignore" in manifest
     assert "global-exclude __pycache__ *.py[cod]" in manifest

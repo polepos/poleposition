@@ -1,6 +1,6 @@
 # PolePosition
 
-![PolePosition logo](assets/logo/poleposition-python-logo.png)
+![PolePosition logo](assets/logo/poleposition-python-logo.svg)
 
 A CLI tool that puts teams in pole position when starting enterprise FastAPI projects.
 
@@ -100,6 +100,13 @@ alembic upgrade head
 uv run python -m myapp.run
 ```
 
+Or start the generated app with Docker and PostgreSQL:
+
+```bash
+docker compose up --build
+docker compose run --rm app uv run alembic upgrade head
+```
+
 Create and run migrations:
 
 ```bash
@@ -160,6 +167,20 @@ polepos db upgrade
 polepos db revision -m "add garage table"
 polepos db downgrade -1
 ```
+
+### Docker workflow
+
+Generated projects include a `Dockerfile`, `.dockerignore`, and `compose.yaml`
+so you can start the app with PostgreSQL in containers.
+
+```bash
+cp .env.example .env
+docker compose up --build
+docker compose run --rm app uv run alembic upgrade head
+```
+
+The compose setup uses the generated `run.py` entrypoint and overrides
+`DATABASE_URL` so the app talks to the bundled PostgreSQL service.
 
 ### Logging
 
@@ -241,10 +262,13 @@ polepos version
 
 ```text
 myapp/
+├─ Dockerfile
+├─ compose.yaml
 ├─ alembic.ini
 ├─ migrations/
 │  └─ versions/
 ├─ pyproject.toml
+├─ .dockerignore
 ├─ .env.example
 ├─ src/
 │  └─ myapp/
@@ -304,7 +328,7 @@ The CLI is intentionally lightweight and avoids heavy templating engines.
 * [x] Project name validation
 * [x] `polepos add module`
 * [x] Alembic and database migrations
-* [ ] Docker support
+* [x] Docker support
 * [x] `polepos db ...` commands
 * [ ] JSON logging support
 * [ ] Auth foundation
@@ -324,6 +348,13 @@ polepos start shop-api
 cd shop-api
 cp .env.example .env
 uv sync
+```
+
+Or use the generated Docker workflow:
+
+```bash
+docker compose up --build
+docker compose run --rm app uv run alembic upgrade head
 ```
 
 Point the project to PostgreSQL in `.env`:

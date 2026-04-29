@@ -1,4 +1,5 @@
 recursive-include pole_position/template *
+include pole_position/template/.dockerignore
 include pole_position/template/.env.example
 include pole_position/template/.gitignore
 global-exclude __pycache__ *.py[cod]

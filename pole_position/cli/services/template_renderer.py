@@ -44,7 +44,7 @@ def build_context(
 
 
 def should_render_file(path: Path) -> bool:
-    if path.name in {".env.example", ".gitignore"}:
+    if path.name in {".dockerignore", ".env.example", ".gitignore", "Dockerfile"}:
         return True
 
     if path.suffix in TEXT_FILE_EXTENSIONS:
