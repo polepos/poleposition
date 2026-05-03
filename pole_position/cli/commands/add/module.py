@@ -1,16 +1,24 @@
+from pathlib import Path
+
 from pole_position.cli.command import Command
+from pole_position.cli.services.module_creator import AddedModuleResult
 from pole_position.cli.services.module_creator import add_module
 from pole_position.cli.services.module_templates import SUPPORTED_MODULE_TEMPLATES
 from pole_position.cli.services.project_name import normalize_package_name, validate_project_name
 
 
-USAGE = "Usage: polepos add module <module_name> [--template <template_name>]"
+USAGE = (
+    "Usage: polepos add module <module_name> "
+    "[--template <template_name>] [--api-only]"
+)
 
 
 def _print_usage() -> None:
     templates = ", ".join(SUPPORTED_MODULE_TEMPLATES)
     print(USAGE)
     print(f"Templates: {templates}")
+    print("Options:")
+    print("  --api-only    Generate router, schemas, service, and tests without DB files.")
 
 
 def run(args: list[str]) -> None:
@@ -20,6 +28,8 @@ def run(args: list[str]) -> None:
 
     raw_name: str | None = None
     template = "standard"
+    template_was_set = False
+    api_only = False
     index = 0
 
     while index < len(args):
@@ -31,11 +41,18 @@ def run(args: list[str]) -> None:
                 _print_usage()
                 raise SystemExit(1)
             template = args[index + 1].strip()
+            template_was_set = True
             index += 2
             continue
 
         if argument.startswith("--template="):
             template = argument.split("=", 1)[1].strip()
+            template_was_set = True
+            index += 1
+            continue
+
+        if argument == "--api-only":
+            api_only = True
             index += 1
             continue
 
@@ -57,10 +74,17 @@ def run(args: list[str]) -> None:
         _print_usage()
         raise SystemExit(1)
 
+    if api_only:
+        if template_was_set and template != "api-only":
+            print("--api-only cannot be combined with another module template.")
+            _print_usage()
+            raise SystemExit(1)
+        template = "api-only"
+
     try:
         validate_project_name(raw_name)
         module_name = normalize_package_name(raw_name)
-        add_module(module_name, template=template)
+        result = add_module(module_name, template=template)
     except RuntimeError as exc:
         print(str(exc))
         raise SystemExit(1)
@@ -69,7 +93,28 @@ def run(args: list[str]) -> None:
         _print_usage()
         raise SystemExit(1)
 
-    print(f"Added module: {module_name}")
+    _print_success(result)
+
+
+def _print_success(result: AddedModuleResult) -> None:
+    print(f"Added module: {result.module_name}")
+    print(f"Template: {result.template}")
+
+    print("Created:")
+    for path in (*result.module_files, *result.test_files):
+        print(f"  {_relative_path(result, path)}")
+
+    print("Updated:")
+    for path in result.updated_files:
+        print(f"  {_relative_path(result, path)}")
+
+    print("Next steps:")
+    for step in result.next_steps:
+        print(f"  {step}")
+
+
+def _relative_path(result: AddedModuleResult, path: Path) -> str:
+    return path.relative_to(result.project_root).as_posix()
 
 
 command = Command(

@@ -13,7 +13,7 @@ from pole_position.cli.services.module_templates.renderer import render_template
 
 
 def test_supported_module_templates_are_stable() -> None:
-    assert SUPPORTED_MODULE_TEMPLATES == ("standard", "ai-prompt")
+    assert SUPPORTED_MODULE_TEMPLATES == ("standard", "ai-prompt", "api-only")
 
 
 def test_to_class_name_normalizes_module_names() -> None:
@@ -74,6 +74,24 @@ def test_ai_prompt_template_contract() -> None:
     assert '"/api/v1/assistant/respond"' in template.integration_test_content
 
 
+def test_api_only_template_contract() -> None:
+    contract = get_module_template_contract("api-only")
+    template = build_module_template(
+        template="api-only",
+        package_name="shop_api",
+        module_name="webhooks",
+    )
+
+    assert set(template.files) == set(contract.file_names)
+    assert template.integration_test_name == contract.integration_test_name("webhooks")
+    assert template.unit_test_name == contract.unit_test_name("webhooks")
+    assert template.update_db_models is False
+    assert "model.py" not in template.files
+    assert "repository.py" not in template.files
+    assert "Depends(db_session)" not in template.files["router.py"]
+    assert 'client.post("/api/v1/webhooks/"' in template.integration_test_content
+
+
 def test_unknown_module_template_raises_clear_error() -> None:
     with pytest.raises(ValueError) as exc_info:
         build_module_template(
@@ -83,7 +101,7 @@ def test_unknown_module_template_raises_clear_error() -> None:
         )
 
     assert "Unsupported module template 'unknown'" in str(exc_info.value)
-    assert "standard, ai-prompt" in str(exc_info.value)
+    assert "standard, ai-prompt, api-only" in str(exc_info.value)
 
 
 def test_llm_integration_files_contract() -> None:

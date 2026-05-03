@@ -126,6 +126,17 @@ For an `ai-prompt` module, `check` expects:
 `ai-prompt` modules are intentionally not required to have a model import in
 `db/models.py`.
 
+For an `api-only` module, `check` expects:
+
+- module files: `__init__.py`, `router.py`, `schemas.py`, `service.py`
+- export in `src/<package>/modules/__init__.py`
+- router import and include in `src/<package>/api/router.py`
+- integration test under `tests/integration/test_<module>.py`
+- unit test under `tests/unit/test_<module>_api_service.py`
+
+`api-only` modules are intentionally not required to have model, repository, or
+`db/models.py` wiring.
+
 ### 3. Integration Check
 
 Integration check validates opt-in external-system scaffolds when the project

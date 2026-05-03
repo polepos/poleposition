@@ -43,6 +43,7 @@ polepos db upgrade
 - [Getting Started](getting-started.md): create and run a project.
 - [CLI Reference](cli.md): command groups and common usage.
 - [Architecture](architecture.md): generated project structure and design intent.
+- [Architecture Diagram](architecture-diagram.md): visual CLI and generated project flow.
 - [Project Checks](project-checks.md): what `polepos check` validates.
 - [Feature Status](feature-status.md): implemented and planned behavior.
 - [Examples](examples/index.md): scenario-oriented usage guides.

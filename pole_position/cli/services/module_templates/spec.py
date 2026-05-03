@@ -63,3 +63,17 @@ AI_PROMPT_MODULE_TEMPLATE_CONTRACT = ModuleTemplateContract(
     ensure_llm_settings=True,
     detection_file_names=("orchestrator.py", "prompts.py"),
 )
+
+API_ONLY_MODULE_TEMPLATE_CONTRACT = ModuleTemplateContract(
+    name="api-only",
+    file_names=(
+        "__init__.py",
+        "router.py",
+        "schemas.py",
+        "service.py",
+    ),
+    integration_test_name_template="test_{module_name}.py",
+    unit_test_name_template="test_{module_name}_api_service.py",
+    update_db_models=False,
+    detection_file_names=("router.py", "service.py"),
+)

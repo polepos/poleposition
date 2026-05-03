@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from pathlib import Path
 
 from pole_position.cli.services.project_locator import find_package_root, find_project_root
@@ -18,7 +19,27 @@ SETTINGS_LLM_MARKER = "    # polepos:llm-settings"
 ENV_LLM_MARKER = "# polepos:llm-env"
 
 
-def add_module(module_name: str, template: str = "standard", cwd: Path | None = None) -> None:
+@dataclass(frozen=True)
+class AddedModuleResult:
+    module_name: str
+    template: str
+    project_root: Path
+    package_root: Path
+    module_files: tuple[Path, ...]
+    test_files: tuple[Path, ...]
+    updated_files: tuple[Path, ...]
+    next_steps: tuple[str, ...]
+
+    @property
+    def package_name(self) -> str:
+        return self.package_root.name
+
+
+def add_module(
+    module_name: str,
+    template: str = "standard",
+    cwd: Path | None = None,
+) -> AddedModuleResult:
     if template not in SUPPORTED_MODULE_TEMPLATES:
         supported = ", ".join(SUPPORTED_MODULE_TEMPLATES)
         raise ValueError(
@@ -45,17 +66,39 @@ def add_module(module_name: str, template: str = "standard", cwd: Path | None = 
         template_spec=template_spec,
     )
 
-    _write_module_files(module_root, template_spec.files)
-    _write_module_tests(project_root / "tests", template_spec)
+    module_files = _write_module_files(module_root, template_spec.files)
+    test_files = _write_module_tests(project_root / "tests", template_spec)
+    updated_files: list[Path] = []
+
     _update_modules_init(modules_root / "__init__.py", module_name)
+    updated_files.append(modules_root / "__init__.py")
     _update_api_router(package_root / "api" / "router.py", package_name, module_name)
+    updated_files.append(package_root / "api" / "router.py")
     if template_spec.update_db_models:
         _update_db_models(package_root / "db" / "models.py", package_name, module_name)
+        updated_files.append(package_root / "db" / "models.py")
     if template_spec.ensure_llm_integrations:
-        _ensure_llm_integrations(package_root, package_name)
+        updated_files.extend(_ensure_llm_integrations(package_root, package_name))
     if template_spec.ensure_llm_settings:
-        _ensure_llm_settings(package_root / "settings.py")
-        _ensure_llm_env(project_root / ".env.example")
+        if _ensure_llm_settings(package_root / "settings.py"):
+            updated_files.append(package_root / "settings.py")
+        if _ensure_llm_env(project_root / ".env.example"):
+            updated_files.append(project_root / ".env.example")
+
+    return AddedModuleResult(
+        module_name=module_name,
+        template=template,
+        project_root=project_root,
+        package_root=package_root,
+        module_files=tuple(module_files),
+        test_files=tuple(test_files),
+        updated_files=tuple(dict.fromkeys(updated_files)),
+        next_steps=_module_next_steps(
+            package_name=package_name,
+            module_name=module_name,
+            template_spec=template_spec,
+        ),
+    )
 
 
 def _validate_add_module_preflight(
@@ -172,14 +215,19 @@ def _read_managed_file_lines(problems: list[str], path: Path) -> list[str] | Non
     return content.splitlines()
 
 
-def _write_module_files(module_root: Path, files: dict[str, str]) -> None:
+def _write_module_files(module_root: Path, files: dict[str, str]) -> list[Path]:
     module_root.mkdir(parents=True)
+    written: list[Path] = []
 
     for file_name, content in files.items():
-        (module_root / file_name).write_text(content, encoding="utf-8")
+        path = module_root / file_name
+        path.write_text(content, encoding="utf-8")
+        written.append(path)
+
+    return written
 
 
-def _write_module_tests(tests_root: Path, template_spec) -> None:
+def _write_module_tests(tests_root: Path, template_spec: ModuleTemplate) -> list[Path]:
     integration_root = tests_root / "integration"
     unit_root = tests_root / "unit"
     integration_root.mkdir(parents=True, exist_ok=True)
@@ -196,6 +244,7 @@ def _write_module_tests(tests_root: Path, template_spec) -> None:
         template_spec.unit_test_content,
         encoding="utf-8",
     )
+    return [integration_test, unit_test]
 
 
 def _update_modules_init(path: Path, module_name: str) -> None:
@@ -240,18 +289,21 @@ def _update_db_models(path: Path, package_name: str, module_name: str) -> None:
     )
 
 
-def _ensure_llm_integrations(package_root: Path, package_name: str) -> None:
+def _ensure_llm_integrations(package_root: Path, package_name: str) -> list[Path]:
+    written: list[Path] = []
     for relative_path, content in llm_integration_files(package_name).items():
         path = package_root / relative_path
         path.parent.mkdir(parents=True, exist_ok=True)
         if not path.exists():
             path.write_text(content, encoding="utf-8")
+            written.append(path)
+    return written
 
 
-def _ensure_llm_settings(path: Path) -> None:
+def _ensure_llm_settings(path: Path) -> bool:
     content = path.read_text(encoding="utf-8")
     if "llm_provider:" in content:
-        return
+        return False
 
     block = llm_settings_block()
     _insert_block_before_marker_or_anchor(
@@ -260,12 +312,13 @@ def _ensure_llm_settings(path: Path) -> None:
         marker=SETTINGS_LLM_MARKER,
         anchor="    model_config = SettingsConfigDict(",
     )
+    return True
 
 
-def _ensure_llm_env(path: Path) -> None:
+def _ensure_llm_env(path: Path) -> bool:
     content = path.read_text(encoding="utf-8")
     if "LLM_PROVIDER=" in content:
-        return
+        return False
 
     block = llm_env_block()
     _insert_block_before_marker_or_anchor(
@@ -274,6 +327,7 @@ def _ensure_llm_env(path: Path) -> None:
         marker=ENV_LLM_MARKER,
         anchor=None,
     )
+    return True
 
 
 def _insert_line_before_marker(path: Path, line: str, marker: str) -> None:
@@ -345,3 +399,25 @@ def _find_marker_index(lines: list[str], marker: str, path: Path) -> int:
         return lines.index(marker)
     except ValueError as exc:
         raise RuntimeError(f"Unsupported managed block layout: {path}") from exc
+
+
+def _module_next_steps(
+    *,
+    package_name: str,
+    module_name: str,
+    template_spec: ModuleTemplate,
+) -> tuple[str, ...]:
+    steps = [
+        f"Review src/{package_name}/modules/{module_name}/",
+        "Run `polepos check`",
+    ]
+
+    if template_spec.update_db_models:
+        steps.append(
+            f'After model changes, run `polepos db revision -m "add {module_name} table"`'
+        )
+
+    if template_spec.ensure_llm_settings:
+        steps.append("Set LLM_API_KEY in .env before calling the generated endpoint")
+
+    return tuple(steps)

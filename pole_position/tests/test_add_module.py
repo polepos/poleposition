@@ -205,6 +205,11 @@ def test_module_templates_render_without_leftover_placeholders() -> None:
         package_name="myapp",
         module_name="assistant",
     )
+    api_only_template = build_module_template(
+        template="api-only",
+        package_name="myapp",
+        module_name="webhooks",
+    )
     rendered_content = [
         *standard_template.files.values(),
         standard_template.integration_test_content,
@@ -212,6 +217,9 @@ def test_module_templates_render_without_leftover_placeholders() -> None:
         *ai_template.files.values(),
         ai_template.integration_test_content,
         ai_template.unit_test_content,
+        *api_only_template.files.values(),
+        api_only_template.integration_test_content,
+        api_only_template.unit_test_content,
         *llm_integration_files("myapp").values(),
     ]
 
@@ -228,6 +236,14 @@ def test_add_module_creates_module_files_and_updates_router(tmp_path: Path):
 
     assert result.returncode == 0
     assert "Added module: garage" in result.stdout
+    assert "Template: standard" in result.stdout
+    assert "Created:" in result.stdout
+    assert "Updated:" in result.stdout
+    assert "Next steps:" in result.stdout
+    assert "src/myapp/modules/garage/router.py" in result.stdout
+    assert "tests/integration/test_garage.py" in result.stdout
+    assert "Run `polepos check`" in result.stdout
+    assert 'polepos db revision -m "add garage table"' in result.stdout
 
     package_root = project_root / "src" / "myapp"
     module_root = package_root / "modules" / "garage"
@@ -446,6 +462,96 @@ def test_add_module_with_ai_prompt_template_creates_llm_module_files(tmp_path: P
     assert "return_value=StubProvider()" in integration_test_content
 
 
+def test_add_module_with_api_only_option_creates_api_module_without_db_files(
+    tmp_path: Path,
+):
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    result = run_cli(project_root, "add", "module", "webhooks", "--api-only")
+
+    assert result.returncode == 0
+    assert "Added module: webhooks" in result.stdout
+    assert "Template: api-only" in result.stdout
+    assert "Run `polepos check`" in result.stdout
+    assert "polepos db revision" not in result.stdout
+
+    package_root = project_root / "src" / "myapp"
+    module_root = package_root / "modules" / "webhooks"
+
+    expected_files = [
+        module_root / "__init__.py",
+        module_root / "router.py",
+        module_root / "schemas.py",
+        module_root / "service.py",
+        project_root / "tests" / "integration" / "test_webhooks.py",
+        project_root / "tests" / "unit" / "test_webhooks_api_service.py",
+    ]
+    for path in expected_files:
+        assert path.exists(), f"Expected generated API-only file is missing: {path}"
+
+    assert not (module_root / "model.py").exists()
+    assert not (module_root / "repository.py").exists()
+
+    router_content = (package_root / "api" / "router.py").read_text(encoding="utf-8")
+    db_models_content = (package_root / "db" / "models.py").read_text(encoding="utf-8")
+    integration_test_content = (
+        project_root / "tests" / "integration" / "test_webhooks.py"
+    ).read_text(encoding="utf-8")
+
+    assert (
+        'api_router.include_router(webhooks_router, prefix="/webhooks", '
+        'tags=["webhooks"])'
+    ) in router_content
+    assert "from myapp.modules.webhooks import model" not in db_models_content
+    assert 'client.post("/api/v1/webhooks/"' in integration_test_content
+
+
+def test_add_module_with_api_only_template_alias(tmp_path: Path):
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    result = run_cli(project_root, "add", "module", "callbacks", "--template", "api-only")
+
+    assert result.returncode == 0
+    assert "Template: api-only" in result.stdout
+    assert (
+        project_root
+        / "src"
+        / "myapp"
+        / "modules"
+        / "callbacks"
+        / "router.py"
+    ).exists()
+    assert (
+        project_root
+        / "tests"
+        / "unit"
+        / "test_callbacks_api_service.py"
+    ).exists()
+
+
+def test_add_module_rejects_api_only_with_other_template(tmp_path: Path):
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    result = run_cli(
+        project_root,
+        "add",
+        "module",
+        "assistant",
+        "--template",
+        "ai-prompt",
+        "--api-only",
+    )
+
+    assert result.returncode != 0
+    assert "--api-only cannot be combined with another module template." in result.stdout
+
+
 def test_add_module_ai_prompt_does_not_duplicate_llm_settings_or_integrations(tmp_path: Path):
     create_result = run_cli(tmp_path, "start", "myapp")
     assert create_result.returncode == 0
@@ -478,4 +584,4 @@ def test_add_module_rejects_unknown_template(tmp_path: Path):
 
     assert result.returncode != 0
     assert "Unsupported module template 'unknown'" in result.stdout
-    assert "Templates: standard, ai-prompt" in result.stdout
+    assert "Templates: standard, ai-prompt, api-only" in result.stdout

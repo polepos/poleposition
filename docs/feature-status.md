@@ -25,6 +25,7 @@ Instead, it clarifies whether a feature is:
 | Generated FastAPI structure | Stable foundation | `auth`, `bootstrap`, `api`, `db`, `domain`, `integrations`, `modules` layout is now part of the product identity. |
 | `polepos add module` with `standard` | Growing | Strong differentiator; works well, but still depends on managed marker blocks. |
 | `polepos add module` with `ai-prompt` | Growing | Good provider-agnostic foundation; adapters are scaffold-level, not full provider integrations yet. |
+| `polepos add module` with `api-only` | Growing | Useful lightweight module archetype for routes that do not need model, repository, or database wiring. |
 | `polepos add integration kafka` | Growing | First messaging integration; producer, consumer factory, settings, env, and test double support are scaffolded. |
 | `polepos add integration rabbitmq` | Growing | Second messaging integration; publisher, queue factory, settings, env, and test double support are scaffolded. |
 | `polepos check` | Stable foundation | Runs core checks for project identity, generated structure, Alembic config, managed markers, added module lifecycle wiring, and opt-in integration wiring. |
@@ -50,6 +51,10 @@ This is one of the most important product surfaces.
 
 It is already useful, but it still assumes PolePosition-managed markers remain in place.
 That means it is powerful, but not fully free-form.
+
+Near-term improvements should continue focusing on ergonomics rather than
+expanding the top-level command surface: clearer guidance in command output,
+additional module archetypes, and scoped generation options.
 
 ### Messaging integrations
 

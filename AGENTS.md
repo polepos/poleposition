@@ -260,6 +260,19 @@ module skeleton instead:
 - shared `src/<package>/integrations/llm/*` files when missing
 - `settings.py` / `.env.example` LLM settings when missing
 
+`polepos add module <name> --api-only` and
+`polepos add module <name> --template api-only` generate a lightweight API
+module instead:
+
+- `__init__.py`
+- `router.py`
+- `schemas.py`
+- `service.py`
+- integration and unit tests
+
+API-only modules do not generate `model.py`, `repository.py`, or `db/models.py`
+wiring.
+
 When changing module generation:
 
 - keep generated code simple and readable

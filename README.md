@@ -230,11 +230,15 @@ python -m myapp.run
 ```bash
 polepos add module garage
 polepos add module assistant --template ai-prompt
+polepos add module webhook --api-only
 ```
 
 `standard` is the default template for REST and domain modules.
 `ai-prompt` adds a provider-agnostic LLM endpoint skeleton with module-local
 prompt orchestration and shared `integrations/llm` adapters.
+`api-only` generates router, schemas, service, and tests without model,
+repository, or database wiring. Use `--api-only` as a shortcut for
+`--template api-only`.
 
 ### Add integrations
 
@@ -520,6 +524,8 @@ The CLI is intentionally lightweight and avoids heavy templating engines. Templa
 * [x] Enterprise FastAPI project lifecycle foundation
 * [x] `polepos add module` for standard modules
 * [x] `polepos add module --template ai-prompt`
+* [x] `polepos add module --api-only`
+* [x] Clearer `polepos add module` success output
 * [x] `polepos add integration kafka`
 * [x] `polepos add integration rabbitmq`
 * [x] Alembic and database migrations
@@ -539,8 +545,8 @@ The CLI is intentionally lightweight and avoids heavy templating engines. Templa
   login, password hashing, refresh tokens, and database-backed users
 * [ ] Production-ready presets
   stronger env defaults, deployment guidance, and safer runtime conventions
-* [ ] `add module` ergonomics
-  better success output, more archetypes, and options like `--api-only`
+* [ ] More `add module` archetypes
+  additional focused module shapes beyond standard, API-only, and AI prompt modules
 
 ### Later Expansion
 

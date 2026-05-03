@@ -73,6 +73,21 @@ def test_check_passes_after_added_standard_and_ai_prompt_modules(tmp_path: Path)
     assert "PolePosition project check passed." in result.stdout
 
 
+def test_check_passes_after_added_api_only_module(tmp_path: Path) -> None:
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    add_result = run_cli(project_root, "add", "module", "webhooks", "--api-only")
+
+    assert add_result.returncode == 0
+
+    result = run_cli(project_root, "check")
+
+    assert result.returncode == 0
+    assert "PolePosition project check passed." in result.stdout
+
+
 def test_check_passes_after_added_messaging_integrations(tmp_path: Path) -> None:
     create_result = run_cli(tmp_path, "start", "myapp")
     assert create_result.returncode == 0
@@ -219,6 +234,27 @@ def test_check_reports_missing_ai_prompt_module_files(tmp_path: Path) -> None:
     assert "Lifecycle module 'assistant' is missing generated path" in result.stdout
     assert "orchestrator.py" in result.stdout
     assert "prompts.py" in result.stdout
+    assert "missing model import" not in result.stdout
+
+
+def test_check_reports_missing_api_only_module_files_without_model_requirement(
+    tmp_path: Path,
+) -> None:
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    add_result = run_cli(project_root, "add", "module", "webhooks", "--api-only")
+    assert add_result.returncode == 0
+
+    module_root = project_root / "src" / "myapp" / "modules" / "webhooks"
+    (module_root / "service.py").unlink()
+
+    result = run_cli(project_root, "check")
+
+    assert result.returncode != 0
+    assert "Lifecycle module 'webhooks' is missing generated path" in result.stdout
+    assert "service.py" in result.stdout
     assert "missing model import" not in result.stdout
 
 

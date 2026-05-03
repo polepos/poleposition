@@ -2,6 +2,8 @@
 
 This document explains how PolePosition is structured as a product and as a codebase.
 
+For a visual overview, see the [Architecture Diagram](architecture-diagram.md).
+
 It is meant to help both humans and coding agents answer the same questions quickly:
 
 - what the product does
@@ -175,6 +177,7 @@ Current templates:
 
 - `standard`
 - `ai-prompt`
+- `api-only`
 
 Project patching lives in:
 
@@ -189,6 +192,10 @@ This file:
 - updates shared registration points
 - optionally adds LLM integration files
 - optionally patches settings and `.env.example`
+
+The `--api-only` CLI option is a shortcut for the `api-only` template. It
+generates router, schemas, service, and tests without model, repository, or
+database model wiring.
 
 ## `add integration` Architecture
 
