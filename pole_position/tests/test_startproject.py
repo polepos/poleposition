@@ -49,6 +49,30 @@ def test_invalid_project_name(tmp_path: Path):
     assert result.returncode != 0
     assert "Usage" in result.stdout
 
+
+def test_start_help_shows_usage_without_creating_project(tmp_path: Path):
+    result = run_cli(tmp_path, "start", "--help")
+
+    assert result.returncode == 0
+    assert (
+        "Usage: polepos start <project_name> [--install] [--no-bytecode]"
+        in result.stdout
+    )
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_start_rejects_unknown_option(tmp_path: Path):
+    result = run_cli(tmp_path, "start", "--template")
+
+    assert result.returncode != 0
+    assert "Unexpected option: --template" in result.stdout
+    assert (
+        "Usage: polepos start <project_name> [--install] [--no-bytecode]"
+        in result.stdout
+    )
+    assert list(tmp_path.iterdir()) == []
+
+
 def test_existing_directory(tmp_path: Path):
     project_path = tmp_path / "myapp"
     project_path.mkdir()

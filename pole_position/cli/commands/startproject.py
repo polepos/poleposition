@@ -10,6 +10,7 @@ from pole_position.cli.services.project_name import (
 
 
 USAGE = "Usage: polepos start <project_name> [--install] [--no-bytecode]"
+HELP_OPTIONS = {"-h", "--help"}
 
 
 def run(args: list[str]) -> None:
@@ -19,17 +20,24 @@ def run(args: list[str]) -> None:
     filtered_args: list[str] = []
 
     for arg in args:
+        if arg in HELP_OPTIONS:
+            print(USAGE)
+            return
         if arg == "--install":
             install = True
         elif arg == "--no-bytecode":
             no_bytecode = True
+        elif arg.startswith("-"):
+            print(f"Unexpected option: {arg}")
+            print(USAGE)
+            raise SystemExit(1)
         else:
             filtered_args.append(arg)
 
     if not filtered_args:
         print(USAGE)
         raise SystemExit(1)
-    
+
     if len(filtered_args) > 1:
         print(f"Unexpected argument: {filtered_args[1]}")
         print(USAGE)

@@ -9,6 +9,7 @@ commands grow under `add` and `db` as the lifecycle expands.
 polepos start shop-api
 polepos start shop-api --install
 polepos start shop-api --no-bytecode
+polepos start --help
 ```
 
 `--install` syncs the generated project after creation. `--no-bytecode`
