@@ -93,6 +93,52 @@ def test_add_kafka_integration_rejects_duplicate(tmp_path: Path):
     assert "Integration already exists: kafka" in second_result.stdout
 
 
+def test_add_integration_preflight_fails_before_writing_when_marker_is_missing(
+    tmp_path: Path,
+):
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    package_root = project_root / "src" / "myapp"
+    settings_path = package_root / "settings.py"
+    env_path = project_root / ".env.example"
+
+    settings_path.write_text(
+        settings_path.read_text(encoding="utf-8").replace(
+            "    # polepos:integration-settings",
+            "    # integration settings are managed manually",
+        ),
+        encoding="utf-8",
+    )
+    env_path.write_text(
+        env_path.read_text(encoding="utf-8").replace(
+            "# polepos:integration-env",
+            "# integration env values are managed manually",
+        ),
+        encoding="utf-8",
+    )
+
+    result = run_cli(project_root, "add", "integration", "kafka")
+
+    assert result.returncode != 0
+    assert "Cannot add integration because the project layout is not ready" in result.stdout
+    assert (
+        "Required managed marker '    # polepos:integration-settings' is missing"
+        in result.stdout
+    )
+    assert (
+        "Required managed marker '# polepos:integration-env' is missing"
+        in result.stdout
+    )
+    assert not (package_root / "integrations" / "kafka").exists()
+    assert "kafka_bootstrap_servers:" not in settings_path.read_text(encoding="utf-8")
+    assert "KAFKA_BOOTSTRAP_SERVERS=" not in env_path.read_text(encoding="utf-8")
+    assert '"aiokafka>=0.12.0",' not in (
+        project_root / "pyproject.toml"
+    ).read_text(encoding="utf-8")
+
+
 def test_add_rabbitmq_integration_creates_files_and_updates_project(tmp_path: Path):
     create_result = run_cli(tmp_path, "start", "myapp")
     assert create_result.returncode == 0

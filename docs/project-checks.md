@@ -93,6 +93,10 @@ Managed markers include:
 - `# polepos:llm-settings`
 - `# polepos:llm-env`
 
+These markers are also used by lifecycle commands. If the integration settings
+or env markers are removed, `polepos add integration ...` stops before writing
+generated files so the project is not left partially patched.
+
 ### 2. Lifecycle Check
 
 Lifecycle check validates modules added after project creation.

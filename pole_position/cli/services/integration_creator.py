@@ -65,13 +65,17 @@ def _validate_add_integration_preflight(
     if integration_root.exists():
         problems.append(f"Integration already exists: {integration_name}")
 
-    for path in [
-        project_root / "pyproject.toml",
-        project_root / ".env.example",
+    _collect_required_file(problems, project_root / "pyproject.toml")
+    _collect_missing_marker(
+        problems,
         package_root / "settings.py",
-    ]:
-        if not path.is_file():
-            problems.append(f"Required managed file is missing: {path}")
+        SETTINGS_INTEGRATION_MARKER,
+    )
+    _collect_missing_marker(
+        problems,
+        project_root / ".env.example",
+        ENV_INTEGRATION_MARKER,
+    )
 
     if problems:
         formatted_problems = "\n".join(f"- {problem}" for problem in problems)
@@ -79,6 +83,20 @@ def _validate_add_integration_preflight(
             "Cannot add integration because the project layout is not ready:\n"
             f"{formatted_problems}"
         )
+
+
+def _collect_required_file(problems: list[str], path: Path) -> None:
+    if not path.is_file():
+        problems.append(f"Required managed file is missing: {path}")
+
+
+def _collect_missing_marker(problems: list[str], path: Path, marker: str) -> None:
+    if not path.is_file():
+        problems.append(f"Required managed file is missing: {path}")
+        return
+
+    if marker not in path.read_text(encoding="utf-8").splitlines():
+        problems.append(f"Required managed marker '{marker}' is missing in {path}")
 
 
 def _ensure_integration_files(package_root: Path, files: dict[str, str]) -> None:
