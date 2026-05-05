@@ -2,10 +2,14 @@ from pathlib import Path
 import os
 import subprocess
 import sys
-import tomllib
 from unittest.mock import patch
 
 import pytest
+
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
