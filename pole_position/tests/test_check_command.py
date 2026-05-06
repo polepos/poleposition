@@ -148,6 +148,41 @@ def test_check_reports_missing_core_path_after_loose_project_detection(tmp_path:
     assert "api/router.py" in result.stdout
 
 
+def test_check_accepts_multiline_added_module_router_wiring(tmp_path: Path) -> None:
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    add_result = run_cli(project_root, "add", "module", "garage")
+    assert add_result.returncode == 0
+
+    router_path = project_root / "src" / "myapp" / "api" / "router.py"
+    router_content = router_path.read_text(encoding="utf-8")
+    router_content = router_content.replace(
+        "from myapp.modules.garage.router import router as garage_router",
+        (
+            "from myapp.modules.garage.router import (\n"
+            "    router as garage_router,\n"
+            ")"
+        ),
+    ).replace(
+        'api_router.include_router(garage_router, prefix="/garage", tags=["garage"])',
+        (
+            "api_router.include_router(\n"
+            "    garage_router,\n"
+            '    prefix="/garage",\n'
+            '    tags=["garage"],\n'
+            ")"
+        ),
+    )
+    router_path.write_text(router_content, encoding="utf-8")
+
+    result = run_cli(project_root, "check")
+
+    assert result.returncode == 0
+    assert "PolePosition project check passed." in result.stdout
+
+
 def test_check_reports_missing_added_module_router_wiring(tmp_path: Path) -> None:
     create_result = run_cli(tmp_path, "start", "myapp")
     assert create_result.returncode == 0

@@ -1,3 +1,4 @@
+import ast
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -364,31 +365,114 @@ def _check_module_router_wiring(
     module_name: str,
 ) -> None:
     router_path = package_root / "api" / "router.py"
-    lines = _read_file_lines(router_path)
-    if lines is None:
+    content = _read_file_text(router_path)
+    if content is None:
         return
 
     package_name = package_root.name
+    router_alias = f"{module_name}_router"
+    router_module = f"{package_name}.modules.{module_name}.router"
     import_line = (
         f"from {package_name}.modules.{module_name}.router import router as "
-        f"{module_name}_router"
+        f"{router_alias}"
     )
     include_line = (
-        f'api_router.include_router({module_name}_router, prefix="/{module_name}", '
+        f'api_router.include_router({router_alias}, prefix="/{module_name}", '
         f'tags=["{module_name}"])'
     )
+    tree = _parse_python_source(content, router_path, problems)
+    if tree is None:
+        return
 
-    if import_line not in lines:
+    if not _has_router_import(tree, router_module, router_alias):
         problems.append(
             f"Lifecycle module '{module_name}' is missing router import in "
             f"{router_path}: {import_line}"
         )
 
-    if include_line not in lines:
+    if not _has_router_include(tree, router_alias, module_name):
         problems.append(
             f"Lifecycle module '{module_name}' is missing API router include in "
             f"{router_path}: {include_line}"
         )
+
+
+def _parse_python_source(
+    content: str,
+    path: Path,
+    problems: list[str],
+) -> ast.Module | None:
+    try:
+        return ast.parse(content, filename=str(path))
+    except SyntaxError as exc:
+        problems.append(f"Could not parse Python file for lifecycle checks: {path}: {exc}")
+        return None
+
+
+def _has_router_import(tree: ast.Module, router_module: str, router_alias: str) -> bool:
+    for node in tree.body:
+        if not isinstance(node, ast.ImportFrom):
+            continue
+        if node.module != router_module:
+            continue
+        for alias in node.names:
+            if alias.name == "router" and alias.asname == router_alias:
+                return True
+
+    return False
+
+
+def _has_router_include(
+    tree: ast.Module,
+    router_alias: str,
+    module_name: str,
+) -> bool:
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        if not _is_api_router_include_call(node):
+            continue
+        if not node.args or not _is_name(node.args[0], router_alias):
+            continue
+        if _include_router_keywords_match(node, module_name):
+            return True
+
+    return False
+
+
+def _is_api_router_include_call(node: ast.Call) -> bool:
+    return (
+        isinstance(node.func, ast.Attribute)
+        and node.func.attr == "include_router"
+        and isinstance(node.func.value, ast.Name)
+        and node.func.value.id == "api_router"
+    )
+
+
+def _is_name(node: ast.AST, expected_name: str) -> bool:
+    return isinstance(node, ast.Name) and node.id == expected_name
+
+
+def _include_router_keywords_match(node: ast.Call, module_name: str) -> bool:
+    prefix = _literal_keyword_value(node, "prefix")
+    tags = _literal_keyword_value(node, "tags")
+
+    return prefix == f"/{module_name}" and tags in ([module_name], (module_name,))
+
+
+def _literal_keyword_value(node: ast.Call, keyword_name: str) -> object:
+    for keyword in node.keywords:
+        if keyword.arg == keyword_name:
+            return _literal_value(keyword.value)
+
+    return None
+
+
+def _literal_value(node: ast.AST) -> object:
+    try:
+        return ast.literal_eval(node)
+    except (ValueError, TypeError):
+        return None
 
 
 def _check_module_model_wiring(
