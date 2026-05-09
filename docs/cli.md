@@ -42,11 +42,19 @@ is the shortcut form.
 ```bash
 polepos remove --help
 polepos remove module customers
+polepos remove module customers --trace
+polepos remove module customers --force
 ```
 
 `remove module` is the counterpart to `add module`. It removes the module
 directory, generated integration and unit tests, module exports, API router
 wiring, and standard-module model imports.
+
+By default, the command stops before deleting the module directory when the
+module files or generated tests appear to contain custom changes. Use `--trace`
+to preview the planned removals and updates without changing files. Use
+`--force` only when you intentionally want to remove a customized module
+directory.
 
 The command is intentionally file-based. It does not connect to the database,
 create a migration, drop tables, or edit migration history. If the removed
@@ -63,9 +71,9 @@ For `ai-prompt` modules, removing the last AI prompt module also removes the
 shared LLM settings, `.env.example` values, and `integrations/llm` scaffold.
 If another AI prompt module remains, the shared LLM scaffold is kept.
 
-The command stops before deleting files when managed wiring has drifted into a
-layout it cannot clean safely. Fix the reported layout or remove the custom
-wiring manually, then retry.
+The command also stops before deleting files when managed wiring has drifted
+into a layout it cannot clean safely. Fix the reported layout or remove the
+custom wiring manually, then retry.
 
 ## Add Integrations
 

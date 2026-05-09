@@ -70,6 +70,11 @@ The command removes only wiring it can recognize as PolePosition-managed. If a
 router include, model import, or module export has been manually reformatted or
 rewritten, `remove module` stops before deleting the module directory.
 
+It also stops when the module directory or generated tests appear to contain
+custom changes. Run `polepos remove module <name> --trace` to see what would be
+removed or updated without changing files. Use `--force` only when deleting the
+customized module directory is intentional.
+
 Run:
 
 ```bash

@@ -149,6 +149,9 @@ table.
 `polepos remove module <name>` is a code cleanup command. It removes generated
 module files, generated tests, module exports, router wiring, and, for standard
 modules, the generated model import from `src/<package>/db/models.py`.
+It stops before deleting a module directory that appears to contain custom
+changes unless `--force` is used. Use `--trace` to preview the planned removals
+and updates without changing files.
 
 It does not:
 

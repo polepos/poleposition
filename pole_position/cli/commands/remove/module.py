@@ -7,11 +7,14 @@ from pole_position.cli.services.project_name import normalize_package_name
 from pole_position.cli.services.project_name import validate_project_name
 
 
-USAGE = "Usage: polepos remove module <module_name>"
+USAGE = "Usage: polepos remove module <module_name> [--force] [--trace]"
 
 
 def _print_usage() -> None:
     print(USAGE)
+    print("Options:")
+    print("  --force    Remove module files even when custom changes are detected.")
+    print("  --trace    Show planned removals and updates without changing files.")
 
 
 def run(args: list[str]) -> None:
@@ -19,16 +22,36 @@ def run(args: list[str]) -> None:
         _print_usage()
         raise SystemExit(1)
 
-    if args[0] in {"-h", "--help"}:
-        _print_usage()
-        return
+    raw_name: str | None = None
+    force = False
+    trace = False
 
-    if len(args) > 1:
-        print(f"Unexpected argument: {args[1]}")
+    for argument in args:
+        if argument in {"-h", "--help"}:
+            _print_usage()
+            return
+
+        if argument == "--force":
+            force = True
+            continue
+
+        if argument == "--trace":
+            trace = True
+            continue
+
+        if argument.startswith("--"):
+            print(f"Unexpected option: {argument}")
+            _print_usage()
+            raise SystemExit(1)
+
+        if raw_name is None:
+            raw_name = argument.strip()
+            continue
+
+        print(f"Unexpected argument: {argument}")
         _print_usage()
         raise SystemExit(1)
 
-    raw_name = args[0].strip()
     if not raw_name:
         _print_usage()
         raise SystemExit(1)
@@ -36,7 +59,7 @@ def run(args: list[str]) -> None:
     try:
         validate_project_name(raw_name)
         module_name = normalize_package_name(raw_name)
-        result = remove_module(module_name)
+        result = remove_module(module_name, force=force, trace=trace)
     except RuntimeError as exc:
         print(str(exc))
         raise SystemExit(1)
@@ -49,6 +72,10 @@ def run(args: list[str]) -> None:
 
 
 def _print_success(result: RemovedModuleResult) -> None:
+    if result.trace:
+        _print_trace(result)
+        return
+
     print(f"Removed module: {result.module_name}")
     print(f"Template: {result.template}")
 
@@ -69,6 +96,31 @@ def _print_success(result: RemovedModuleResult) -> None:
 
 def _relative_path(result: RemovedModuleResult, path: Path) -> str:
     return path.relative_to(result.project_root).as_posix()
+
+
+def _print_trace(result: RemovedModuleResult) -> None:
+    print(f"Removal trace: {result.module_name}")
+    print(f"Template: {result.template}")
+
+    if result.blocked_by_custom_changes:
+        print("Blocked unless --force is used because custom changes were detected:")
+    elif result.custom_changes:
+        print("Custom changes that would be removed because --force is set:")
+
+    for change in result.custom_changes:
+        print(f"  {change}")
+
+    if result.removed_paths:
+        print("Would remove:")
+        for path in result.removed_paths:
+            print(f"  {_relative_path(result, path)}")
+
+    if result.updated_files:
+        print("Would update:")
+        for path in result.updated_files:
+            print(f"  {_relative_path(result, path)}")
+
+    print("Trace only: no files changed.")
 
 
 command = Command(

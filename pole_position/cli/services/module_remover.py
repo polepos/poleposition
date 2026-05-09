@@ -9,6 +9,7 @@ from pole_position.cli.services.module_creator import ROUTER_IMPORTS_MARKER
 from pole_position.cli.services.module_creator import ROUTER_INCLUDES_MARKER
 from pole_position.cli.services.module_templates import DEFAULT_MODULE_TEMPLATE
 from pole_position.cli.services.module_templates import ModuleTemplateContract
+from pole_position.cli.services.module_templates import build_module_template
 from pole_position.cli.services.module_templates import get_module_template_contract
 from pole_position.cli.services.module_templates import llm_env_block
 from pole_position.cli.services.module_templates import llm_integration_files
@@ -30,13 +31,23 @@ class RemovedModuleResult:
     removed_paths: tuple[Path, ...]
     updated_files: tuple[Path, ...]
     next_steps: tuple[str, ...]
+    trace: bool = False
+    force: bool = False
+    custom_changes: tuple[str, ...] = ()
+    blocked_by_custom_changes: bool = False
 
     @property
     def package_name(self) -> str:
         return self.package_root.name
 
 
-def remove_module(module_name: str, cwd: Path | None = None) -> RemovedModuleResult:
+def remove_module(
+    module_name: str,
+    cwd: Path | None = None,
+    *,
+    force: bool = False,
+    trace: bool = False,
+) -> RemovedModuleResult:
     project_root = find_project_root(cwd)
     package_root = find_package_root(cwd)
     package_name = package_root.name
@@ -51,6 +62,63 @@ def remove_module(module_name: str, cwd: Path | None = None) -> RemovedModuleRes
         module_name=module_name,
         template_contract=template_contract,
     )
+
+    custom_changes = _detect_custom_changes(
+        project_root=project_root,
+        package_root=package_root,
+        module_root=module_root,
+        module_name=module_name,
+        template_contract=template_contract,
+    )
+    remove_llm_shared = (
+        template_contract.ensure_llm_settings
+        and not _has_remaining_ai_prompt_module(
+            project_root=project_root,
+            modules_root=modules_root,
+            removed_module_name=module_name,
+        )
+        and _is_generated_llm_scaffold_pristine(project_root, package_root, package_name)
+    )
+
+    if custom_changes and not force and not trace:
+        raise RuntimeError(_custom_changes_message(module_name, custom_changes))
+
+    if trace:
+        return RemovedModuleResult(
+            module_name=module_name,
+            template=template_contract.name,
+            project_root=project_root,
+            package_root=package_root,
+            removed_paths=tuple(
+                dict.fromkeys(
+                    _planned_removed_paths(
+                        project_root=project_root,
+                        package_root=package_root,
+                        module_root=module_root,
+                        module_name=module_name,
+                        template_contract=template_contract,
+                        remove_llm_shared=remove_llm_shared,
+                    )
+                )
+            ),
+            updated_files=tuple(
+                dict.fromkeys(
+                    _planned_updated_files(
+                        project_root=project_root,
+                        package_root=package_root,
+                        package_name=package_name,
+                        module_name=module_name,
+                        template_contract=template_contract,
+                        remove_llm_shared=remove_llm_shared,
+                    )
+                )
+            ),
+            next_steps=_remove_next_steps(),
+            trace=True,
+            force=force,
+            custom_changes=tuple(custom_changes),
+            blocked_by_custom_changes=bool(custom_changes and not force),
+        )
 
     updated_files: list[Path] = []
     removed_paths: list[Path] = []
@@ -74,11 +142,7 @@ def remove_module(module_name: str, cwd: Path | None = None) -> RemovedModuleRes
         shutil.rmtree(module_root)
         removed_paths.append(module_root)
 
-    if template_contract.ensure_llm_settings and not _has_remaining_ai_prompt_module(
-        project_root=project_root,
-        modules_root=modules_root,
-        removed_module_name=module_name,
-    ) and _is_generated_llm_scaffold_pristine(project_root, package_root, package_name):
+    if remove_llm_shared:
         updated_files.extend(_remove_llm_settings(project_root, package_root))
         removed_paths.extend(_remove_llm_integration_files(package_root, package_name))
 
@@ -89,10 +153,207 @@ def remove_module(module_name: str, cwd: Path | None = None) -> RemovedModuleRes
         package_root=package_root,
         removed_paths=tuple(dict.fromkeys(removed_paths)),
         updated_files=tuple(dict.fromkeys(updated_files)),
-        next_steps=(
-            "Run `polepos check`",
-            "Create a migration if removing the module also removes database tables",
-        ),
+        next_steps=_remove_next_steps(),
+        force=force,
+        custom_changes=tuple(custom_changes),
+    )
+
+
+def _detect_custom_changes(
+    *,
+    project_root: Path,
+    package_root: Path,
+    module_root: Path,
+    module_name: str,
+    template_contract: ModuleTemplateContract,
+) -> list[str]:
+    template = build_module_template(
+        template=template_contract.name,
+        package_name=package_root.name,
+        module_name=module_name,
+    )
+    changes: list[str] = []
+
+    if module_root.is_dir():
+        expected_module_files = template.files
+        for path in sorted(module_root.rglob("*")):
+            if not path.is_file():
+                continue
+
+            relative_path = path.relative_to(module_root).as_posix()
+            expected_content = expected_module_files.get(relative_path)
+            if expected_content is None:
+                changes.append(f"Unexpected module file: {path}")
+                continue
+
+            if path.read_text(encoding="utf-8") != expected_content:
+                changes.append(f"Modified generated module file: {path}")
+
+    integration_test_path = (
+        project_root / "tests" / "integration" / template.integration_test_name
+    )
+    unit_test_path = project_root / "tests" / "unit" / template.unit_test_name
+    expected_tests = {
+        integration_test_path: template.integration_test_content,
+        unit_test_path: template.unit_test_content,
+    }
+    for path, expected_content in expected_tests.items():
+        if path.is_file() and path.read_text(encoding="utf-8") != expected_content:
+            changes.append(f"Modified generated test file: {path}")
+
+    return changes
+
+
+def _custom_changes_message(module_name: str, custom_changes: list[str]) -> str:
+    formatted_changes = "\n".join(f"- {change}" for change in custom_changes)
+    return (
+        "Cannot remove module because it appears to contain custom changes:\n"
+        f"{formatted_changes}\n"
+        f"Use `polepos remove module {module_name} --force` to remove it anyway."
+    )
+
+
+def _planned_removed_paths(
+    *,
+    project_root: Path,
+    package_root: Path,
+    module_root: Path,
+    module_name: str,
+    template_contract: ModuleTemplateContract,
+    remove_llm_shared: bool,
+) -> list[Path]:
+    removed_paths = [
+        path
+        for path in _generated_test_paths(project_root, module_name, template_contract)
+        if path.exists()
+    ]
+
+    if module_root.exists():
+        removed_paths.append(module_root)
+
+    if remove_llm_shared:
+        removed_paths.extend(
+            _planned_llm_integration_paths(package_root, package_root.name)
+        )
+
+    return removed_paths
+
+
+def _planned_updated_files(
+    *,
+    project_root: Path,
+    package_root: Path,
+    package_name: str,
+    module_name: str,
+    template_contract: ModuleTemplateContract,
+    remove_llm_shared: bool,
+) -> list[Path]:
+    updated_files: list[Path] = []
+    modules_init_path = package_root / "modules" / "__init__.py"
+    router_path = package_root / "api" / "router.py"
+
+    if _line_exists(modules_init_path, _module_export_line(module_name)):
+        updated_files.append(modules_init_path)
+
+    if _router_wiring_ranges(router_path, package_name, module_name):
+        updated_files.append(router_path)
+
+    if template_contract.update_db_models:
+        models_path = package_root / "db" / "models.py"
+        if _line_exists(models_path, _model_import_line(package_name, module_name)):
+            updated_files.append(models_path)
+
+    if remove_llm_shared:
+        updated_files.extend(_planned_llm_settings_updates(project_root, package_root))
+
+    return updated_files
+
+
+def _line_exists(path: Path, line: str) -> bool:
+    if not path.is_file():
+        return False
+
+    return line in path.read_text(encoding="utf-8").splitlines()
+
+
+def _router_wiring_ranges(
+    path: Path,
+    package_name: str,
+    module_name: str,
+) -> list[tuple[int, int]]:
+    if not path.is_file():
+        return []
+
+    content = path.read_text(encoding="utf-8")
+    tree = ast.parse(content, filename=str(path))
+    router_alias = f"{module_name}_router"
+    router_module = f"{package_name}.modules.{module_name}.router"
+    ranges = [
+        _find_router_import_range(tree, router_module, router_alias),
+        _find_router_include_range(tree, router_alias, module_name),
+    ]
+    return [line_range for line_range in ranges if line_range is not None]
+
+
+def _planned_llm_settings_updates(project_root: Path, package_root: Path) -> list[Path]:
+    updated_files: list[Path] = []
+    settings_path = package_root / "settings.py"
+    env_path = project_root / ".env.example"
+
+    if _would_remove_lines_by_prefix(settings_path, _llm_setting_prefixes()):
+        updated_files.append(settings_path)
+    if _would_remove_lines_by_prefix(env_path, _llm_env_prefixes()):
+        updated_files.append(env_path)
+
+    return updated_files
+
+
+def _planned_llm_integration_paths(package_root: Path, package_name: str) -> list[Path]:
+    removed_paths: list[Path] = []
+    integrations_root = package_root / "integrations"
+    llm_root = integrations_root / "llm"
+    integrations_init = integrations_root / "__init__.py"
+
+    if llm_root.exists():
+        removed_paths.append(llm_root)
+
+    expected_integrations_init = llm_integration_files(package_name).get(
+        "integrations/__init__.py"
+    )
+    remove_integrations_init = (
+        integrations_init.is_file()
+        and not _has_other_integrations(integrations_root)
+        and integrations_init.read_text(encoding="utf-8") == expected_integrations_init
+    )
+    if remove_integrations_init:
+        removed_paths.append(integrations_init)
+
+    if integrations_root.is_dir():
+        remaining_names = {path.name for path in integrations_root.iterdir()}
+        if llm_root.exists():
+            remaining_names.discard("llm")
+        if remove_integrations_init:
+            remaining_names.discard("__init__.py")
+        if not remaining_names:
+            removed_paths.append(integrations_root)
+
+    return removed_paths
+
+
+def _would_remove_lines_by_prefix(path: Path, prefixes: list[str]) -> bool:
+    if not path.is_file():
+        return False
+
+    return any(
+        any(line.strip().startswith(prefix) for prefix in prefixes)
+        for line in path.read_text(encoding="utf-8").splitlines()
+    )
+
+
+def _remove_next_steps() -> tuple[str, ...]:
+    return (
+        "Run `polepos check`",
+        "Create a migration if removing the module also removes database tables",
     )
 
 
@@ -444,6 +705,21 @@ def _remove_generated_tests(
     module_name: str,
     template_contract: ModuleTemplateContract,
 ) -> list[Path]:
+    removed_paths: list[Path] = []
+
+    for path in _generated_test_paths(project_root, module_name, template_contract):
+        if path.exists():
+            path.unlink()
+            removed_paths.append(path)
+
+    return removed_paths
+
+
+def _generated_test_paths(
+    project_root: Path,
+    module_name: str,
+    template_contract: ModuleTemplateContract,
+) -> list[Path]:
     test_paths = [
         (
             project_root
@@ -456,14 +732,7 @@ def _remove_generated_tests(
     if module_name == "races":
         test_paths.append(project_root / "tests" / "unit" / "test_race_service.py")
 
-    removed_paths: list[Path] = []
-
-    for path in test_paths:
-        if path.exists():
-            path.unlink()
-            removed_paths.append(path)
-
-    return removed_paths
+    return test_paths
 
 
 def _has_remaining_ai_prompt_module(
@@ -487,19 +756,26 @@ def _remove_llm_settings(project_root: Path, package_root: Path) -> list[Path]:
     settings_path = package_root / "settings.py"
     env_path = project_root / ".env.example"
 
-    setting_prefixes = [line.strip().split(":", 1)[0] + ":" for line in llm_settings_block()]
-    if _remove_lines_by_prefix(settings_path, setting_prefixes):
+    if _remove_lines_by_prefix(settings_path, _llm_setting_prefixes()):
         updated_files.append(settings_path)
 
+    if _remove_lines_by_prefix(env_path, _llm_env_prefixes()):
+        updated_files.append(env_path)
+
+    return updated_files
+
+
+def _llm_setting_prefixes() -> list[str]:
+    return [line.strip().split(":", 1)[0] + ":" for line in llm_settings_block()]
+
+
+def _llm_env_prefixes() -> list[str]:
     env_prefixes = []
     for line in llm_env_block():
         env_prefixes.append(line.split("=", 1)[0] + "=" if "=" in line else line)
         if line.startswith("# ") and "=" in line:
             env_prefixes.append(line[2:].split("=", 1)[0] + "=")
-    if _remove_lines_by_prefix(env_path, env_prefixes):
-        updated_files.append(env_path)
-
-    return updated_files
+    return env_prefixes
 
 
 def _is_generated_llm_scaffold_pristine(

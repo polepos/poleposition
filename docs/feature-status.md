@@ -26,7 +26,7 @@ Instead, it clarifies whether a feature is:
 | `polepos add module` with `standard` | Growing | Strong differentiator; works well, but still depends on managed marker blocks. |
 | `polepos add module` with `ai-prompt` | Growing | Good provider-agnostic foundation; adapters are scaffold-level boundaries for real provider integration. |
 | `polepos add module` with `api-only` | Growing | Useful lightweight module archetype for routes that do not need model, repository, or database wiring. |
-| `polepos remove module` | Growing | Removes generated module scaffolds and managed wiring; intentionally stops when cleanup would require interpreting custom layout drift. |
+| `polepos remove module` | Growing | Removes generated module scaffolds and managed wiring; intentionally stops when cleanup would require interpreting custom layout drift or deleting customized module files without `--force`. |
 | `polepos add integration kafka` | Growing | First messaging integration; producer, consumer factory, settings, env, and test double support are scaffolded. |
 | `polepos add integration rabbitmq` | Growing | Second messaging integration; publisher, queue factory, settings, env, and test double support are scaffolded. |
 | `polepos check` | Stable foundation | Runs core checks for project identity, generated structure, Alembic config, managed markers, added module lifecycle wiring, and opt-in integration wiring. |
@@ -63,9 +63,10 @@ service classes as a module grows without pushing logic into global folders.
 This is the cleanup counterpart to `add module`.
 
 It removes generated module directories, generated tests, module exports,
-router wiring, and standard-module model imports. For AI prompt modules, the
-last remaining AI prompt module removal also cleans up shared LLM scaffold
-settings and files.
+router wiring, and standard-module model imports. `--trace` previews planned
+removals and updates without mutating files. For AI prompt modules, the last
+remaining AI prompt module removal also cleans up shared LLM scaffold settings
+and files.
 
 It intentionally does not mutate database schema. Database-backed module
 removal should be followed by an explicit Alembic revision only when the team

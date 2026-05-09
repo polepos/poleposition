@@ -232,10 +232,12 @@ For `ai-prompt` modules, removing the last AI prompt module also removes shared
 LLM settings, `.env.example` values, and the `integrations/llm` scaffold. If
 another AI prompt module remains, shared LLM files and settings stay in place.
 
-The command checks managed markers and generated wiring before deleting the
-module directory. If router, model, or export wiring has drifted into an
-unsupported custom layout, it stops before removing files so the project is not
-left partially cleaned.
+The command checks managed markers, generated wiring, and generated module
+content before deleting the module directory. If router, model, or export wiring
+has drifted into an unsupported custom layout, it stops before removing files so
+the project is not left partially cleaned. If module files or generated tests
+appear to contain custom changes, it also stops unless `--force` is used.
+`--trace` reports the planned removals and updates without mutating files.
 
 ## `add integration` Architecture
 

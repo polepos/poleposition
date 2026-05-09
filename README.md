@@ -261,12 +261,19 @@ shortcut for `--template api-only`.
 
 ```bash
 polepos remove module garage
+polepos remove module garage --trace
+polepos remove module garage --force
 ```
 
 `remove module` deletes the module directory and generated tests, then removes
 the module export, router include, and standard-module model import from the
 managed files. It stops before deleting files if the module wiring has drifted
-away from a managed layout.
+away from a managed layout, or if the module directory or generated tests appear
+to contain custom changes.
+
+Use `--trace` to preview the files that would be removed or updated without
+changing the project. Use `--force` only when you intentionally want to remove a
+customized module directory.
 
 The command does not change the live database. If a removed standard module had
 a table and you want that table removed too, create and review a migration after
@@ -490,7 +497,7 @@ polepos help
 polepos start <name> [--install] [--no-bytecode]
 polepos startproject <name> [--install] [--no-bytecode]
 polepos add module <name>
-polepos remove module <name>
+polepos remove module <name> [--force] [--trace]
 polepos add integration kafka
 polepos add integration rabbitmq
 polepos check

@@ -79,6 +79,7 @@ Use PolePosition commands for generated module lifecycle work:
 ```bash
 {{no_bytecode_command_prefix}}polepos add module garage
 {{no_bytecode_command_prefix}}polepos remove module garage
+{{no_bytecode_command_prefix}}polepos remove module garage --trace
 {{no_bytecode_command_prefix}}polepos check
 ```
 
@@ -86,6 +87,11 @@ Use PolePosition commands for generated module lifecycle work:
 module exports, and standard-module model imports. It does not connect to the
 database, drop tables, delete rows, create migrations, or edit migration
 history.
+
+By default, `polepos remove module` stops before deleting a module directory
+that appears to contain custom changes. Use `--trace` to preview the planned
+removals and updates without changing files, and use `--force` only when you
+intentionally want to remove a customized module directory.
 
 If a removed standard module had a database table and that table should be
 removed too, create and review an Alembic revision after the code cleanup:

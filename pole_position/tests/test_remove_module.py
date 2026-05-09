@@ -38,6 +38,8 @@ def test_remove_module_shows_usage_without_name(tmp_path: Path):
 
     assert result.returncode != 0
     assert "Usage: polepos remove module <module_name>" in result.stdout
+    assert "--force" in result.stdout
+    assert "--trace" in result.stdout
 
 
 def test_remove_standard_module_cleans_generated_wiring(tmp_path: Path):
@@ -69,6 +71,85 @@ def test_remove_standard_module_cleans_generated_wiring(tmp_path: Path):
     assert "modules.garage" not in router_content
     assert "modules.garage" not in db_models_content
     assert '"garage"' not in modules_init_content
+
+    check_result = run_cli(project_root, "check")
+    assert check_result.returncode == 0
+
+
+def test_remove_module_trace_reports_plan_without_changing_files(tmp_path: Path):
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    add_result = run_cli(project_root, "add", "module", "garage")
+    assert add_result.returncode == 0
+
+    result = run_cli(project_root, "remove", "module", "garage", "--trace")
+
+    assert result.returncode == 0
+    assert "Removal trace: garage" in result.stdout
+    assert "Template: standard" in result.stdout
+    assert "Would remove:" in result.stdout
+    assert "src/myapp/modules/garage" in result.stdout
+    assert "tests/integration/test_garage.py" in result.stdout
+    assert "Would update:" in result.stdout
+    assert "src/myapp/api/router.py" in result.stdout
+
+    package_root = project_root / "src" / "myapp"
+    assert (package_root / "modules" / "garage").exists()
+    assert (project_root / "tests" / "integration" / "test_garage.py").exists()
+    assert "garage_router" in (
+        package_root / "api" / "router.py"
+    ).read_text(encoding="utf-8")
+
+
+def test_remove_module_rejects_custom_module_files_without_force(tmp_path: Path):
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    add_result = run_cli(project_root, "add", "module", "garage")
+    assert add_result.returncode == 0
+
+    package_root = project_root / "src" / "myapp"
+    custom_file = package_root / "modules" / "garage" / "custom_logic.py"
+    custom_file.write_text("CUSTOM_VALUE = 1\n", encoding="utf-8")
+
+    result = run_cli(project_root, "remove", "module", "garage")
+
+    assert result.returncode != 0
+    assert "custom changes" in result.stdout
+    assert "Unexpected module file" in result.stdout
+    assert "custom_logic.py" in result.stdout
+    assert "polepos remove module garage --force" in result.stdout
+    assert custom_file.exists()
+    assert (project_root / "tests" / "integration" / "test_garage.py").exists()
+    assert "garage_router" in (
+        package_root / "api" / "router.py"
+    ).read_text(encoding="utf-8")
+
+
+def test_remove_module_force_removes_custom_module_files(tmp_path: Path):
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    add_result = run_cli(project_root, "add", "module", "garage")
+    assert add_result.returncode == 0
+
+    package_root = project_root / "src" / "myapp"
+    custom_file = package_root / "modules" / "garage" / "custom_logic.py"
+    custom_file.write_text("CUSTOM_VALUE = 1\n", encoding="utf-8")
+
+    result = run_cli(project_root, "remove", "module", "garage", "--force")
+
+    assert result.returncode == 0
+    assert "Removed module: garage" in result.stdout
+    assert not (package_root / "modules" / "garage").exists()
+    assert not (project_root / "tests" / "integration" / "test_garage.py").exists()
+    assert "garage_router" not in (
+        package_root / "api" / "router.py"
+    ).read_text(encoding="utf-8")
 
     check_result = run_cli(project_root, "check")
     assert check_result.returncode == 0
