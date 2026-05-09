@@ -283,13 +283,13 @@ def test_check_reports_missing_api_only_module_files_without_model_requirement(
     assert add_result.returncode == 0
 
     module_root = project_root / "src" / "myapp" / "modules" / "webhooks"
-    (module_root / "service.py").unlink()
+    (module_root / "services" / "webhooks_service.py").unlink()
 
     result = run_cli(project_root, "check")
 
     assert result.returncode != 0
     assert "Lifecycle module 'webhooks' is missing generated path" in result.stdout
-    assert "service.py" in result.stdout
+    assert "services/webhooks_service.py" in result.stdout
     assert "missing model import" not in result.stdout
 
 

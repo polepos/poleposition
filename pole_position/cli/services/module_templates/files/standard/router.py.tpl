@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from {{package_name}}.api.deps import db_session
 from {{package_name}}.modules.{{module_name}}.schemas import {{class_name}}Create, {{class_name}}Read
-from {{package_name}}.modules.{{module_name}}.service import {{class_name}}Service
+from {{package_name}}.modules.{{module_name}}.services import {{class_name}}Service
 
 
 router = APIRouter()

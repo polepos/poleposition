@@ -221,6 +221,7 @@ def _write_module_files(module_root: Path, files: dict[str, str]) -> list[Path]:
 
     for file_name, content in files.items():
         path = module_root / file_name
+        path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content, encoding="utf-8")
         written.append(path)
 

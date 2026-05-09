@@ -92,7 +92,7 @@ Then refine the generated domain files:
 src/shop_api/modules/customers/model.py
 src/shop_api/modules/customers/schemas.py
 src/shop_api/modules/customers/repository.py
-src/shop_api/modules/customers/service.py
+src/shop_api/modules/customers/services/customers_service.py
 src/shop_api/modules/customers/router.py
 ```
 

@@ -18,7 +18,14 @@ def build_standard_template(*, package_name: str, module_name: str) -> ModuleTem
             "model.py": render_template("standard/model.py.tpl", context),
             "repository.py": render_template("standard/repository.py.tpl", context),
             "schemas.py": render_template("standard/schemas.py.tpl", context),
-            "service.py": render_template("standard/service.py.tpl", context),
+            "services/__init__.py": render_template(
+                "standard/services/__init__.py.tpl",
+                context,
+            ),
+            f"services/{module_name}_service.py": render_template(
+                "standard/services/module_service.py.tpl",
+                context,
+            ),
             "router.py": render_template("standard/router.py.tpl", context),
         },
         integration_test_name=STANDARD_MODULE_TEMPLATE_CONTRACT.integration_test_name(

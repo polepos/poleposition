@@ -26,7 +26,7 @@ PolePosition keeps the same idea but uses FastAPI and SQLAlchemy names.
 | Web endpoint group | `@RestController` | Controller or Minimal API group | `router.py` with `APIRouter` |
 | Endpoint declaration | `@GetMapping`, `@PostMapping` | `[HttpGet]`, `MapGet`, `MapPost` | `@router.get`, `@router.post` |
 | Request and response types | DTOs or records | DTOs, records, request models | `schemas.py` with Pydantic models |
-| Business logic | `@Service` | service class | `service.py` |
+| Business logic | `@Service` | service class | `services/<module>_service.py` |
 | Persistence boundary | `@Repository` | repository or DbContext wrapper | `repository.py` |
 | Database model | JPA `@Entity` | EF Core entity | `model.py` with SQLAlchemy model |
 | Database migrations | Flyway or Liquibase | EF Core migrations | Alembic migrations |
@@ -49,7 +49,7 @@ This table is intentionally more detailed for Spring Boot and Java readers.
 | Lombok `@Builder` | Pydantic model construction, `.model_validate(...)`, and `.model_copy(...)` |
 | `@RestController` | `router.py` with `APIRouter` |
 | `@GetMapping`, `@PostMapping` | `@router.get`, `@router.post` |
-| `@Service` | `service.py` service class |
+| `@Service` | module-local service class under `services/` |
 | `@Repository` | `repository.py` repository class |
 | `@Transactional` | explicit SQLAlchemy session, commit, rollback, and transaction handling |
 | `application.yml` or `application.properties` | `.env` plus `settings.py` |
@@ -95,7 +95,7 @@ This table is intentionally more detailed for ASP.NET Core and EF Core readers.
 | Model binding | FastAPI parameter and request body parsing |
 | ModelState validation | FastAPI automatic validation responses |
 | `IServiceCollection` registration | direct imports, dependency functions, and explicit wiring |
-| Service class | `service.py` service class |
+| Service class | module-local service class under `services/` |
 | Repository class | `repository.py` repository class |
 | EF Core entity | SQLAlchemy model class in `model.py` |
 | `DbSet<Customer>` | SQLAlchemy model plus repository queries |
@@ -167,7 +167,9 @@ src/<package>/modules/customers/
   repository.py
   router.py
   schemas.py
-  service.py
+  services/
+    __init__.py
+    customers_service.py
 tests/integration/test_customers.py
 tests/unit/test_customers_service.py
 ```
@@ -222,7 +224,7 @@ class CustomerRead(BaseModel):
     name: str
 ```
 
-### `service.py`
+### `services/<module>_service.py`
 
 This is the business workflow boundary. Keep domain decisions here instead of
 putting all logic directly in the router.
@@ -339,7 +341,9 @@ src/<package>/modules/webhooks/
   __init__.py
   router.py
   schemas.py
-  service.py
+  services/
+    __init__.py
+    webhooks_service.py
 ```
 
 Use this for callbacks, health-adjacent endpoints, transformation endpoints, or
@@ -360,7 +364,9 @@ orchestrator.py
 prompts.py
 router.py
 schemas.py
-service.py
+services/
+  __init__.py
+  assistant_service.py
 ```
 
 It also creates shared `integrations/llm` adapter stubs when missing.
@@ -371,7 +377,7 @@ For a real domain, expect to edit:
 
 - `model.py`: database fields and table shape
 - `schemas.py`: request and response contracts
-- `service.py`: business rules
+- `services/<module>_service.py`: business rules and workflow orchestration
 - `repository.py`: queries and persistence behavior
 - `router.py`: endpoint paths and HTTP behavior
 - generated tests: examples of expected behavior
@@ -383,6 +389,7 @@ The generated module is a strong starting point, not the final business system.
 Avoid these patterns:
 
 - do not put all features in one global `services/` folder
+- do keep service classes inside the owning module's `services/` package
 - do not create tables during FastAPI startup
 - do not bypass Alembic for schema changes
 - do not manually recreate module boilerplate when `polepos add module` fits
@@ -394,7 +401,7 @@ Use this flow when growing a REST API:
 
 ```bash
 polepos add module customers
-# edit model.py, schemas.py, service.py, repository.py, router.py
+# edit model.py, schemas.py, services/customers_service.py, repository.py, router.py
 polepos check
 polepos db revision -m "add customers table"
 polepos db upgrade

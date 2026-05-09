@@ -201,8 +201,8 @@ This file:
 - optionally patches settings and `.env.example`
 
 The `--api-only` CLI option is a shortcut for the `api-only` template. It
-generates router, schemas, service, and tests without model, repository, or
-database model wiring.
+generates router, schemas, a module-local `services/` package, and tests
+without model, repository, or database model wiring.
 
 ## `remove module` Architecture
 

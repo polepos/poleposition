@@ -18,6 +18,18 @@ class ModuleTemplateContract:
     def unit_test_name(self, module_name: str) -> str:
         return self.unit_test_name_template.format(module_name=module_name)
 
+    def file_names_for(self, module_name: str) -> tuple[str, ...]:
+        return tuple(
+            file_name.format(module_name=module_name)
+            for file_name in self.file_names
+        )
+
+    def detection_file_names_for(self, module_name: str) -> tuple[str, ...]:
+        return tuple(
+            file_name.format(module_name=module_name)
+            for file_name in self.detection_file_names
+        )
+
 
 @dataclass(frozen=True)
 class ModuleTemplate:
@@ -39,7 +51,8 @@ STANDARD_MODULE_TEMPLATE_CONTRACT = ModuleTemplateContract(
         "repository.py",
         "router.py",
         "schemas.py",
-        "service.py",
+        "services/__init__.py",
+        "services/{module_name}_service.py",
     ),
     integration_test_name_template="test_{module_name}.py",
     unit_test_name_template="test_{module_name}_service.py",
@@ -54,7 +67,8 @@ AI_PROMPT_MODULE_TEMPLATE_CONTRACT = ModuleTemplateContract(
         "prompts.py",
         "router.py",
         "schemas.py",
-        "service.py",
+        "services/__init__.py",
+        "services/{module_name}_service.py",
     ),
     integration_test_name_template="test_{module_name}.py",
     unit_test_name_template="test_{module_name}_orchestrator.py",
@@ -70,10 +84,15 @@ API_ONLY_MODULE_TEMPLATE_CONTRACT = ModuleTemplateContract(
         "__init__.py",
         "router.py",
         "schemas.py",
-        "service.py",
+        "services/__init__.py",
+        "services/{module_name}_service.py",
     ),
     integration_test_name_template="test_{module_name}.py",
     unit_test_name_template="test_{module_name}_api_service.py",
     update_db_models=False,
-    detection_file_names=("router.py", "service.py"),
+    detection_file_names=(
+        "router.py",
+        "service.py",
+        "services/{module_name}_service.py",
+    ),
 )

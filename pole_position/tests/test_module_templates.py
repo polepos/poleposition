@@ -46,15 +46,16 @@ def test_standard_template_contract() -> None:
         module_name="customers",
     )
 
-    assert set(template.files) == set(contract.file_names)
+    assert set(template.files) == set(contract.file_names_for("customers"))
     assert template.integration_test_name == contract.integration_test_name("customers")
     assert template.unit_test_name == contract.unit_test_name("customers")
     assert template.update_db_models is contract.update_db_models
     assert template.ensure_llm_integrations is contract.ensure_llm_integrations
     assert template.ensure_llm_settings is contract.ensure_llm_settings
-    assert "from shop_api.bootstrap.logging import get_logger" in template.files["service.py"]
-    assert 'extra={"item_name": payload.name}' in template.files["service.py"]
-    assert 'extra={"name": payload.name}' not in template.files["service.py"]
+    service_content = template.files["services/customers_service.py"]
+    assert "from shop_api.bootstrap.logging import get_logger" in service_content
+    assert 'extra={"item_name": payload.name}' in service_content
+    assert 'extra={"name": payload.name}' not in service_content
     assert 'client.post("/api/v1/customers/"' in template.integration_test_content
 
 
@@ -66,7 +67,7 @@ def test_ai_prompt_template_contract() -> None:
         module_name="assistant",
     )
 
-    assert set(template.files) == set(contract.file_names)
+    assert set(template.files) == set(contract.file_names_for("assistant"))
     assert template.integration_test_name == contract.integration_test_name("assistant")
     assert template.unit_test_name == contract.unit_test_name("assistant")
     assert template.update_db_models is contract.update_db_models
@@ -84,15 +85,16 @@ def test_api_only_template_contract() -> None:
         module_name="webhooks",
     )
 
-    assert set(template.files) == set(contract.file_names)
+    assert set(template.files) == set(contract.file_names_for("webhooks"))
     assert template.integration_test_name == contract.integration_test_name("webhooks")
     assert template.unit_test_name == contract.unit_test_name("webhooks")
     assert template.update_db_models is False
     assert "model.py" not in template.files
     assert "repository.py" not in template.files
     assert "Depends(db_session)" not in template.files["router.py"]
-    assert 'extra={"payload_name": payload.name}' in template.files["service.py"]
-    assert 'extra={"name": payload.name}' not in template.files["service.py"]
+    service_content = template.files["services/webhooks_service.py"]
+    assert 'extra={"payload_name": payload.name}' in service_content
+    assert 'extra={"name": payload.name}' not in service_content
     assert 'client.post("/api/v1/webhooks/"' in template.integration_test_content
 
 

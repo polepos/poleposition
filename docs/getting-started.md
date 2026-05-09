@@ -51,7 +51,7 @@ Refine the generated files for the real domain:
 
 - `model.py`
 - `schemas.py`
-- `service.py`
+- `services/<module>_service.py`
 - `repository.py`
 - `router.py`
 

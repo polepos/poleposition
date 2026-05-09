@@ -104,7 +104,8 @@ CORE_PACKAGE_PATHS = [
     "modules/status/__init__.py",
     "modules/status/router.py",
     "modules/status/schemas.py",
-    "modules/status/service.py",
+    "modules/status/services/__init__.py",
+    "modules/status/services/status_service.py",
 ]
 
 ALEMBIC_PATHS = [
@@ -339,7 +340,7 @@ def _check_added_module_wiring(
     module_kind = _detect_module_kind(project_root, module_root)
     template_contract = get_module_template_contract(module_kind)
 
-    for relative_path in template_contract.file_names:
+    for relative_path in template_contract.file_names_for(module_name):
         path = module_root / relative_path
         if not path.exists():
             problems.append(
@@ -363,7 +364,7 @@ def _detect_module_kind(project_root: Path, module_root: Path) -> str:
 
         if any(
             (module_root / file_name).exists()
-            for file_name in contract.detection_file_names
+            for file_name in contract.detection_file_names_for(module_name)
         ):
             return contract.name
 

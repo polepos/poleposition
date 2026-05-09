@@ -56,7 +56,9 @@ src/account_api/modules/users/
   repository.py
   router.py
   schemas.py
-  service.py
+  services/
+    __init__.py
+    users_service.py
 tests/integration/test_users.py
 tests/unit/test_users_service.py
 ```
@@ -227,12 +229,12 @@ The service checks for duplicate emails before insert. The repository still
 handles `IntegrityError` because the database unique constraint is the final
 source of truth.
 
-## 8. Replace `service.py`
+## 8. Replace `services/users_service.py`
 
 Replace:
 
 ```text
-src/account_api/modules/users/service.py
+src/account_api/modules/users/services/users_service.py
 ```
 
 with:
@@ -281,6 +283,22 @@ The service owns business rules:
 - hash the password
 - avoid logging the raw password
 
+Replace:
+
+```text
+src/account_api/modules/users/services/__init__.py
+```
+
+with:
+
+```python
+from account_api.modules.users.services.users_service import (
+    UserService,
+)
+
+__all__ = ["UserService"]
+```
+
 ## 9. Replace `router.py`
 
 Replace:
@@ -297,7 +315,7 @@ from sqlalchemy.orm import Session
 
 from account_api.api.deps import db_session
 from account_api.modules.users.schemas import UserCreate, UserRead
-from account_api.modules.users.service import UserService
+from account_api.modules.users.services import UserService
 
 
 router = APIRouter()
@@ -391,7 +409,7 @@ with:
 from unittest.mock import Mock
 
 from account_api.modules.users.schemas import UserCreate
-from account_api.modules.users.service import UserService
+from account_api.modules.users.services import UserService
 
 
 def test_register_user_hashes_password_and_creates_user() -> None:

@@ -16,7 +16,14 @@ def build_api_only_template(*, package_name: str, module_name: str) -> ModuleTem
         files={
             "__init__.py": render_template("api_only/__init__.py.tpl", context),
             "schemas.py": render_template("api_only/schemas.py.tpl", context),
-            "service.py": render_template("api_only/service.py.tpl", context),
+            "services/__init__.py": render_template(
+                "api_only/services/__init__.py.tpl",
+                context,
+            ),
+            f"services/{module_name}_service.py": render_template(
+                "api_only/services/module_service.py.tpl",
+                context,
+            ),
             "router.py": render_template("api_only/router.py.tpl", context),
         },
         integration_test_name=API_ONLY_MODULE_TEMPLATE_CONTRACT.integration_test_name(

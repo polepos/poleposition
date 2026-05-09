@@ -370,12 +370,15 @@ def test_add_module_creates_module_files_and_updates_router(tmp_path: Path):
         module_root / "repository.py",
         module_root / "router.py",
         module_root / "schemas.py",
-        module_root / "service.py",
+        module_root / "services" / "__init__.py",
+        module_root / "services" / "garage_service.py",
         project_root / "tests" / "integration" / "test_garage.py",
         project_root / "tests" / "unit" / "test_garage_service.py",
     ]
     for path in expected_files:
         assert path.exists(), f"Expected generated module file is missing: {path}"
+
+    assert not (module_root / "service.py").exists()
 
     router_content = (package_root / "api" / "router.py").read_text(encoding="utf-8")
     db_models_content = (package_root / "db" / "models.py").read_text(encoding="utf-8")
@@ -383,7 +386,9 @@ def test_add_module_creates_module_files_and_updates_router(tmp_path: Path):
     integration_test_content = (
         project_root / "tests" / "integration" / "test_garage.py"
     ).read_text(encoding="utf-8")
-    service_content = (module_root / "service.py").read_text(encoding="utf-8")
+    service_content = (
+        module_root / "services" / "garage_service.py"
+    ).read_text(encoding="utf-8")
 
     assert "from myapp.modules.garage.router import router as garage_router" in router_content
     assert 'api_router.include_router(garage_router, prefix="/garage", tags=["garage"])' in router_content
@@ -569,7 +574,8 @@ def test_add_module_with_ai_prompt_template_creates_llm_module_files(tmp_path: P
         module_root / "prompts.py",
         module_root / "router.py",
         module_root / "schemas.py",
-        module_root / "service.py",
+        module_root / "services" / "__init__.py",
+        module_root / "services" / "assistant_service.py",
         package_root / "integrations" / "__init__.py",
         package_root / "integrations" / "llm" / "__init__.py",
         package_root / "integrations" / "llm" / "factory.py",
@@ -583,11 +589,15 @@ def test_add_module_with_ai_prompt_template_creates_llm_module_files(tmp_path: P
     for path in expected_files:
         assert path.exists(), f"Expected generated AI module file is missing: {path}"
 
+    assert not (module_root / "service.py").exists()
+
     router_content = (package_root / "api" / "router.py").read_text(encoding="utf-8")
     db_models_content = (package_root / "db" / "models.py").read_text(encoding="utf-8")
     settings_content = (package_root / "settings.py").read_text(encoding="utf-8")
     env_content = (project_root / ".env.example").read_text(encoding="utf-8")
-    service_content = (module_root / "service.py").read_text(encoding="utf-8")
+    service_content = (
+        module_root / "services" / "assistant_service.py"
+    ).read_text(encoding="utf-8")
     orchestrator_content = (module_root / "orchestrator.py").read_text(encoding="utf-8")
     integration_test_content = (
         project_root / "tests" / "integration" / "test_assistant.py"
@@ -630,7 +640,8 @@ def test_add_module_with_api_only_option_creates_api_module_without_db_files(
         module_root / "__init__.py",
         module_root / "router.py",
         module_root / "schemas.py",
-        module_root / "service.py",
+        module_root / "services" / "__init__.py",
+        module_root / "services" / "webhooks_service.py",
         project_root / "tests" / "integration" / "test_webhooks.py",
         project_root / "tests" / "unit" / "test_webhooks_api_service.py",
     ]
@@ -639,6 +650,7 @@ def test_add_module_with_api_only_option_creates_api_module_without_db_files(
 
     assert not (module_root / "model.py").exists()
     assert not (module_root / "repository.py").exists()
+    assert not (module_root / "service.py").exists()
 
     router_content = (package_root / "api" / "router.py").read_text(encoding="utf-8")
     db_models_content = (package_root / "db" / "models.py").read_text(encoding="utf-8")

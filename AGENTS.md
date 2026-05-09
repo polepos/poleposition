@@ -73,7 +73,7 @@ polepos add module customers
 
 - update `model.py`
 - update `schemas.py`
-- update `service.py`
+- update `services/<module>_service.py`
 - update `router.py` if needed
 
 4. Validate the project contract
@@ -289,7 +289,8 @@ If you touch migration behavior:
 - `repository.py`
 - `router.py`
 - `schemas.py`
-- `service.py`
+- `services/__init__.py`
+- `services/<module>_service.py`
 - integration test
 - unit test
 
@@ -307,7 +308,8 @@ module skeleton instead:
 - `orchestrator.py`
 - `router.py`
 - `schemas.py`
-- `service.py`
+- `services/__init__.py`
+- `services/<module>_service.py`
 - integration and unit tests
 - shared `src/<package>/integrations/llm/*` files when missing
 - `settings.py` / `.env.example` LLM settings when missing
@@ -319,7 +321,8 @@ module instead:
 - `__init__.py`
 - `router.py`
 - `schemas.py`
-- `service.py`
+- `services/__init__.py`
+- `services/<module>_service.py`
 - integration and unit tests
 
 API-only modules do not generate `model.py`, `repository.py`, or `db/models.py`

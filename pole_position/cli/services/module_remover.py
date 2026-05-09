@@ -108,7 +108,7 @@ def _detect_module_contract(
 
         if any(
             (module_root / file_name).exists()
-            for file_name in contract.detection_file_names
+            for file_name in contract.detection_file_names_for(module_name)
         ):
             return contract
 

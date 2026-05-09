@@ -27,13 +27,15 @@ polepos add module webhook --template api-only
 ```
 
 The standard module template generates a REST-friendly starting point with
-model, repository, schemas, service, router, and tests.
+model, repository, schemas, a module-local `services/` package, router, and
+tests.
 
 The `ai-prompt` template generates a provider-agnostic LLM-oriented module
 skeleton and shared `integrations/llm` files when they are missing.
 
-The `api-only` template generates router, schemas, service, and tests without
-model, repository, or database wiring. `--api-only` is the shortcut form.
+The `api-only` template generates router, schemas, a module-local `services/`
+package, and tests without model, repository, or database wiring. `--api-only`
+is the shortcut form.
 
 ## Remove a Module
 

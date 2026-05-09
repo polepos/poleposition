@@ -15,7 +15,9 @@ src/<package>/modules/assistant/
   prompts.py
   router.py
   schemas.py
-  service.py
+  services/
+    __init__.py
+    assistant_service.py
 ```
 
 It also creates shared LLM adapter files when missing:
@@ -60,7 +62,7 @@ Use the generated files this way:
 
 - `prompts.py`: prompt construction
 - `orchestrator.py`: provider call orchestration
-- `service.py`: application workflow boundary
+- `services/assistant_service.py`: application workflow boundary
 - `router.py`: FastAPI endpoint contract
 - `schemas.py`: request and response models
 
@@ -77,4 +79,3 @@ polepos check
 
 The check command validates LLM files, settings, and env values without
 contacting a provider.
-

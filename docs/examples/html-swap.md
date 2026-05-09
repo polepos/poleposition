@@ -42,7 +42,9 @@ src/html_tools/modules/html/
   __init__.py
   router.py
   schemas.py
-  service.py
+  services/
+    __init__.py
+    html_service.py
 tests/integration/test_html.py
 tests/unit/test_html_api_service.py
 ```
@@ -53,7 +55,7 @@ Keep the generated module boundary, then reshape the internals for the real
 workflow:
 
 - `schemas.py` defines the HTML swap request contract
-- `service.py` parses HTML and performs replacements
+- `services/html_service.py` parses HTML and performs replacements
 - `router.py` exposes `POST /api/v1/html/swap`
 - add `model.py` when swap history becomes part of the contract
 - add `repository.py` to persist completed operations

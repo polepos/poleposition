@@ -1,5 +1,5 @@
 from {{package_name}}.modules.{{module_name}}.schemas import {{class_name}}Request
-from {{package_name}}.modules.{{module_name}}.service import {{class_name}}Service
+from {{package_name}}.modules.{{module_name}}.services import {{class_name}}Service
 
 
 def test_describe_returns_api_readiness() -> None:

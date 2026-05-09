@@ -120,7 +120,7 @@ so upgraded CLI versions can still validate older generated projects.
 For a standard module, `check` expects:
 
 - module files: `__init__.py`, `model.py`, `repository.py`, `router.py`,
-  `schemas.py`, `service.py`
+  `schemas.py`, `services/__init__.py`, `services/<module>_service.py`
 - export in `src/<package>/modules/__init__.py`
 - router import in `src/<package>/api/router.py`
 - router include in `src/<package>/api/router.py`
@@ -131,7 +131,7 @@ For a standard module, `check` expects:
 For an `ai-prompt` module, `check` expects:
 
 - module files: `__init__.py`, `orchestrator.py`, `prompts.py`, `router.py`,
-  `schemas.py`, `service.py`
+  `schemas.py`, `services/__init__.py`, `services/<module>_service.py`
 - export in `src/<package>/modules/__init__.py`
 - router import and include in `src/<package>/api/router.py`
 - integration test under `tests/integration/test_<module>.py`
@@ -142,7 +142,8 @@ For an `ai-prompt` module, `check` expects:
 
 For an `api-only` module, `check` expects:
 
-- module files: `__init__.py`, `router.py`, `schemas.py`, `service.py`
+- module files: `__init__.py`, `router.py`, `schemas.py`,
+  `services/__init__.py`, `services/<module>_service.py`
 - export in `src/<package>/modules/__init__.py`
 - router import and include in `src/<package>/api/router.py`
 - integration test under `tests/integration/test_<module>.py`

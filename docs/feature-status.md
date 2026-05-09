@@ -54,6 +54,10 @@ It uses PolePosition-managed markers as its insertion contract.
 That makes generated updates predictable while keeping surrounding project code
 editable.
 
+Generated modules keep workflow code in a module-local `services/` package
+instead of a single root `service.py` file. That leaves room for additional
+service classes as a module grows without pushing logic into global folders.
+
 ### `remove module`
 
 This is the cleanup counterpart to `add module`.

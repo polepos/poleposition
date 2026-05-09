@@ -16,7 +16,7 @@ Focus:
 - `polepos start account-api`
 - `polepos add module users`
 - `POST /api/v1/users/register`
-- module-local model, schema, repository, service, router, and test changes
+- module-local model, schema, repository, services, router, and test changes
 - Alembic migration review
 
 Read the site guide: [User Registration](user-registration.md)

@@ -18,7 +18,14 @@ def build_ai_prompt_template(*, package_name: str, module_name: str) -> ModuleTe
             "schemas.py": render_template("ai_prompt/schemas.py.tpl", context),
             "prompts.py": render_template("ai_prompt/prompts.py.tpl", context),
             "orchestrator.py": render_template("ai_prompt/orchestrator.py.tpl", context),
-            "service.py": render_template("ai_prompt/service.py.tpl", context),
+            "services/__init__.py": render_template(
+                "ai_prompt/services/__init__.py.tpl",
+                context,
+            ),
+            f"services/{module_name}_service.py": render_template(
+                "ai_prompt/services/module_service.py.tpl",
+                context,
+            ),
             "router.py": render_template("ai_prompt/router.py.tpl", context),
         },
         integration_test_name=AI_PROMPT_MODULE_TEMPLATE_CONTRACT.integration_test_name(

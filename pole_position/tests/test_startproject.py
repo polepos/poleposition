@@ -138,13 +138,16 @@ def test_generated_project_uses_enterprise_template_layout(tmp_path: Path):
         package_root / "db" / "base.py",
         package_root / "domain" / "exceptions.py",
         package_root / "modules" / "status" / "router.py",
-        package_root / "modules" / "status" / "service.py",
+        package_root / "modules" / "status" / "services" / "__init__.py",
+        package_root / "modules" / "status" / "services" / "status_service.py",
         project_root / "tests" / "conftest.py",
         project_root / "tests" / "integration" / "test_status.py",
     ]
 
     for path in expected_paths:
         assert path.exists(), f"Expected generated file is missing: {path}"
+
+    assert not (package_root / "modules" / "status" / "service.py").exists()
 
     removed_sample_paths = [
         project_root / "migrations" / "versions" / "0001_create_races_table.py",
@@ -197,7 +200,7 @@ def test_generated_project_renders_database_and_module_placeholders(tmp_path: Pa
     middleware_module = (package_root / "bootstrap" / "middleware.py").read_text(encoding="utf-8")
     tests_conftest = (project_root / "tests" / "conftest.py").read_text(encoding="utf-8")
     status_service = (
-        package_root / "modules" / "status" / "service.py"
+        package_root / "modules" / "status" / "services" / "status_service.py"
     ).read_text(encoding="utf-8")
     auth_dependencies = (
         package_root / "auth" / "dependencies.py"

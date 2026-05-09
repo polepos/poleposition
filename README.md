@@ -253,9 +253,9 @@ polepos add module webhook --api-only
 `standard` is the default template for REST and domain modules.
 `ai-prompt` adds a provider-agnostic LLM endpoint skeleton with module-local
 prompt orchestration and shared `integrations/llm` adapters.
-`api-only` generates router, schemas, service, and tests without model,
-repository, or database wiring. Use `--api-only` as a shortcut for
-`--template api-only`.
+`api-only` generates router, schemas, a module-local `services/` package, and
+tests without model, repository, or database wiring. Use `--api-only` as a
+shortcut for `--template api-only`.
 
 ### Remove modules
 
@@ -620,7 +620,7 @@ At that point, your project has:
 * FastAPI app structure
 * PostgreSQL-ready SQLAlchemy setup
 * Alembic migration workflow
-* A generated REST module with router, schemas, service, repository, and tests
+* A generated REST module with router, schemas, module-local services, repository, and tests
 
 That is the core PolePosition flow: start fast, add modules as the API grows, and evolve the database schema through the CLI.
 

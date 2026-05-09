@@ -50,6 +50,23 @@ polepos check
 to verify whether the project still follows the PolePosition lifecycle
 contract.
 
+## Module Service Layout
+
+New generated modules use a module-local `services/` package instead of a root
+`service.py` file:
+
+```text
+src/<package>/modules/customers/
+  services/
+    __init__.py
+    customers_service.py
+```
+
+Existing generated projects are not rewritten automatically. If an older module
+still uses `service.py`, either keep managing it manually or move the service
+class into the new layout and update imports before relying on the latest
+`polepos check` lifecycle expectations.
+
 ## Recommended Upgrade Flow
 
 For an existing generated project:
@@ -98,4 +115,3 @@ Review generated migrations before applying them to shared environments.
 
 Repository changes are summarized in the
 [Changelog](https://github.com/erenertemden/poleposition/blob/main/CHANGELOG.md).
-

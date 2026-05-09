@@ -4,7 +4,7 @@ from {{package_name}}.modules.{{module_name}}.schemas import (
     {{class_name}}Request,
     {{class_name}}Response,
 )
-from {{package_name}}.modules.{{module_name}}.service import {{class_name}}Service
+from {{package_name}}.modules.{{module_name}}.services import {{class_name}}Service
 
 
 router = APIRouter()
