@@ -76,6 +76,8 @@ Avoid changing the PolePosition lifecycle contract unless you intend to manage
 that surface manually:
 
 * Do not remove or rename `# polepos:*` marker comments.
+* Keep `.poleposition.toml` in sync with the package name, database mode,
+  generated modules, and generated integrations.
 * Do not rewrite managed router includes, model imports, or module exports into
   a shape the CLI cannot recognize.
 * Do not delete generated module directories by hand; use

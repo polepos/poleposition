@@ -13,6 +13,8 @@ from pole_position.cli.services.module_templates import (
     get_module_template_contract,
     module_template_detection_contracts,
 )
+from pole_position.cli.services.project_manifest import ProjectManifest
+from pole_position.cli.services.project_manifest import read_project_manifest
 
 
 MANAGED_MARKERS = {
@@ -186,16 +188,22 @@ def _project_check_issue_code(problem: str) -> str:
         return "PPCHK003"
     if problem.startswith("Application package name is not a valid Python identifier"):
         return "PPCHK004"
+    if problem.startswith("Project manifest package does not match"):
+        return "PPCHK005"
     if problem.startswith("Required generated path is missing"):
         return "PPCHK010"
     if problem.startswith("Required Alembic path is missing"):
         return "PPCHK011"
     if problem.startswith("Database-free project contains database-specific content"):
         return "PPCHK012"
+    if problem.startswith("Project manifest has unsupported database mode"):
+        return "PPCHK013"
     if problem.startswith("Managed file is missing"):
         return "PPCHK020"
     if problem.startswith("Managed marker"):
         return "PPCHK021"
+    if problem.startswith("Starter module 'status' is missing"):
+        return "PPCHK022"
     if problem.startswith(
         "Lifecycle module directory is not a valid Python identifier"
     ):
@@ -216,6 +224,8 @@ def _project_check_issue_code(problem: str) -> str:
         return "PPCHK037"
     if problem.startswith("Could not parse Python file for lifecycle checks"):
         return "PPCHK038"
+    if problem.startswith("Orphan module"):
+        return "PPCHK039"
     if problem.startswith("Integration ") and " is missing generated file:" in problem:
         return "PPCHK040"
     if problem.startswith("Integration ") and " is missing dependency " in problem:
@@ -248,6 +258,8 @@ def _project_check_remediation(problem: str) -> str:
         )
     if problem.startswith("Application package name is not a valid Python identifier"):
         return "Rename the package directory to a valid Python identifier."
+    if problem.startswith("Project manifest package does not match"):
+        return "Update .poleposition.toml or move the package back to the recorded name."
     if problem.startswith("Required generated path is missing"):
         return (
             "Restore the generated path, or intentionally opt out and document "
@@ -263,6 +275,8 @@ def _project_check_remediation(problem: str) -> str:
             "Remove database-specific remnants or add a database layer "
             "intentionally."
         )
+    if problem.startswith("Project manifest has unsupported database mode"):
+        return "Use db = \"sqlite\", \"postgres\", \"none\", or \"custom\"."
     if problem.startswith("Managed file is missing"):
         return (
             "Restore the managed file before running PolePosition lifecycle "
@@ -270,6 +284,8 @@ def _project_check_remediation(problem: str) -> str:
         )
     if problem.startswith("Managed marker"):
         return "Restore the listed # polepos marker or manage that file manually."
+    if problem.startswith("Starter module 'status' is missing"):
+        return "Restore the generated status router import/include in api/router.py."
     if problem.startswith(
         "Lifecycle module directory is not a valid Python identifier"
     ):
@@ -314,6 +330,14 @@ def _project_check_remediation(problem: str) -> str:
         )
     if problem.startswith("Could not parse Python file for lifecycle checks"):
         return "Fix the Python syntax error before rerunning polepos check."
+    if problem.startswith("Orphan module"):
+        orphan_name = _extract_orphan_module_name(problem)
+        if orphan_name is not None:
+            return (
+                f"Run `polepos remove module {orphan_name}` to clean generated "
+                "remnants, or restore the missing module directory."
+            )
+        return "Clean generated remnants or restore the missing module directory."
     if problem.startswith("Integration ") and " is missing generated file:" in problem:
         return _integration_fix(
             integration_name,
@@ -348,6 +372,11 @@ def _extract_lifecycle_module_name(problem: str) -> str | None:
 
 def _extract_integration_name(problem: str) -> str | None:
     match = re.search(r"Integration '([^']+)'", problem)
+    return match.group(1) if match else None
+
+
+def _extract_orphan_module_name(problem: str) -> str | None:
+    match = re.search(r"missing module '([^']+)'", problem)
     return match.group(1) if match else None
 
 
@@ -386,9 +415,12 @@ def _run_project_checks(
 ) -> ProjectCheckResult:
     project_root, package_root = _discover_core_project(cwd)
     problems: list[str] = []
-    uses_database = _project_uses_database(project_root, package_root)
+    manifest = read_project_manifest(project_root)
+    database_mode = _project_database_mode(project_root, package_root, manifest)
+    uses_database = database_mode in {"sqlite", "postgres", "managed"}
 
     _check_project_identity(problems, project_root, package_root)
+    _check_project_manifest(problems, project_root, package_root, manifest)
     _check_generated_structure(
         problems,
         project_root,
@@ -397,13 +429,13 @@ def _run_project_checks(
     )
     if uses_database:
         _check_alembic_config(problems, project_root)
-    else:
+    elif database_mode == "none":
         _check_database_free_remnants(problems, project_root, package_root)
     _check_managed_markers(problems, package_root, uses_database=uses_database)
     if include_lifecycle:
-        _check_lifecycle_wiring(problems, project_root, package_root)
+        _check_lifecycle_wiring(problems, project_root, package_root, manifest)
     if include_integrations:
-        _check_integration_wiring(problems, project_root, package_root)
+        _check_integration_wiring(problems, project_root, package_root, manifest)
 
     return ProjectCheckResult(
         project_root=project_root,
@@ -427,6 +459,16 @@ def _find_core_package_root_in(project_root: Path) -> Path | None:
     src_root = project_root / "src"
     if not src_root.is_dir():
         return None
+
+    manifest = read_project_manifest(project_root)
+    if manifest.exists and manifest.package_name:
+        package_root = src_root / manifest.package_name
+        if (
+            package_root.is_dir()
+            and package_root.name.isidentifier()
+            and _has_core_project_signals(project_root, package_root)
+        ):
+            return package_root
 
     candidates = [
         path
@@ -481,6 +523,20 @@ def _project_uses_database(project_root: Path, package_root: Path) -> bool:
     return False
 
 
+def _project_database_mode(
+    project_root: Path,
+    package_root: Path,
+    manifest: ProjectManifest,
+) -> str:
+    if manifest.exists and manifest.database:
+        database_mode = manifest.database.strip().lower()
+        if database_mode in {"sqlite", "postgres", "none", "custom"}:
+            return database_mode
+        return "unsupported"
+
+    return "managed" if _project_uses_database(project_root, package_root) else "none"
+
+
 def _check_project_identity(
     problems: list[str],
     project_root: Path,
@@ -504,6 +560,34 @@ def _check_project_identity(
     if not package_root.name.isidentifier():
         problems.append(
             f"Application package name is not a valid Python identifier: {package_root.name}"
+        )
+
+
+def _check_project_manifest(
+    problems: list[str],
+    project_root: Path,
+    package_root: Path,
+    manifest: ProjectManifest,
+) -> None:
+    if not manifest.exists:
+        return
+
+    manifest_path = project_root / ".poleposition.toml"
+    if manifest.package_name and manifest.package_name != package_root.name:
+        problems.append(
+            "Project manifest package does not match discovered package in "
+            f"{manifest_path}: {manifest.package_name} != {package_root.name}"
+        )
+
+    if manifest.database and manifest.database not in {
+        "sqlite",
+        "postgres",
+        "none",
+        "custom",
+    }:
+        problems.append(
+            "Project manifest has unsupported database mode in "
+            f"{manifest_path}: {manifest.database}"
         )
 
 
@@ -601,10 +685,19 @@ def _check_lifecycle_wiring(
     problems: list[str],
     project_root: Path,
     package_root: Path,
+    manifest: ProjectManifest | None = None,
 ) -> None:
     modules_root = package_root / "modules"
     if not modules_root.is_dir():
         return
+
+    module_names = {
+        module_root.name
+        for module_root in modules_root.iterdir()
+        if module_root.is_dir()
+    }
+
+    _check_status_router_wiring(problems, package_root)
 
     for module_root in sorted(modules_root.iterdir()):
         if not module_root.is_dir():
@@ -617,7 +710,15 @@ def _check_lifecycle_wiring(
             project_root=project_root,
             package_root=package_root,
             module_root=module_root,
+            manifest=manifest,
         )
+
+    _check_orphan_module_references(
+        problems=problems,
+        project_root=project_root,
+        package_root=package_root,
+        module_names=module_names,
+    )
 
 
 def _should_skip_lifecycle_module(project_root: Path, module_root: Path) -> bool:
@@ -628,6 +729,53 @@ def _should_skip_lifecycle_module(project_root: Path, module_root: Path) -> bool
         return True
 
     return _is_legacy_starter_module(project_root, module_root)
+
+
+def _check_status_router_wiring(
+    problems: list[str],
+    package_root: Path,
+) -> None:
+    router_path = package_root / "api" / "router.py"
+    content = _read_file_text(router_path)
+    if content is None:
+        return
+
+    tree = _parse_python_source(content, router_path, problems)
+    if tree is None:
+        return
+
+    package_name = package_root.name
+    router_module = f"{package_name}.modules.status.router"
+    import_line = (
+        f"from {package_name}.modules.status.router import router as status_router"
+    )
+    include_line = 'api_router.include_router(status_router, tags=["status"])'
+
+    if not _has_router_import(tree, router_module, "status_router"):
+        problems.append(
+            "Starter module 'status' is missing router import in "
+            f"{router_path}: {import_line}"
+        )
+
+    if not _has_status_router_include(tree):
+        problems.append(
+            "Starter module 'status' is missing API router include in "
+            f"{router_path}: {include_line}"
+        )
+
+
+def _has_status_router_include(tree: ast.Module) -> bool:
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        if not _is_api_router_include_call(node):
+            continue
+        if not node.args or not _is_name(node.args[0], "status_router"):
+            continue
+        if _literal_keyword_value(node, "tags") in (["status"], ("status",)):
+            return True
+
+    return False
 
 
 def _is_legacy_starter_module(project_root: Path, module_root: Path) -> bool:
@@ -652,6 +800,7 @@ def _check_added_module_wiring(
     project_root: Path,
     package_root: Path,
     module_root: Path,
+    manifest: ProjectManifest | None = None,
 ) -> None:
     module_name = module_root.name
 
@@ -661,7 +810,7 @@ def _check_added_module_wiring(
         )
         return
 
-    module_kind = _detect_module_kind(project_root, module_root)
+    module_kind = _detect_module_kind(project_root, module_root, manifest)
     template_contract = get_module_template_contract(module_kind)
 
     for relative_path in template_contract.file_names_for(module_name):
@@ -678,8 +827,17 @@ def _check_added_module_wiring(
     _check_module_tests(problems, project_root, module_name, template_contract)
 
 
-def _detect_module_kind(project_root: Path, module_root: Path) -> str:
+def _detect_module_kind(
+    project_root: Path,
+    module_root: Path,
+    manifest: ProjectManifest | None = None,
+) -> str:
     module_name = module_root.name
+    manifest = manifest or read_project_manifest(project_root)
+    if manifest.exists:
+        module_kind = manifest.module_templates.get(module_name)
+        if module_kind and module_kind != "starter":
+            return module_kind
 
     for contract in module_template_detection_contracts():
         unit_test = project_root / "tests" / "unit" / contract.unit_test_name(module_name)
@@ -892,20 +1050,280 @@ def _check_module_tests(
         )
 
 
+def _check_orphan_module_references(
+    *,
+    problems: list[str],
+    project_root: Path,
+    package_root: Path,
+    module_names: set[str],
+) -> None:
+    orphan_references = _collect_orphan_module_references(
+        project_root=project_root,
+        package_root=package_root,
+        module_names=module_names,
+    )
+    seen: set[tuple[str, str, str]] = set()
+
+    for module_name, path, description in orphan_references:
+        key = (module_name, str(path), description)
+        if key in seen:
+            continue
+        seen.add(key)
+        problems.append(
+            f"Orphan module reference to missing module '{module_name}' in "
+            f"{path}: {description}"
+        )
+
+
+def _collect_orphan_module_references(
+    *,
+    project_root: Path,
+    package_root: Path,
+    module_names: set[str],
+) -> list[tuple[str, Path, str]]:
+    references: list[tuple[str, Path, str]] = []
+    ignored_modules = module_names | STARTER_MODULES
+
+    references.extend(
+        _collect_orphan_module_exports(package_root, ignored_modules)
+    )
+    references.extend(
+        _collect_orphan_router_references(package_root, ignored_modules)
+    )
+    references.extend(
+        _collect_orphan_model_references(package_root, ignored_modules)
+    )
+    references.extend(
+        _collect_orphan_generated_tests(project_root, package_root, ignored_modules)
+    )
+
+    return references
+
+
+def _collect_orphan_module_exports(
+    package_root: Path,
+    ignored_modules: set[str],
+) -> list[tuple[str, Path, str]]:
+    path = package_root / "modules" / "__init__.py"
+    lines = _read_file_lines(path)
+    if lines is None:
+        return []
+
+    marker_index = _safe_marker_index(lines, "    # polepos:module-exports")
+    references: list[tuple[str, Path, str]] = []
+    for line in lines[:marker_index]:
+        match = re.match(r"^\s*['\"]([A-Za-z_][A-Za-z0-9_]*)['\"]\s*,?\s*$", line)
+        if match is None:
+            continue
+        module_name = match.group(1)
+        if module_name not in ignored_modules:
+            references.append((module_name, path, "module export"))
+
+    return references
+
+
+def _collect_orphan_router_references(
+    package_root: Path,
+    ignored_modules: set[str],
+) -> list[tuple[str, Path, str]]:
+    path = package_root / "api" / "router.py"
+    content = _read_file_text(path)
+    if content is None:
+        return []
+
+    try:
+        tree = ast.parse(content, filename=str(path))
+    except SyntaxError:
+        return []
+
+    lines = content.splitlines()
+    import_marker_line = _safe_marker_index(lines, "# polepos:router-imports") + 1
+    include_marker_line = _safe_marker_index(lines, "# polepos:router-includes") + 1
+    package_name = package_root.name
+    references: list[tuple[str, Path, str]] = []
+
+    for node in ast.walk(tree):
+        lineno = getattr(node, "lineno", 0)
+        if isinstance(node, ast.ImportFrom) and lineno <= import_marker_line:
+            module_name = _module_name_from_router_import(node, package_name)
+            if module_name is not None and module_name not in ignored_modules:
+                references.append((module_name, path, "router import"))
+            continue
+
+        if isinstance(node, ast.Call) and lineno <= include_marker_line:
+            module_name = _module_name_from_router_include(node)
+            if module_name is not None and module_name not in ignored_modules:
+                references.append((module_name, path, "router include"))
+
+    return references
+
+
+def _module_name_from_router_import(
+    node: ast.ImportFrom,
+    package_name: str,
+) -> str | None:
+    prefix = f"{package_name}.modules."
+    suffix = ".router"
+    if node.module is None:
+        return None
+    if not node.module.startswith(prefix) or not node.module.endswith(suffix):
+        return None
+
+    module_name = node.module[len(prefix) : -len(suffix)]
+    return module_name if module_name.isidentifier() else None
+
+
+def _module_name_from_router_include(node: ast.Call) -> str | None:
+    if not _is_api_router_include_call(node):
+        return None
+
+    if node.args and isinstance(node.args[0], ast.Name):
+        alias = node.args[0].id
+        if alias.endswith("_router"):
+            module_name = alias[: -len("_router")]
+            if module_name.isidentifier():
+                return module_name
+
+    prefix = _literal_keyword_value(node, "prefix")
+    tags = _literal_keyword_value(node, "tags")
+    if isinstance(prefix, str) and prefix.startswith("/"):
+        module_name = prefix.strip("/")
+        if module_name.isidentifier() and tags in ([module_name], (module_name,)):
+            return module_name
+
+    return None
+
+
+def _collect_orphan_model_references(
+    package_root: Path,
+    ignored_modules: set[str],
+) -> list[tuple[str, Path, str]]:
+    path = package_root / "db" / "models.py"
+    content = _read_file_text(path)
+    if content is None:
+        return []
+
+    marker_line = _safe_marker_index(
+        content.splitlines(),
+        "    # polepos:model-imports",
+    ) + 1
+    package_name = package_root.name
+    references: list[tuple[str, Path, str]] = []
+
+    try:
+        tree = ast.parse(content, filename=str(path))
+    except SyntaxError:
+        return []
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ImportFrom):
+            continue
+        if getattr(node, "lineno", 0) > marker_line:
+            continue
+        module_name = _module_name_from_model_import(node, package_name)
+        if module_name is not None and module_name not in ignored_modules:
+            references.append((module_name, path, "model import"))
+
+    return references
+
+
+def _module_name_from_model_import(
+    node: ast.ImportFrom,
+    package_name: str,
+) -> str | None:
+    prefix = f"{package_name}.modules."
+    if node.module is None or not node.module.startswith(prefix):
+        return None
+
+    module_name = node.module[len(prefix) :]
+    if not module_name.isidentifier():
+        return None
+
+    for alias in node.names:
+        if alias.name == "model":
+            return module_name
+
+    return None
+
+
+def _collect_orphan_generated_tests(
+    project_root: Path,
+    package_root: Path,
+    ignored_modules: set[str],
+) -> list[tuple[str, Path, str]]:
+    references: list[tuple[str, Path, str]] = []
+    package_name = package_root.name
+    test_roots = [
+        project_root / "tests" / "integration",
+        project_root / "tests" / "unit",
+    ]
+
+    for test_root in test_roots:
+        if not test_root.is_dir():
+            continue
+        for path in sorted(test_root.glob("test_*.py")):
+            module_name = _module_name_from_generated_test_path(path)
+            if module_name is None or module_name in ignored_modules:
+                continue
+            if _test_file_references_module(path, package_name, module_name):
+                references.append((module_name, path, "generated test"))
+
+    return references
+
+
+def _module_name_from_generated_test_path(path: Path) -> str | None:
+    name = path.name
+    unit_suffixes = (
+        "_api_service.py",
+        "_orchestrator.py",
+        "_service.py",
+    )
+
+    if not name.startswith("test_") or not name.endswith(".py"):
+        return None
+
+    stem = name[len("test_") : -len(".py")]
+    for suffix in unit_suffixes:
+        if stem.endswith(suffix[:-len(".py")]):
+            stem = stem[: -len(suffix[:-len(".py")])]
+            break
+
+    return stem if stem.isidentifier() else None
+
+
+def _test_file_references_module(path: Path, package_name: str, module_name: str) -> bool:
+    content = path.read_text(encoding="utf-8")
+    return (
+        f"{package_name}.modules.{module_name}" in content
+        or f"/api/v1/{module_name}" in content
+        or f"test_{module_name}" in content
+    )
+
+
+def _safe_marker_index(lines: list[str], marker: str) -> int:
+    try:
+        return lines.index(marker)
+    except ValueError:
+        return len(lines)
+
+
 def _check_integration_wiring(
     problems: list[str],
     project_root: Path,
     package_root: Path,
+    manifest: ProjectManifest | None = None,
 ) -> None:
+    manifest = manifest or read_project_manifest(project_root)
     settings_content = _read_file_text(package_root / "settings.py")
     env_content = _read_file_text(project_root / ".env.example")
     pyproject_content = _read_file_text(project_root / "pyproject.toml")
 
     for contract in CHECKED_INTEGRATION_CONTRACTS:
-        if not _has_integration_signal(
+        if not _should_check_integration(
             contract=contract,
             project_root=project_root,
             package_root=package_root,
+            manifest=manifest,
             settings_content=settings_content,
             env_content=env_content,
             pyproject_content=pyproject_content,
@@ -935,6 +1353,34 @@ def _check_integration_wiring(
             contract=contract,
             env_content=env_content,
         )
+
+
+def _should_check_integration(
+    *,
+    contract: IntegrationContract,
+    project_root: Path,
+    package_root: Path,
+    manifest: ProjectManifest,
+    settings_content: str | None,
+    env_content: str | None,
+    pyproject_content: str | None,
+) -> bool:
+    if manifest.exists:
+        integrations = manifest.enabled_integrations
+        if integrations.get(contract.name):
+            return True
+        if contract.name == "llm":
+            return _has_ai_prompt_module(project_root, package_root)
+        return False
+
+    return _has_integration_signal(
+        contract=contract,
+        project_root=project_root,
+        package_root=package_root,
+        settings_content=settings_content,
+        env_content=env_content,
+        pyproject_content=pyproject_content,
+    )
 
 
 def _has_integration_signal(

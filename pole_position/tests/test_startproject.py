@@ -165,6 +165,7 @@ def test_start_with_no_database_option(tmp_path: Path):
     project_root = tmp_path / "api-app"
     package_root = project_root / "src" / "api_app"
     env_example = (project_root / ".env.example").read_text(encoding="utf-8")
+    manifest = (project_root / ".poleposition.toml").read_text(encoding="utf-8")
     pyproject = (project_root / "pyproject.toml").read_text(encoding="utf-8")
     readme = (project_root / "README.md").read_text(encoding="utf-8")
     dockerfile = (project_root / "Dockerfile").read_text(encoding="utf-8")
@@ -180,6 +181,7 @@ def test_start_with_no_database_option(tmp_path: Path):
     assert not (project_root / "alembic.ini").exists()
     assert not (project_root / "migrations").exists()
     assert not (package_root / "db").exists()
+    assert 'db = "none"' in manifest
     assert "DATABASE_URL=" not in env_example
     assert "POSTGRES_DB=" not in env_example
     assert '"alembic>=' not in pyproject
@@ -248,6 +250,7 @@ def test_generated_project_uses_enterprise_template_layout(tmp_path: Path):
         project_root / "AGENTS.md",
         project_root / "Dockerfile",
         project_root / ".dockerignore",
+        project_root / ".poleposition.toml",
         project_root / "compose.yaml",
         project_root / "alembic.ini",
         project_root / ".gitignore",
@@ -325,6 +328,7 @@ def test_generated_project_renders_database_and_module_placeholders(tmp_path: Pa
     settings_module = (package_root / "settings.py").read_text(encoding="utf-8")
     readme = (project_root / "README.md").read_text(encoding="utf-8")
     pyproject = (project_root / "pyproject.toml").read_text(encoding="utf-8")
+    manifest = (project_root / ".poleposition.toml").read_text(encoding="utf-8")
     dockerfile = (project_root / "Dockerfile").read_text(encoding="utf-8")
     dockerignore = (project_root / ".dockerignore").read_text(encoding="utf-8")
     compose_file = (project_root / "compose.yaml").read_text(encoding="utf-8")
@@ -380,6 +384,9 @@ def test_generated_project_renders_database_and_module_placeholders(tmp_path: Pa
     assert "# UVICORN_LIMIT_MAX_REQUESTS=" in env_example
     assert "UVICORN_LIMIT_MAX_REQUESTS_JITTER=0" in env_example
     assert 'name = "demo-app"' in pyproject
+    assert 'package = "demo_app"' in manifest
+    assert 'db = "sqlite"' in manifest
+    assert 'status = "starter"' in manifest
     assert '"PyJWT>=' in pyproject
     assert '"psycopg[binary]>=' in pyproject
     assert "[project.optional-dependencies]" in pyproject

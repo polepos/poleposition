@@ -21,6 +21,9 @@ Prefer these lifecycle commands when they fit the request:
 Use manual edits after PolePosition generates the starting point, or when the
 requested task is outside the supported PolePosition lifecycle commands.
 
+Keep `.poleposition.toml` aligned with package renames, database mode changes,
+generated module templates, and generated integrations.
+
 {{agents_db_guidance}}
 
 After changing {{agents_check_scope}},

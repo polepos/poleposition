@@ -187,9 +187,11 @@ Use these files to understand the repo quickly:
 Build the documentation site locally:
 
 ```bash
-python -m pip install -r requirements-docs.txt
-python -m mkdocs serve
+npm install
+npm run start
 ```
+
+The documentation site uses Docusaurus and requires Node.js `>=20`.
 
 ## Usage
 
@@ -349,8 +351,9 @@ polepos check
 
 `check` runs the core project health checks for the current PolePosition
 project. It validates project identity, generated structure, Alembic config,
-managed markers, added module lifecycle wiring, and opt-in integration wiring
-used by commands such as `polepos add module`, `polepos remove module`, and
+managed markers, starter module router wiring, added module lifecycle wiring,
+orphan generated references, and opt-in integration wiring used by commands
+such as `polepos add module`, `polepos remove module`, and
 `polepos add integration`.
 
 Use it after adding modules or integrations, after resolving merge conflicts in
@@ -364,7 +367,7 @@ coding agents, and CI logs can refer to the same remediation.
 The checks are organized into three layers:
 
 * Core checks for project identity, generated structure, Alembic files, and managed markers
-* Lifecycle checks for added module router/model/test wiring
+* Lifecycle checks for starter routing, added module router/model/test wiring, and orphan remnants
 * Integration checks for Kafka, RabbitMQ, and LLM files, settings, env values, and dependencies
 
 See [Project Checks](docs/project-checks.md) for detailed user guidance and the
@@ -386,7 +389,7 @@ surface manually:
 * Do not delete generated module directories by hand. Use
   `polepos remove module <name>` so generated wiring and tests are cleaned too.
 * Do not move generated core files such as `api/router.py`, `db/models.py`,
-  `settings.py`, `.env.example`, or Alembic files.
+  `settings.py`, `.env.example`, `.poleposition.toml`, or Alembic files.
 * Do not create database tables during app startup; keep schema changes in
   Alembic migrations.
 
@@ -588,6 +591,7 @@ myapp/
 ├─ AGENTS.md
 ├─ Dockerfile
 ├─ compose.yaml
+├─ .poleposition.toml
 ├─ alembic.ini
 ├─ migrations/
 │  └─ versions/
@@ -765,9 +769,9 @@ The repository CI currently runs the CLI test suite on Python `3.10`, `3.11`,
 
 | Workflow | Trigger | What it runs |
 |---|---|---|
-| `CI` | push, pull request, manual dispatch | Repo test suite on Python `3.10`, `3.11`, `3.12`, `3.13`, and `3.14`; strict MkDocs build |
+| `CI` | push, pull request, manual dispatch | Repo test suite on Python `3.10`, `3.11`, `3.12`, `3.13`, and `3.14`; Docusaurus production build |
 | `E2E` | release tags, relevant pull requests, manual dispatch | Generated-project non-Docker e2e smoke tests on Python `3.11` |
-| `Deploy Docs` | pushes to `main`, manual dispatch | Strict MkDocs build and GitHub Pages deploy |
+| `Deploy Docs` | pushes to `main`, manual dispatch | Docusaurus production build and GitHub Pages deploy |
 
 The `CI` workflow runs `pytest` with `pytest-cov`, prints a terminal coverage
 report, and uploads `coverage.xml` as a per-Python-version workflow artifact.

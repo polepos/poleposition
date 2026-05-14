@@ -64,6 +64,10 @@ Do not remove or rename `# polepos:*` marker comments in:
 - `src/<package>/settings.py`
 - `.env.example`
 
+Also keep `.poleposition.toml` in sync when you rename the application package,
+change the intended database mode, or intentionally detach generated modules or
+integrations.
+
 Avoid manually rewriting generated router includes, model imports, module
 exports, integration settings, or integration env examples into a different
 shape. If you need custom behavior, add code around the managed block instead
@@ -79,6 +83,15 @@ polepos check
 If the directory was already deleted manually, rerun
 `polepos remove module <name>` so PolePosition can clean remaining generated
 wiring and tests.
+
+If `polepos check` reports orphan module references, it means generated wiring
+or tests still point at a module directory that no longer exists. Run:
+
+```bash
+polepos remove module <name>
+```
+
+or restore the missing module directory.
 
 ## `polepos add module` Fails Before Writing Files
 

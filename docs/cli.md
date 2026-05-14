@@ -128,11 +128,16 @@ polepos check
 ```
 
 `check` validates generated structure, managed markers, Alembic configuration,
-added module wiring, generated tests, and supported integration scaffolds. It
-works from nested directories inside a PolePosition project.
+starter module routing, added module wiring, orphan generated remnants,
+generated tests, and supported integration scaffolds. It works from nested
+directories inside a PolePosition project.
 
 When it fails, each issue includes a `PPCHK` code and a `Fix:` hint so humans,
 coding agents, and CI logs can point to the same remediation.
+
+New generated projects include `.poleposition.toml`, which records package,
+database mode, module templates, and generated integrations. If that file is
+missing in an older project, `check` falls back to structural inference.
 
 PolePosition does not currently provide a separate `polepos validate` command.
 Project contract validation is handled by `polepos check`.

@@ -16,6 +16,9 @@ dist/
 
 # Documentation
 site/
+build/
+.docusaurus/
+node_modules/
 
 # Logs
 *.log

@@ -1,0 +1,53 @@
+:root {
+  --ifm-color-primary: #3157d5;
+  --ifm-color-primary-dark: #274cc4;
+  --ifm-color-primary-darker: #2548b9;
+  --ifm-color-primary-darkest: #1f3b98;
+  --ifm-color-primary-light: #486ade;
+  --ifm-color-primary-lighter: #5473e0;
+  --ifm-color-primary-lightest: #748ee7;
+  --ifm-code-font-size: 95%;
+  --ifm-heading-font-weight: 700;
+  --ifm-navbar-height: 4rem;
+}
+
+[data-theme="dark"] {
+  --ifm-color-primary: #8fa8ff;
+  --ifm-color-primary-dark: #6f8fff;
+  --ifm-color-primary-darker: #5f83ff;
+  --ifm-color-primary-darkest: #2f5dff;
+  --ifm-color-primary-light: #afc1ff;
+  --ifm-color-primary-lighter: #bfcdff;
+  --ifm-color-primary-lightest: #eef2ff;
+  --ifm-background-color: #10131a;
+  --ifm-navbar-background-color: #151924;
+}
+
+.navbar__logo {
+  height: 2rem;
+}
+
+.theme-doc-markdown figure {
+  margin: 2rem 0;
+}
+
+.theme-doc-markdown figcaption {
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.theme-doc-markdown img {
+  border-radius: 8px;
+  max-width: 100%;
+}
+
+.theme-doc-markdown iframe {
+  border-radius: 8px;
+  max-width: 100%;
+}
+
+.footer {
+  --ifm-footer-background-color: #111827;
+}

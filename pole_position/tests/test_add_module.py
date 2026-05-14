@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 import py_compile
+import shutil
 import subprocess
 import sys
 
@@ -150,6 +151,48 @@ def test_add_kafka_integration_creates_files_and_updates_project(tmp_path: Path)
     assert "class InMemoryKafkaEventProducer:" in testing_content
     assert "{{" not in producer_content
     assert "{{" not in factory_content
+
+
+def test_add_kafka_integration_completes_partial_settings_and_env(tmp_path: Path):
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    package_root = project_root / "src" / "myapp"
+    settings_path = package_root / "settings.py"
+    env_path = project_root / ".env.example"
+
+    settings_path.write_text(
+        settings_path.read_text(encoding="utf-8").replace(
+            "    # polepos:integration-settings",
+            '    kafka_bootstrap_servers: str = "localhost:9092"\n'
+            "    # polepos:integration-settings",
+        ),
+        encoding="utf-8",
+    )
+    env_path.write_text(
+        env_path.read_text(encoding="utf-8").replace(
+            "# polepos:integration-env",
+            "KAFKA_BOOTSTRAP_SERVERS=localhost:9092\n"
+            "# polepos:integration-env",
+        ),
+        encoding="utf-8",
+    )
+
+    result = run_cli(project_root, "add", "integration", "kafka")
+
+    assert result.returncode == 0
+    settings_content = settings_path.read_text(encoding="utf-8")
+    env_content = env_path.read_text(encoding="utf-8")
+    manifest = (project_root / ".poleposition.toml").read_text(encoding="utf-8")
+
+    assert settings_content.count("kafka_bootstrap_servers:") == 1
+    assert "kafka_client_id: str" in settings_content
+    assert "kafka_request_timeout_ms: int = 40000" in settings_content
+    assert env_content.count("KAFKA_BOOTSTRAP_SERVERS=") == 1
+    assert "KAFKA_CLIENT_ID=myapp" in env_content
+    assert "KAFKA_REQUEST_TIMEOUT_MS=40000" in env_content
+    assert "kafka = true" in manifest
 
 
 def test_add_kafka_integration_rejects_duplicate(tmp_path: Path):
@@ -651,6 +694,28 @@ def test_add_module_preflight_fails_before_writing_when_marker_is_missing(tmp_pa
     assert not (project_root / "tests" / "unit" / "test_garage_service.py").exists()
 
 
+def test_add_module_rejects_stale_managed_wiring_before_readding(tmp_path: Path):
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    add_result = run_cli(project_root, "add", "module", "garage")
+    assert add_result.returncode == 0
+
+    package_root = project_root / "src" / "myapp"
+    module_root = package_root / "modules" / "garage"
+    shutil.rmtree(module_root)
+    (project_root / "tests" / "integration" / "test_garage.py").unlink()
+    (project_root / "tests" / "unit" / "test_garage_service.py").unlink()
+
+    result = run_cli(project_root, "add", "module", "garage")
+
+    assert result.returncode != 0
+    assert "Managed references already exist for module 'garage'" in result.stdout
+    assert "polepos remove module garage" in result.stdout
+    assert not module_root.exists()
+
+
 def test_add_module_with_ai_prompt_template_creates_llm_module_files(tmp_path: Path):
     create_result = run_cli(tmp_path, "start", "myapp")
     assert create_result.returncode == 0
@@ -712,6 +777,52 @@ def test_add_module_with_ai_prompt_template_creates_llm_module_files(tmp_path: P
     assert "from myapp.integrations.llm.factory import get_llm_provider" in orchestrator_content
     assert "/api/v1/assistant/respond" in integration_test_content
     assert "return_value=StubProvider()" in integration_test_content
+    assert 'assistant = "ai-prompt"' in (
+        project_root / ".poleposition.toml"
+    ).read_text(encoding="utf-8")
+    assert "llm = true" in (
+        project_root / ".poleposition.toml"
+    ).read_text(encoding="utf-8")
+
+
+def test_add_module_ai_prompt_completes_partial_llm_settings_and_env(tmp_path: Path):
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    package_root = project_root / "src" / "myapp"
+    settings_path = package_root / "settings.py"
+    env_path = project_root / ".env.example"
+
+    settings_path.write_text(
+        settings_path.read_text(encoding="utf-8").replace(
+            "    # polepos:llm-settings",
+            '    llm_provider: str = "openai"\n'
+            "    # polepos:llm-settings",
+        ),
+        encoding="utf-8",
+    )
+    env_path.write_text(
+        env_path.read_text(encoding="utf-8").replace(
+            "# polepos:llm-env",
+            "LLM_PROVIDER=openai\n"
+            "# polepos:llm-env",
+        ),
+        encoding="utf-8",
+    )
+
+    result = run_cli(project_root, "add", "module", "assistant", "--template", "ai-prompt")
+
+    assert result.returncode == 0
+    settings_content = settings_path.read_text(encoding="utf-8")
+    env_content = env_path.read_text(encoding="utf-8")
+
+    assert settings_content.count("llm_provider:") == 1
+    assert 'llm_model: str = "gpt-5.4-mini"' in settings_content
+    assert "llm_timeout_seconds: float = 30.0" in settings_content
+    assert env_content.count("LLM_PROVIDER=") == 1
+    assert "LLM_MODEL=gpt-5.4-mini" in env_content
+    assert "LLM_TIMEOUT_SECONDS=30" in env_content
 
 
 def test_add_module_with_api_only_option_creates_api_module_without_db_files(

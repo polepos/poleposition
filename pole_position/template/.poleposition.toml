@@ -1,0 +1,8 @@
+[poleposition]
+package = "{{project_import_name}}"
+db = "{{database_mode}}"
+
+[modules]
+status = "starter"
+
+[integrations]

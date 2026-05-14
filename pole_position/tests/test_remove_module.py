@@ -76,6 +76,9 @@ def test_remove_standard_module_cleans_generated_wiring(tmp_path: Path):
     assert "modules.garage" not in router_content
     assert "modules.garage" not in db_models_content
     assert '"garage"' not in modules_init_content
+    assert "garage =" not in (
+        project_root / ".poleposition.toml"
+    ).read_text(encoding="utf-8")
 
     check_result = run_cli(project_root, "check")
     assert check_result.returncode == 0
@@ -409,6 +412,9 @@ def test_remove_last_ai_prompt_module_cleans_llm_shared_scaffold(tmp_path: Path)
     assert "LLM_PROVIDER" not in (project_root / ".env.example").read_text(
         encoding="utf-8"
     )
+    manifest = (project_root / ".poleposition.toml").read_text(encoding="utf-8")
+    assert "assistant =" not in manifest
+    assert "llm = true" not in manifest
 
     check_result = run_cli(project_root, "check")
     assert check_result.returncode == 0

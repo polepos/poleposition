@@ -18,8 +18,12 @@ polepos db upgrade
 uv run python -m shop_api.run
 ```
 
-<figure markdown>
-  ![PolePosition terminal demo: project creation](assets/gif/demo.gif){ width="760" }
+<figure>
+  <img
+    src="assets/gif/demo.gif"
+    alt="PolePosition terminal demo: project creation"
+    width="760"
+  />
   <figcaption>Starting a PolePosition project.</figcaption>
 </figure>
 

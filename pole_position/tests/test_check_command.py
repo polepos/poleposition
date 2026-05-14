@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import shutil
 import subprocess
 import sys
 
@@ -286,6 +287,49 @@ def test_check_reports_missing_added_module_router_wiring(tmp_path: Path) -> Non
     assert "api/router.py" in result.stdout
 
 
+def test_check_reports_orphan_module_wiring_after_manual_directory_delete(
+    tmp_path: Path,
+) -> None:
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    add_result = run_cli(project_root, "add", "module", "garage")
+    assert add_result.returncode == 0
+
+    module_root = project_root / "src" / "myapp" / "modules" / "garage"
+    shutil.rmtree(module_root)
+
+    result = run_cli(project_root, "check")
+
+    assert result.returncode != 0
+    assert "[PPCHK039]" in result.stdout
+    assert "Orphan module reference to missing module 'garage'" in result.stdout
+    assert "router include" in result.stdout
+    assert "module export" in result.stdout
+    assert "generated test" in result.stdout
+    assert "polepos remove module garage" in result.stdout
+
+
+def test_check_reports_missing_status_router_wiring(tmp_path: Path) -> None:
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    router_path = project_root / "src" / "myapp" / "api" / "router.py"
+    router_content = router_path.read_text(encoding="utf-8").replace(
+        'api_router.include_router(status_router, tags=["status"])\n',
+        "",
+    )
+    router_path.write_text(router_content, encoding="utf-8")
+
+    result = run_cli(project_root, "check")
+
+    assert result.returncode != 0
+    assert "[PPCHK022]" in result.stdout
+    assert "Starter module 'status' is missing API router include" in result.stdout
+
+
 def test_check_reports_missing_added_module_model_wiring(tmp_path: Path) -> None:
     create_result = run_cli(tmp_path, "start", "myapp")
     assert create_result.returncode == 0
@@ -549,6 +593,60 @@ def test_check_database_free_project_ignores_sqlalchemy_named_dependencies(
                 '    "pydantic>=2.0.0",\n'
                 '    "sqlalchemy-utils>=0.41.0",\n'
             ),
+        ),
+        encoding="utf-8",
+    )
+
+    result = run_cli(project_root, "check")
+
+    assert result.returncode == 0
+    assert "PolePosition project check passed." in result.stdout
+
+
+def test_check_manifest_custom_db_allows_user_managed_database_content(
+    tmp_path: Path,
+) -> None:
+    create_result = run_cli(tmp_path, "start", "myapp", "--db", "none")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    package_root = project_root / "src" / "myapp"
+    manifest_path = project_root / ".poleposition.toml"
+    manifest_path.write_text(
+        manifest_path.read_text(encoding="utf-8").replace(
+            'db = "none"',
+            'db = "custom"',
+        ),
+        encoding="utf-8",
+    )
+    (project_root / ".env.example").write_text(
+        (project_root / ".env.example").read_text(encoding="utf-8")
+        + "DATABASE_URL=clickhouse://localhost/default\n",
+        encoding="utf-8",
+    )
+    (package_root / "api" / "deps.py").write_text(
+        "def custom_database_client():\n    return None\n",
+        encoding="utf-8",
+    )
+
+    result = run_cli(project_root, "check")
+
+    assert result.returncode == 0
+    assert "PolePosition project check passed." in result.stdout
+
+
+def test_check_manifest_ignores_manual_kafka_dependency_without_integration(
+    tmp_path: Path,
+) -> None:
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    pyproject_path = project_root / "pyproject.toml"
+    pyproject_path.write_text(
+        pyproject_path.read_text(encoding="utf-8").replace(
+            '    "pydantic>=2.0.0",\n',
+            '    "pydantic>=2.0.0",\n    "aiokafka>=0.12.0",\n',
         ),
         encoding="utf-8",
     )

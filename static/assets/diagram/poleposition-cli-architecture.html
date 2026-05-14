@@ -1,0 +1,175 @@
+<style>
+#export-btn {
+  display:inline-flex;align-items:center;gap:6px;
+  margin:0 0 12px;padding:6px 14px;font-size:13px;
+  cursor:pointer;border-radius:8px;
+  background:var(--color-background-secondary);
+  color:var(--color-text-primary);
+  border:0.5px solid var(--color-border-secondary);
+}
+#export-btn:hover{background:var(--color-background-tertiary);}
+</style>
+
+<button id="export-btn" onclick="exportSVG()">
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M8 2v8M5 7l3 3 3-3M3 12h10"/>
+  </svg>
+  Download SVG
+</button>
+
+<svg id="pole-diagram" width="100%" viewBox="0 0 680 720" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>PolePosition architecture diagram</title>
+<desc>CLI command flow, generated project structure, and integrations for the PolePosition FastAPI lifecycle tool</desc>
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+  <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</marker>
+<style>
+.t  { font:400 14px/1 "Anthropic Sans",ui-sans-serif,sans-serif; fill:#2C2C2A; }
+.ts { font:400 12px/1 "Anthropic Sans",ui-sans-serif,sans-serif; fill:#5F5E5A; }
+.th { font:500 14px/1 "Anthropic Sans",ui-sans-serif,sans-serif; fill:#2C2C2A; }
+.arr { fill:none; stroke:#888780; stroke-width:1.2; marker-end:url(#arrow); }
+.bx  { fill:#F1EFE8; stroke:#5F5E5A; stroke-width:0.5; }
+.purple-fill { fill:#EEEDFE; stroke:#534AB7; stroke-width:0.5; }
+.purple-th   { font:500 14px/1 "Anthropic Sans",ui-sans-serif,sans-serif; fill:#3C3489; }
+.purple-ts   { font:400 12px/1 "Anthropic Sans",ui-sans-serif,sans-serif; fill:#534AB7; }
+.blue-fill   { fill:#E6F1FB; stroke:#185FA5; stroke-width:0.5; }
+.blue-th     { font:500 14px/1 "Anthropic Sans",ui-sans-serif,sans-serif; fill:#0C447C; }
+.blue-ts     { font:400 12px/1 "Anthropic Sans",ui-sans-serif,sans-serif; fill:#185FA5; }
+.teal-fill   { fill:#E1F5EE; stroke:#0F6E56; stroke-width:0.5; }
+.teal-th     { font:500 14px/1 "Anthropic Sans",ui-sans-serif,sans-serif; fill:#085041; }
+.teal-ts     { font:400 12px/1 "Anthropic Sans",ui-sans-serif,sans-serif; fill:#0F6E56; }
+.amber-fill  { fill:#FAEEDA; stroke:#854F0B; stroke-width:0.5; }
+.amber-th    { font:500 14px/1 "Anthropic Sans",ui-sans-serif,sans-serif; fill:#633806; }
+.amber-ts    { font:400 12px/1 "Anthropic Sans",ui-sans-serif,sans-serif; fill:#854F0B; }
+.coral-fill  { fill:#FAECE7; stroke:#993C1D; stroke-width:0.5; }
+.coral-th    { font:500 14px/1 "Anthropic Sans",ui-sans-serif,sans-serif; fill:#712B13; }
+.coral-ts    { font:400 12px/1 "Anthropic Sans",ui-sans-serif,sans-serif; fill:#993C1D; }
+.green-fill  { fill:#EAF3DE; stroke:#3B6D11; stroke-width:0.5; }
+.green-th    { font:500 14px/1 "Anthropic Sans",ui-sans-serif,sans-serif; fill:#27500A; }
+.gray-fill   { fill:#F1EFE8; stroke:#5F5E5A; stroke-width:0.5; }
+.gray-th     { font:500 14px/1 "Anthropic Sans",ui-sans-serif,sans-serif; fill:#2C2C2A; }
+.gray-ts     { font:400 12px/1 "Anthropic Sans",ui-sans-serif,sans-serif; fill:#5F5E5A; }
+</style>
+</defs>
+
+<!-- CLI entry bar -->
+<rect class="purple-fill" x="40" y="30" width="600" height="50" rx="10"/>
+<text class="purple-th" x="340" y="60" text-anchor="middle" dominant-baseline="central">PolePosition CLI - polepos / poleposition</text>
+
+<!-- command boxes -->
+<rect class="blue-fill"   x="40"  y="110" width="104" height="56" rx="8"/>
+<text class="blue-th"     x="92" y="130" text-anchor="middle" dominant-baseline="central">start</text>
+<text class="blue-ts"     x="92" y="150" text-anchor="middle" dominant-baseline="central">Create project</text>
+
+<rect class="teal-fill"   x="154" y="110" width="112" height="56" rx="8"/>
+<text class="teal-th"     x="210" y="130" text-anchor="middle" dominant-baseline="central">module ops</text>
+<text class="teal-ts"     x="210" y="150" text-anchor="middle" dominant-baseline="central">Add/remove</text>
+
+<rect class="amber-fill"  x="276" y="110" width="132" height="56" rx="8"/>
+<text class="amber-th"    x="342" y="130" text-anchor="middle" dominant-baseline="central">add integration</text>
+<text class="amber-ts"    x="342" y="150" text-anchor="middle" dominant-baseline="central">External systems</text>
+
+<rect class="purple-fill" x="418" y="110" width="92" height="56" rx="8"/>
+<text class="purple-th"   x="464" y="130" text-anchor="middle" dominant-baseline="central">check</text>
+<text class="purple-ts"   x="464" y="150" text-anchor="middle" dominant-baseline="central">Contract</text>
+
+<rect class="coral-fill"  x="520" y="110" width="120" height="56" rx="8"/>
+<text class="coral-th"    x="580" y="130" text-anchor="middle" dominant-baseline="central">db commands</text>
+<text class="coral-ts"    x="580" y="150" text-anchor="middle" dominant-baseline="central">Alembic flow</text>
+
+<!-- arrows to service layer -->
+<line class="arr" x1="92" y1="166" x2="92" y2="200"/>
+<line class="arr" x1="210" y1="166" x2="210" y2="200"/>
+<line class="arr" x1="342" y1="166" x2="342" y2="200"/>
+<line class="arr" x1="464" y1="166" x2="464" y2="200"/>
+<line class="arr" x1="580" y1="166" x2="580" y2="200"/>
+
+<!-- Service layer -->
+<rect class="gray-fill" x="40" y="200" width="600" height="56" rx="8"/>
+<text class="gray-th" x="340" y="216" text-anchor="middle" dominant-baseline="central">Services layer</text>
+<text class="gray-ts" x="340" y="234" text-anchor="middle" dominant-baseline="central">project_creator / template_renderer / module_creator / module_remover</text>
+<text class="gray-ts" x="340" y="248" text-anchor="middle" dominant-baseline="central">integration_creator / project_checker / db_runner</text>
+
+<!-- arrow to generated project label -->
+<line class="arr" x1="340" y1="256" x2="340" y2="278"/>
+<text class="gray-th" x="340" y="275" text-anchor="middle" dominant-baseline="central">Generated FastAPI project</text>
+
+<!-- Generated project outer container -->
+<rect class="green-fill" x="40" y="284" width="600" height="396" rx="14"/>
+
+<!-- src/package row -->
+<rect class="teal-fill" x="58" y="302" width="564" height="38" rx="8"/>
+<text class="teal-th" x="340" y="321" text-anchor="middle" dominant-baseline="central">src / &lt;package&gt; - app.py / main.py / run.py / settings.py</text>
+
+<!-- 5 core layer boxes -->
+<rect class="blue-fill" x="58"  y="354" width="104" height="50" rx="6"/>
+<text class="blue-th"   x="110" y="372" text-anchor="middle" dominant-baseline="central">bootstrap</text>
+<text class="blue-ts"   x="110" y="390" text-anchor="middle" dominant-baseline="central">logging, middleware</text>
+
+<rect class="blue-fill" x="170" y="354" width="96" height="50" rx="6"/>
+<text class="blue-th"   x="218" y="372" text-anchor="middle" dominant-baseline="central">auth</text>
+<text class="blue-ts"   x="218" y="390" text-anchor="middle" dominant-baseline="central">JWT, roles</text>
+
+<rect class="blue-fill" x="274" y="354" width="96" height="50" rx="6"/>
+<text class="blue-th"   x="322" y="372" text-anchor="middle" dominant-baseline="central">api</text>
+<text class="blue-ts"   x="322" y="390" text-anchor="middle" dominant-baseline="central">router, deps</text>
+
+<rect class="blue-fill" x="378" y="354" width="106" height="50" rx="6"/>
+<text class="blue-th"   x="431" y="372" text-anchor="middle" dominant-baseline="central">db</text>
+<text class="blue-ts"   x="431" y="390" text-anchor="middle" dominant-baseline="central">SQLAlchemy, models</text>
+
+<rect class="blue-fill" x="492" y="354" width="110" height="50" rx="6"/>
+<text class="blue-th"   x="547" y="372" text-anchor="middle" dominant-baseline="central">domain</text>
+<text class="blue-ts"   x="547" y="390" text-anchor="middle" dominant-baseline="central">exceptions, types</text>
+
+<!-- modules container -->
+<rect class="teal-fill" x="58" y="418" width="564" height="96" rx="8"/>
+<text class="teal-th" x="340" y="438" text-anchor="middle" dominant-baseline="central">modules/ - managed by add/remove module</text>
+
+<rect class="purple-fill" x="72"  y="452" width="110" height="34" rx="6"/>
+<text class="purple-th"   x="127" y="469" text-anchor="middle" dominant-baseline="central">status</text>
+
+<rect class="purple-fill" x="194" y="452" width="110" height="34" rx="6"/>
+<text class="purple-th"   x="249" y="469" text-anchor="middle" dominant-baseline="central">standard</text>
+
+<rect class="purple-fill" x="316" y="452" width="86" height="34" rx="6"/>
+<text class="purple-th"   x="359" y="469" text-anchor="middle" dominant-baseline="central">custom</text>
+
+<rect class="amber-fill"  x="414" y="452" width="104" height="34" rx="6"/>
+<text class="amber-th"    x="466" y="469" text-anchor="middle" dominant-baseline="central">ai-prompt</text>
+
+<rect class="amber-fill"  x="530" y="452" width="80" height="34" rx="6"/>
+<text class="amber-th"    x="570" y="469" text-anchor="middle" dominant-baseline="central">api-only</text>
+
+<!-- integrations -->
+<rect class="coral-fill" x="58" y="528" width="564" height="40" rx="8"/>
+<text class="coral-th"   x="200" y="548" text-anchor="middle" dominant-baseline="central">integrations/</text>
+<text class="coral-ts"   x="450" y="548" text-anchor="middle" dominant-baseline="central">kafka / rabbitmq / llm (ai-prompt template)</text>
+
+<!-- tests -->
+<rect class="gray-fill" x="58" y="582" width="564" height="28" rx="6"/>
+<text class="gray-th"   x="340" y="596" text-anchor="middle" dominant-baseline="central">tests/ - unit / integration (pytest)</text>
+
+<!-- Alembic + Docker footer -->
+<rect class="amber-fill" x="40"  y="626" width="290" height="36" rx="8"/>
+<text class="amber-th"   x="185" y="644" text-anchor="middle" dominant-baseline="central">Alembic migrations</text>
+
+<rect class="gray-fill"  x="348" y="626" width="292" height="36" rx="8"/>
+<text class="gray-th"    x="494" y="644" text-anchor="middle" dominant-baseline="central">Docker + compose.yaml</text>
+
+</svg>
+
+<script>
+function exportSVG() {
+  const svg = document.getElementById('pole-diagram');
+  const clone = svg.cloneNode(true);
+  clone.setAttribute('xmlns','http://www.w3.org/2000/svg');
+  const blob = new Blob([clone.outerHTML], {type:'image/svg+xml'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'poleposition-architecture.svg';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+</script>

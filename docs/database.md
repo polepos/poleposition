@@ -280,6 +280,21 @@ project has a reviewed custom migration workflow for it. If PolePosition adds
 first-class ClickHouse support later, it should be closer to an integration
 scaffold than the default `polepos db` lifecycle.
 
+For user-managed database workflows that should not participate in
+PolePosition's SQLAlchemy/Alembic checks, record that choice in
+`.poleposition.toml`:
+
+```toml
+[poleposition]
+db = "custom"
+```
+
+Use `custom` for cases such as ClickHouse adapters, analytics stores, or a
+reviewed migration flow that is intentionally outside `polepos db`. With
+`custom`, `polepos check` still validates the FastAPI project lifecycle, but it
+does not infer the standard Alembic contract from custom database settings or
+dependencies.
+
 ## Docker and PostgreSQL
 
 Generated projects include a Docker Compose setup with PostgreSQL:

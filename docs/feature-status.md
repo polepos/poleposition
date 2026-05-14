@@ -23,13 +23,14 @@ Instead, it clarifies whether a feature is:
 | `polepos start` | Stable foundation | Core product entrypoint; generated project shape is now a major part of the product contract. |
 | Template rendering | Stable foundation | Supporting mechanism for lifecycle workflows; placeholder replacement and template packaging are in good shape. |
 | Generated FastAPI structure | Stable foundation | `auth`, `bootstrap`, `api`, `db`, `domain`, `integrations`, `modules` layout is now part of the product identity. |
+| Lifecycle manifest | Growing | New projects include `.poleposition.toml` so package, database mode, module templates, and generated integrations do not depend only on inference. |
 | `polepos add module` with `standard` | Growing | Strong differentiator; works well, but still depends on managed marker blocks. |
 | `polepos add module` with `ai-prompt` | Growing | Good provider-agnostic foundation; adapters are scaffold-level boundaries for real provider integration. |
 | `polepos add module` with `api-only` | Growing | Useful lightweight module archetype for routes that do not need model, repository, or database wiring. |
 | `polepos remove module` | Growing | Removes generated module scaffolds and managed wiring; supports `--wiring-only` for detaching managed references while preserving customized module files. |
 | `polepos add integration kafka` | Growing | First messaging integration; producer, consumer factory, settings, env, and test double support are scaffolded. |
 | `polepos add integration rabbitmq` | Growing | Second messaging integration; publisher, queue factory, settings, env, and test double support are scaffolded. |
-| `polepos check` | Stable foundation | Runs core checks for project identity, generated structure, Alembic config, managed markers, added module lifecycle wiring, and opt-in integration wiring. |
+| `polepos check` | Stable foundation | Runs core checks for project identity, generated structure, Alembic config, managed markers, starter routing, added module lifecycle wiring, orphan remnants, and opt-in integration wiring. |
 | `polepos db ...` commands | Stable foundation | Good migration lifecycle wrapper around Alembic. |
 | Alembic migration support | Stable foundation | Generated projects are migration-first. |
 | Docker and PostgreSQL workflow | Growing | Good local runtime story; Docker e2e exists as opt-in smoke coverage. |
@@ -97,7 +98,9 @@ It currently validates:
 - core project identity and generated structure
 - Alembic migration setup
 - PolePosition-managed markers
+- starter status router wiring
 - added module lifecycle wiring
+- orphan generated remnants after manual module deletion
 - Kafka, RabbitMQ, and LLM opt-in integration wiring
 
 The command is intentionally read-only and file-based. It is safe to run from

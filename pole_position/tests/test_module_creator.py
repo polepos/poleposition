@@ -8,7 +8,11 @@ from pole_position.cli.services.module_creator import (
     _insert_sorted_line_before_marker,
     _validate_add_module_preflight,
 )
-from pole_position.cli.services.module_templates import ModuleTemplate
+from pole_position.cli.services.module_templates import (
+    ModuleTemplate,
+    llm_env_block,
+    llm_settings_block,
+)
 
 
 def test_insert_line_before_marker_is_idempotent(tmp_path: Path) -> None:
@@ -119,11 +123,11 @@ def test_ai_preflight_allows_existing_llm_settings_without_markers(tmp_path: Pat
     package_root = project_root / "src" / "shop_api"
     _write_required_preflight_files(project_root, package_root)
     (package_root / "settings.py").write_text(
-        '    llm_provider: str = "openai"\n',
+        "\n".join(llm_settings_block()) + "\n",
         encoding="utf-8",
     )
     (project_root / ".env.example").write_text(
-        "LLM_PROVIDER=openai\n",
+        "\n".join(llm_env_block()) + "\n",
         encoding="utf-8",
     )
 
@@ -144,6 +148,45 @@ def test_ai_preflight_allows_existing_llm_settings_without_markers(tmp_path: Pat
             ensure_llm_settings=True,
         ),
     )
+
+
+def test_ai_preflight_reports_partial_llm_settings_without_markers(
+    tmp_path: Path,
+) -> None:
+    project_root = tmp_path / "shop-api"
+    package_root = project_root / "src" / "shop_api"
+    _write_required_preflight_files(project_root, package_root)
+    (package_root / "settings.py").write_text(
+        '    llm_provider: str = "openai"\n',
+        encoding="utf-8",
+    )
+    (project_root / ".env.example").write_text(
+        "LLM_PROVIDER=openai\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RuntimeError) as exc_info:
+        _validate_add_module_preflight(
+            project_root=project_root,
+            package_root=package_root,
+            modules_root=package_root / "modules",
+            module_root=package_root / "modules" / "assistant",
+            module_name="assistant",
+            template_spec=ModuleTemplate(
+                files={},
+                integration_test_name="test_assistant.py",
+                integration_test_content="",
+                unit_test_name="test_assistant_orchestrator.py",
+                unit_test_content="",
+                update_db_models=False,
+                ensure_llm_integrations=True,
+                ensure_llm_settings=True,
+            ),
+        )
+
+    assert "Required managed marker" in str(exc_info.value)
+    assert "polepos:llm-settings" in str(exc_info.value)
+    assert "polepos:llm-env" in str(exc_info.value)
 
 
 def _write_required_preflight_files(project_root: Path, package_root: Path) -> None:

@@ -302,6 +302,18 @@ Core-only behavior is available through `check_core_project()` for internal
 callers that need the foundation without lifecycle or integration checks.
 The public `check_project()` path runs the full current contract.
 
+New generated projects include `.poleposition.toml` at the project root. It is
+small lifecycle metadata, not application configuration:
+
+- application package name
+- database mode: `sqlite`, `postgres`, `none`, or user-managed `custom`
+- generated module templates
+- generated integration scaffolds
+
+When the manifest is present, package detection, module template detection, and
+integration checks prefer it over inference. Older generated projects without
+the manifest continue to use structural inference.
+
 For the detailed user guide and agent-facing contract, see:
 
 ```text
@@ -340,6 +352,7 @@ The most important managed files are:
 - `src/<package>/modules/__init__.py`
 - `src/<package>/settings.py`
 - `.env.example`
+- `.poleposition.toml`
 
 If these markers are removed or rearranged incorrectly, `polepos add module`,
 `polepos remove module`, or `polepos add integration ...` may fail or stop

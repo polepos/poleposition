@@ -17,6 +17,9 @@ from pole_position.cli.services.module_templates import llm_settings_block
 from pole_position.cli.services.module_templates import module_template_detection_contracts
 from pole_position.cli.services.project_locator import find_package_root
 from pole_position.cli.services.project_locator import find_project_root
+from pole_position.cli.services.project_manifest import read_project_manifest
+from pole_position.cli.services.project_manifest import remove_manifest_integration
+from pole_position.cli.services.project_manifest import remove_manifest_module
 
 
 STARTER_MODULES = {"status"}
@@ -176,6 +179,9 @@ def remove_module(
     if remove_llm_shared:
         updated_files.extend(_remove_llm_settings(project_root, package_root))
         removed_paths.extend(_remove_llm_integration_files(package_root, package_name))
+        remove_manifest_integration(project_root=project_root, integration_name="llm")
+
+    remove_manifest_module(project_root=project_root, module_name=module_name)
 
     return RemovedModuleResult(
         module_name=module_name,
@@ -465,6 +471,12 @@ def _detect_module_contract(
     module_root: Path,
     module_name: str,
 ) -> ModuleTemplateContract:
+    manifest = read_project_manifest(project_root)
+    if manifest.exists:
+        template = manifest.module_templates.get(module_name)
+        if template and template != "starter":
+            return get_module_template_contract(template)
+
     for contract in module_template_detection_contracts():
         unit_test = project_root / "tests" / "unit" / contract.unit_test_name(module_name)
         if unit_test.exists():

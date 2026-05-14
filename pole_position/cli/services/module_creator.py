@@ -1,7 +1,10 @@
+import ast
 from dataclasses import dataclass
 from pathlib import Path
 
 from pole_position.cli.services.project_locator import find_package_root, find_project_root
+from pole_position.cli.services.project_manifest import record_manifest_integration
+from pole_position.cli.services.project_manifest import record_manifest_module
 from pole_position.cli.services.module_templates import (
     ModuleTemplate,
     SUPPORTED_MODULE_TEMPLATES,
@@ -84,6 +87,16 @@ def add_module(
             updated_files.append(package_root / "settings.py")
         if _ensure_llm_env(project_root / ".env.example"):
             updated_files.append(project_root / ".env.example")
+        record_manifest_integration(
+            project_root=project_root,
+            integration_name="llm",
+        )
+
+    record_manifest_module(
+        project_root=project_root,
+        module_name=module_name,
+        template=template,
+    )
 
     return AddedModuleResult(
         module_name=module_name,
@@ -140,6 +153,12 @@ def _validate_add_module_preflight(
         package_root / "api" / "router.py",
         ROUTER_INCLUDES_MARKER,
     )
+    _collect_existing_managed_module_references(
+        problems=problems,
+        package_root=package_root,
+        module_name=module_name,
+        template_spec=template_spec,
+    )
 
     if template_spec.update_db_models:
         db_models_path = package_root / "db" / "models.py"
@@ -156,17 +175,19 @@ def _validate_add_module_preflight(
             )
 
     if template_spec.ensure_llm_settings:
-        _collect_missing_marker_unless_content_exists(
+        _collect_missing_marker_unless_entries_exist(
             problems,
             package_root / "settings.py",
             marker=SETTINGS_LLM_MARKER,
-            existing_content="llm_provider:",
+            block=llm_settings_block(),
+            entry_type="setting",
         )
-        _collect_missing_marker_unless_content_exists(
+        _collect_missing_marker_unless_entries_exist(
             problems,
             project_root / ".env.example",
             marker=ENV_LLM_MARKER,
-            existing_content="LLM_PROVIDER=",
+            block=llm_env_block(),
+            entry_type="env",
         )
 
     if problems:
@@ -191,15 +212,121 @@ def _collect_missing_marker(problems: list[str], path: Path, marker: str) -> Non
         problems.append(f"Required managed marker '{marker}' is missing in {path}")
 
 
-def _collect_missing_marker_unless_content_exists(
+def _collect_existing_managed_module_references(
+    *,
+    problems: list[str],
+    package_root: Path,
+    module_name: str,
+    template_spec: ModuleTemplate,
+) -> None:
+    package_name = package_root.name
+    modules_init_path = package_root / "modules" / "__init__.py"
+    router_path = package_root / "api" / "router.py"
+    models_path = package_root / "db" / "models.py"
+
+    stale_references: list[str] = []
+    if _line_exists(modules_init_path, f'    "{module_name}",'):
+        stale_references.append(f"module export in {modules_init_path}")
+
+    if _has_router_reference(router_path, package_name, module_name):
+        stale_references.append(f"router wiring in {router_path}")
+
+    if template_spec.update_db_models and _line_exists(
+        models_path,
+        f"    from {package_name}.modules.{module_name} import model  # noqa: F401",
+    ):
+        stale_references.append(f"model import in {models_path}")
+
+    if stale_references:
+        formatted = ", ".join(stale_references)
+        problems.append(
+            f"Managed references already exist for module '{module_name}': "
+            f"{formatted}. Run `polepos remove module {module_name}` before "
+            "adding it again."
+        )
+
+
+def _line_exists(path: Path, line: str) -> bool:
+    if not path.is_file():
+        return False
+
+    return line in path.read_text(encoding="utf-8").splitlines()
+
+
+def _has_router_reference(path: Path, package_name: str, module_name: str) -> bool:
+    if not path.is_file():
+        return False
+
+    content = path.read_text(encoding="utf-8")
+    try:
+        tree = ast.parse(content, filename=str(path))
+    except SyntaxError:
+        return False
+
+    router_alias = f"{module_name}_router"
+    router_module = f"{package_name}.modules.{module_name}.router"
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.module == router_module:
+            return True
+        if not isinstance(node, ast.Call):
+            continue
+        if not _is_api_router_include_call(node):
+            continue
+        if node.args and _is_name(node.args[0], router_alias):
+            return True
+        if _literal_keyword_value(node, "prefix") == f"/{module_name}":
+            return True
+
+    return False
+
+
+def _is_api_router_include_call(node: ast.Call) -> bool:
+    return (
+        isinstance(node.func, ast.Attribute)
+        and node.func.attr == "include_router"
+        and isinstance(node.func.value, ast.Name)
+        and node.func.value.id == "api_router"
+    )
+
+
+def _is_name(node: ast.AST, expected_name: str) -> bool:
+    return isinstance(node, ast.Name) and node.id == expected_name
+
+
+def _literal_keyword_value(node: ast.Call, keyword_name: str) -> object:
+    for keyword in node.keywords:
+        if keyword.arg == keyword_name:
+            try:
+                return ast.literal_eval(keyword.value)
+            except (ValueError, TypeError):
+                return None
+
+    return None
+
+
+def _collect_missing_marker_unless_entries_exist(
     problems: list[str],
     path: Path,
     *,
     marker: str,
-    existing_content: str,
+    block: list[str],
+    entry_type: str,
 ) -> None:
     content = _read_managed_file_text(problems, path)
-    if content is None or existing_content in content:
+    if content is None:
+        return
+
+    expected_keys = [
+        key
+        for line in block
+        if (key := _line_key(line, entry_type=entry_type)) is not None
+    ]
+    existing_keys = {
+        key
+        for line in content.splitlines()
+        if (key := _line_key(line, entry_type=entry_type)) is not None
+    }
+    if all(key in existing_keys for key in expected_keys):
         return
 
     if marker not in content.splitlines():
@@ -309,33 +436,25 @@ def _ensure_llm_integrations(package_root: Path, package_name: str) -> list[Path
 
 
 def _ensure_llm_settings(path: Path) -> bool:
-    content = path.read_text(encoding="utf-8")
-    if "llm_provider:" in content:
-        return False
-
     block = llm_settings_block()
-    _insert_block_before_marker_or_anchor(
+    return _ensure_block_entries_before_marker_or_anchor(
         path=path,
         block=block,
         marker=SETTINGS_LLM_MARKER,
         anchor="    model_config = SettingsConfigDict(",
+        entry_type="setting",
     )
-    return True
 
 
 def _ensure_llm_env(path: Path) -> bool:
-    content = path.read_text(encoding="utf-8")
-    if "LLM_PROVIDER=" in content:
-        return False
-
     block = llm_env_block()
-    _insert_block_before_marker_or_anchor(
+    return _ensure_block_entries_before_marker_or_anchor(
         path=path,
         block=block,
         marker=ENV_LLM_MARKER,
         anchor=None,
+        entry_type="env",
     )
-    return True
 
 
 def _insert_line_before_marker(path: Path, line: str, marker: str) -> None:
@@ -431,6 +550,52 @@ def _line_bracket_delta(line: str) -> int:
     return line.count("(") - line.count(")")
 
 
+def _ensure_block_entries_before_marker_or_anchor(
+    *,
+    path: Path,
+    block: list[str],
+    marker: str,
+    anchor: str | None,
+    entry_type: str,
+) -> bool:
+    lines = path.read_text(encoding="utf-8").splitlines()
+    existing_keys = {
+        key
+        for line in lines
+        if (key := _line_key(line, entry_type=entry_type)) is not None
+    }
+    missing_lines = [
+        line
+        for line in block
+        if (key := _line_key(line, entry_type=entry_type)) is not None
+        and key not in existing_keys
+    ]
+
+    if not missing_lines:
+        return False
+
+    insert_at = _find_insert_index(lines=lines, marker=marker, anchor=anchor)
+    lines[insert_at:insert_at] = missing_lines + [""]
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return True
+
+
+def _line_key(line: str, *, entry_type: str) -> str | None:
+    stripped = line.strip()
+    if entry_type == "setting":
+        if ":" not in stripped:
+            return None
+        key = stripped.split(":", 1)[0]
+        return key if key.isidentifier() else None
+
+    if stripped.startswith("# "):
+        stripped = stripped[2:].strip()
+    if "=" not in stripped:
+        return None
+    key = stripped.split("=", 1)[0]
+    return key if key else None
+
+
 def _insert_block_before_marker_or_anchor(
     *,
     path: Path,
@@ -439,16 +604,23 @@ def _insert_block_before_marker_or_anchor(
     anchor: str | None,
 ) -> None:
     lines = path.read_text(encoding="utf-8").splitlines()
-
-    if marker in lines:
-        insert_at = lines.index(marker)
-    elif anchor and anchor in lines:
-        insert_at = lines.index(anchor)
-    else:
-        insert_at = len(lines)
+    insert_at = _find_insert_index(lines=lines, marker=marker, anchor=anchor)
 
     lines[insert_at:insert_at] = block + [""]
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _find_insert_index(
+    *,
+    lines: list[str],
+    marker: str,
+    anchor: str | None,
+) -> int:
+    if marker in lines:
+        return lines.index(marker)
+    if anchor and anchor in lines:
+        return lines.index(anchor)
+    return len(lines)
 
 
 def _find_marker_index(lines: list[str], marker: str, path: Path) -> int:

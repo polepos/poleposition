@@ -4,4 +4,5 @@ include pole_position/template/AGENTS.md
 include pole_position/template/.dockerignore
 include pole_position/template/.env.example
 include pole_position/template/.gitignore
+include pole_position/template/.poleposition.toml
 global-exclude __pycache__ *.py[cod]

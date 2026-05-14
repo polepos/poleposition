@@ -8,7 +8,7 @@ It includes the current module archetypes: `standard`, `ai-prompt`, and
 `api-only`.
 
 <iframe
-  src="../assets/diagram/poleposition-cli-architecture.html"
+  src="assets/diagram/poleposition-cli-architecture.html"
   title="PolePosition architecture diagram"
-  style="width: 100%; min-height: 780px; border: 0;"
+  style={{width: "100%", minHeight: "780px", border: 0}}
 ></iframe>
