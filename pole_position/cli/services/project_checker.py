@@ -3,6 +3,20 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - Python < 3.11 fallback
+    try:
+        import tomli as tomllib
+    except ModuleNotFoundError:
+        tomllib = None  # type: ignore[assignment]
+
+try:
+    from packaging.version import InvalidVersion, Version
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
+    InvalidVersion = ValueError  # type: ignore[assignment]
+    Version = None  # type: ignore[assignment]
+
 from pole_position.cli.services.integration_specs import (
     CHECKED_INTEGRATION_CONTRACTS,
     IntegrationContract,
@@ -144,6 +158,11 @@ ALEMBIC_PATHS = [
     "migrations/script.py.mako",
     "migrations/versions",
 ]
+
+DEPENDENCY_NAME_PATTERN = re.compile(r"^\s*(?P<name>[A-Za-z0-9][A-Za-z0-9._-]*)")
+DEPENDENCY_SPECIFIER_PATTERN = re.compile(
+    r"(?P<operator>~=|===|==|!=|<=|>=|<|>)\s*(?P<version>[^,;\s]+)"
+)
 
 
 @dataclass(frozen=True)
@@ -1422,7 +1441,7 @@ def _has_integration_signal(
     if (
         isinstance(dependency, str)
         and pyproject_content is not None
-        and dependency in pyproject_content
+        and _pyproject_has_dependency(pyproject_content, dependency)
     ):
         return True
 
@@ -1486,11 +1505,134 @@ def _check_integration_dependency(
     if pyproject_content is None:
         return
 
-    if dependency not in pyproject_content:
+    if not _pyproject_has_dependency(pyproject_content, dependency):
         problems.append(
             f"Integration '{contract.name}' is missing dependency in "
             f"{project_root / 'pyproject.toml'}: {dependency}"
         )
+
+
+def _pyproject_has_dependency(pyproject_content: str, required_dependency: str) -> bool:
+    return _dependency_contract_satisfied(
+        dependencies=_project_dependency_specs(pyproject_content),
+        required_dependency=required_dependency,
+    )
+
+
+def _project_dependency_specs(pyproject_content: str) -> tuple[str, ...]:
+    if tomllib is not None:
+        try:
+            pyproject = tomllib.loads(pyproject_content)
+        except tomllib.TOMLDecodeError:
+            return ()
+
+        project = pyproject.get("project")
+        if not isinstance(project, dict):
+            return ()
+
+        dependencies = project.get("dependencies")
+        if not isinstance(dependencies, list):
+            return ()
+
+        return tuple(
+            dependency
+            for dependency in dependencies
+            if isinstance(dependency, str)
+        )
+
+    return _fallback_project_dependency_specs(pyproject_content)
+
+
+def _fallback_project_dependency_specs(pyproject_content: str) -> tuple[str, ...]:
+    project_match = re.search(
+        r"(?ms)^\s*\[project\]\s*$"
+        r"(?P<section>.*?)"
+        r"^\s*\[[^\]]+\]\s*$",
+        f"{pyproject_content}\n[__poleposition_end__]\n",
+    )
+    if project_match is None:
+        return ()
+
+    dependencies_match = re.search(
+        r"(?ms)^\s*dependencies\s*=\s*\[(?P<dependencies>.*?)\]\s*(?:#.*)?$",
+        project_match.group("section"),
+    )
+    if dependencies_match is None:
+        return ()
+
+    return tuple(
+        match.group("dependency")
+        for match in re.finditer(
+            r"""(?P<quote>["'])(?P<dependency>.+?)(?P=quote)""",
+            dependencies_match.group("dependencies"),
+        )
+    )
+
+
+def _dependency_contract_satisfied(
+    *,
+    dependencies: tuple[str, ...],
+    required_dependency: str,
+) -> bool:
+    required_name = _dependency_name(required_dependency)
+    required_min_version = _dependency_min_version(required_dependency)
+    if required_name is None:
+        return False
+
+    for dependency in dependencies:
+        if _dependency_name(dependency) != required_name:
+            continue
+        if required_min_version is None:
+            return True
+
+        dependency_min_version = _dependency_min_version(dependency)
+        if dependency_min_version is None:
+            continue
+        if _version_at_least(dependency_min_version, required_min_version):
+            return True
+
+    return False
+
+
+def _dependency_name(dependency: str) -> str | None:
+    match = DEPENDENCY_NAME_PATTERN.match(dependency.split(";", 1)[0])
+    if match is None:
+        return None
+    return _normalize_dependency_name(match.group("name"))
+
+
+def _normalize_dependency_name(name: str) -> str:
+    return re.sub(r"[-_.]+", "-", name).lower()
+
+
+def _dependency_min_version(dependency: str) -> str | None:
+    lower_bounds: list[str] = []
+    dependency_spec = dependency.split(";", 1)[0]
+    for match in DEPENDENCY_SPECIFIER_PATTERN.finditer(dependency_spec):
+        operator = match.group("operator")
+        if operator not in {">=", ">", "==", "===", "~="}:
+            continue
+        lower_bounds.append(match.group("version"))
+
+    if not lower_bounds:
+        return None
+
+    return max(lower_bounds, key=_version_sort_key)
+
+
+def _version_at_least(version: str, required_version: str) -> bool:
+    if Version is not None:
+        try:
+            return Version(version) >= Version(required_version)
+        except InvalidVersion:
+            pass
+
+    return _version_sort_key(version) >= _version_sort_key(required_version)
+
+
+def _version_sort_key(version: str) -> tuple[int, ...]:
+    parts = [int(part) for part in re.findall(r"\d+", version)]
+    return tuple(parts)
 
 
 def _check_integration_settings(

@@ -489,6 +489,78 @@ def test_check_reports_missing_kafka_dependency(tmp_path: Path) -> None:
     assert "aiokafka>=0.12.0" in result.stdout
 
 
+def test_check_accepts_upgraded_kafka_dependency(tmp_path: Path) -> None:
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    add_result = run_cli(project_root, "add", "integration", "kafka")
+    assert add_result.returncode == 0
+
+    pyproject_path = project_root / "pyproject.toml"
+    pyproject_path.write_text(
+        pyproject_path.read_text(encoding="utf-8").replace(
+            '"aiokafka>=0.12.0"',
+            '"aiokafka>=0.13.0"',
+        ),
+        encoding="utf-8",
+    )
+
+    result = run_cli(project_root, "check")
+
+    assert result.returncode == 0
+    assert "PolePosition project check passed." in result.stdout
+
+
+def test_check_reports_kafka_dependency_below_required_version(
+    tmp_path: Path,
+) -> None:
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    add_result = run_cli(project_root, "add", "integration", "kafka")
+    assert add_result.returncode == 0
+
+    pyproject_path = project_root / "pyproject.toml"
+    pyproject_path.write_text(
+        pyproject_path.read_text(encoding="utf-8").replace(
+            '"aiokafka>=0.12.0"',
+            '"aiokafka>=0.11.0"',
+        ),
+        encoding="utf-8",
+    )
+
+    result = run_cli(project_root, "check")
+
+    assert result.returncode != 0
+    assert "Integration 'kafka' is missing dependency" in result.stdout
+    assert "aiokafka>=0.12.0" in result.stdout
+
+
+def test_check_accepts_normalized_rabbitmq_dependency_name(tmp_path: Path) -> None:
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    add_result = run_cli(project_root, "add", "integration", "rabbitmq")
+    assert add_result.returncode == 0
+
+    pyproject_path = project_root / "pyproject.toml"
+    pyproject_path.write_text(
+        pyproject_path.read_text(encoding="utf-8").replace(
+            '"aio-pika>=9.0.0"',
+            '"aio_pika>=9.1.0"',
+        ),
+        encoding="utf-8",
+    )
+
+    result = run_cli(project_root, "check")
+
+    assert result.returncode == 0
+    assert "PolePosition project check passed." in result.stdout
+
+
 def test_check_reports_missing_rabbitmq_settings_and_env(tmp_path: Path) -> None:
     create_result = run_cli(tmp_path, "start", "myapp")
     assert create_result.returncode == 0
