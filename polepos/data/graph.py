@@ -18,7 +18,10 @@ class Graph(Generic[T]):
         directed: bool = False,
     ) -> None:
         self.directed = directed
-        self._adjacency: dict[T, set[T]] = {}
+        # Adjacency is stored as an insertion-ordered mapping acting as an
+        # ordered set so traversals are deterministic across processes (a plain
+        # ``set`` iterates in hash order, which varies with ``PYTHONHASHSEED``).
+        self._adjacency: dict[T, dict[T, None]] = {}
         for source, target in edges:
             self.add_edge(source, target)
 
@@ -29,24 +32,24 @@ class Graph(Generic[T]):
         return len(self._adjacency)
 
     def add_node(self, node: T) -> None:
-        self._adjacency.setdefault(node, set())
+        self._adjacency.setdefault(node, {})
 
     def add_edge(self, source: T, target: T) -> None:
         self.add_node(source)
         self.add_node(target)
-        self._adjacency[source].add(target)
+        self._adjacency[source][target] = None
         if not self.directed:
-            self._adjacency[target].add(source)
+            self._adjacency[target][source] = None
 
     def remove_edge(self, source: T, target: T) -> None:
-        self._adjacency[source].remove(target)
+        del self._adjacency[source][target]
         if not self.directed:
-            self._adjacency[target].remove(source)
+            del self._adjacency[target][source]
 
     def remove_node(self, node: T) -> None:
         del self._adjacency[node]
         for neighbors in self._adjacency.values():
-            neighbors.discard(node)
+            neighbors.pop(node, None)
 
     def nodes(self) -> set[T]:
         return set(self._adjacency)
@@ -74,6 +77,8 @@ class Graph(Generic[T]):
         return set(self._adjacency[node])
 
     def bfs(self, start: T) -> Iterator[T]:
+        if start not in self._adjacency:
+            raise ValueError(f"node not in graph: {start!r}")
         seen = {start}
         queue: deque[T] = deque([start])
         while queue:
@@ -86,6 +91,8 @@ class Graph(Generic[T]):
                 queue.append(neighbor)
 
     def dfs(self, start: T) -> Iterator[T]:
+        if start not in self._adjacency:
+            raise ValueError(f"node not in graph: {start!r}")
         seen: set[T] = set()
         stack = [start]
         while stack:
@@ -97,6 +104,10 @@ class Graph(Generic[T]):
             stack.extend(reversed(tuple(self._adjacency[node])))
 
     def shortest_path(self, source: T, target: T) -> list[T]:
+        if source not in self._adjacency:
+            raise ValueError(f"node not in graph: {source!r}")
+        if target not in self._adjacency:
+            raise ValueError(f"node not in graph: {target!r}")
         parents: dict[T, T | None] = {source: None}
         queue: deque[T] = deque([source])
         while queue:

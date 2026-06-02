@@ -30,10 +30,16 @@ class UnionFind(Generic[T]):
 
     def find(self, value: T) -> T:
         self.add(value)
-        parent = self._parent[value]
-        if parent != value:
-            self._parent[value] = self.find(parent)
-        return self._parent[value]
+        # Iterative two-pass find: locate the root, then compress the path.
+        # Recursion would risk RecursionError on long chains before compression.
+        root = value
+        while self._parent[root] != root:
+            root = self._parent[root]
+
+        node = value
+        while self._parent[node] != root:
+            self._parent[node], node = root, self._parent[node]
+        return root
 
     def union(self, left: T, right: T) -> T:
         left_root = self.find(left)

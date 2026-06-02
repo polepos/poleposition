@@ -206,3 +206,69 @@ def test_ttl_cache_evicts_when_max_size_exceeded() -> None:
     assert "b" in cache
     assert "c" in cache
     assert len(cache) == 2
+
+
+def test_graph_traversals_follow_edge_insertion_order() -> None:
+    from polepos.data import Graph
+
+    # Neighbour order must mirror edge insertion, not the hash order of a set,
+    # so traversals are reproducible regardless of PYTHONHASHSEED.
+    graph = Graph(
+        [("root", "b"), ("root", "a"), ("root", "c")],
+        directed=True,
+    )
+
+    assert list(graph.bfs("root")) == ["root", "b", "a", "c"]
+    assert list(graph.dfs("root")) == ["root", "b", "a", "c"]
+
+    dag = Graph([("root", "b"), ("root", "a")], directed=True)
+    assert dag.topological_sort() == ["root", "b", "a"]
+
+
+def test_graph_traversals_reject_unknown_start_node() -> None:
+    from polepos.data import Graph
+
+    graph = Graph([("a", "b")])
+
+    with pytest.raises(ValueError, match="not in graph"):
+        list(graph.bfs("missing"))
+    with pytest.raises(ValueError, match="not in graph"):
+        list(graph.dfs("missing"))
+    with pytest.raises(ValueError, match="not in graph"):
+        graph.shortest_path("missing", "a")
+    with pytest.raises(ValueError, match="not in graph"):
+        graph.shortest_path("a", "missing")
+
+
+def test_union_find_handles_deep_chains_without_recursion_error() -> None:
+    from polepos.data import UnionFind
+
+    union_find = UnionFind(range(3000))
+    # Force a degenerate linear parent chain deeper than the recursion limit;
+    # an iterative find must resolve and compress it without RecursionError.
+    for value in range(1, 3000):
+        union_find._parent[value] = value - 1
+
+    assert union_find.find(2999) == 0
+    assert union_find._parent[2999] == 0
+
+
+def test_sorted_irange_is_lazy_and_consistent_across_containers() -> None:
+    import types
+
+    from polepos.data import SortedDict, SortedList, SortedSet
+
+    sorted_list = SortedList([5, 1, 3, 2, 4])
+    result = sorted_list.irange(2, 4)
+    assert isinstance(result, types.GeneratorType)
+    assert list(result) == [2, 3, 4]
+
+    sorted_set = SortedSet([5, 1, 3, 2, 4])
+    assert list(sorted_set.irange(2, 4)) == [2, 3, 4]
+
+    sorted_dict = SortedDict([(key, key * 10) for key in [5, 1, 3, 2, 4]])
+    assert list(sorted_dict.irange(2, 4)) == [(2, 20), (3, 30), (4, 40)]
+
+    assert list(sorted_list.irange(2, 4, inclusive=(False, False))) == [3]
+    assert list(sorted_set.irange(2, 4, inclusive=(False, False))) == [3]
+    assert list(sorted_dict.irange(2, 4, inclusive=(False, False))) == [(3, 30)]

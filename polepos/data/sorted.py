@@ -12,6 +12,30 @@ T = TypeVar("T")
 V = TypeVar("V")
 
 
+def _irange_bounds(
+    items: list,
+    minimum: object | None,
+    maximum: object | None,
+    inclusive: tuple[bool, bool],
+) -> tuple[int, int]:
+    """Resolve the slice bounds for a half-open range over a sorted list."""
+    start = 0
+    stop = len(items)
+    if minimum is not None:
+        start = (
+            _bisect_left(items, minimum)
+            if inclusive[0]
+            else _bisect_right(items, minimum)
+        )
+    if maximum is not None:
+        stop = (
+            _bisect_right(items, maximum)
+            if inclusive[1]
+            else _bisect_left(items, maximum)
+        )
+    return start, stop
+
+
 class SortedList(Generic[T]):
     """A list that keeps values in sorted order."""
 
@@ -72,21 +96,8 @@ class SortedList(Generic[T]):
         *,
         inclusive: tuple[bool, bool] = (True, True),
     ) -> Iterator[T]:
-        start = 0
-        stop = len(self._items)
-        if minimum is not None:
-            start = (
-                self.bisect_left(minimum)
-                if inclusive[0]
-                else self.bisect_right(minimum)
-            )
-        if maximum is not None:
-            stop = (
-                self.bisect_right(maximum)
-                if inclusive[1]
-                else self.bisect_left(maximum)
-            )
-        return iter(self._items[start:stop])
+        start, stop = _irange_bounds(self._items, minimum, maximum, inclusive)
+        yield from self._items[start:stop]
 
     def to_list(self) -> list[T]:
         return list(self._items)
@@ -140,11 +151,8 @@ class SortedSet(MutableSet[T], Generic[T]):
         *,
         inclusive: tuple[bool, bool] = (True, True),
     ) -> Iterator[T]:
-        return SortedList(self._items).irange(
-            minimum=minimum,
-            maximum=maximum,
-            inclusive=inclusive,
-        )
+        start, stop = _irange_bounds(self._items, minimum, maximum, inclusive)
+        yield from self._items[start:stop]
 
 
 class SortedDict(MutableMapping[K, V], Generic[K, V]):
@@ -191,19 +199,6 @@ class SortedDict(MutableMapping[K, V], Generic[K, V]):
         *,
         inclusive: tuple[bool, bool] = (True, True),
     ) -> Iterator[tuple[K, V]]:
-        start = 0
-        stop = len(self._keys)
-        if minimum is not None:
-            start = (
-                self.bisect_left(minimum)
-                if inclusive[0]
-                else self.bisect_right(minimum)
-            )
-        if maximum is not None:
-            stop = (
-                self.bisect_right(maximum)
-                if inclusive[1]
-                else self.bisect_left(maximum)
-            )
+        start, stop = _irange_bounds(self._keys, minimum, maximum, inclusive)
         for key in self._keys[start:stop]:
             yield key, self._values[key]
