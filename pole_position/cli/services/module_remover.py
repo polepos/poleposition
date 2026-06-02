@@ -18,6 +18,7 @@ from pole_position.cli.services.module_templates import llm_env_block
 from pole_position.cli.services.module_templates import llm_integration_files
 from pole_position.cli.services.module_templates import llm_settings_block
 from pole_position.cli.services.module_templates import module_template_detection_contracts
+from pole_position.cli.services.project_checker import LEGACY_RACES_UNIT_TEST
 from pole_position.cli.services.project_locator import find_package_root
 from pole_position.cli.services.project_locator import find_project_root
 from pole_position.cli.services.project_manifest import ManifestModuleTemplate
@@ -445,7 +446,10 @@ def _router_wiring_ranges(
     except UnicodeDecodeError:
         return []
 
-    tree = ast.parse(content, filename=str(path))
+    try:
+        tree = ast.parse(content, filename=str(path))
+    except SyntaxError:
+        return []
     router_alias = f"{module_name}_router"
     router_module = f"{package_name}.modules.{module_name}.router"
     ranges = [
@@ -848,19 +852,6 @@ def _module_export_line(module_name: str) -> str:
     return f'    "{module_name}",'
 
 
-def _router_lines(package_name: str, module_name: str) -> list[str]:
-    return [
-        (
-            f"from {package_name}.modules.{module_name}.router import router as "
-            f"{module_name}_router"
-        ),
-        (
-            f'api_router.include_router({module_name}_router, prefix="/{module_name}", '
-            f'tags=["{module_name}"])'
-        ),
-    ]
-
-
 def _model_import_line(package_name: str, module_name: str) -> str:
     return f"    from {package_name}.modules.{module_name} import model  # noqa: F401"
 
@@ -888,7 +879,10 @@ def _remove_router_wiring(path: Path, package_name: str, module_name: str) -> bo
     content = _read_optional_text(path)
     if not content:
         return False
-    tree = ast.parse(content, filename=str(path))
+    try:
+        tree = ast.parse(content, filename=str(path))
+    except SyntaxError:
+        return False
     router_alias = f"{module_name}_router"
     router_module = f"{package_name}.modules.{module_name}.router"
     ranges = [
@@ -1087,8 +1081,13 @@ def _generated_test_paths(
         ),
         project_root / "tests" / "unit" / template_contract.unit_test_name(module_name),
     ]
+    # Legacy: older scaffolds shipped a "races" starter whose unit test used the
+    # singular name (test_race_service.py). Clean it up only when that legacy
+    # file is actually present, matching project_checker._is_legacy_starter_module.
     if module_name == "races":
-        test_paths.append(project_root / "tests" / "unit" / "test_race_service.py")
+        legacy_unit_test = project_root / LEGACY_RACES_UNIT_TEST
+        if legacy_unit_test.is_file():
+            test_paths.append(legacy_unit_test)
 
     return test_paths
 
