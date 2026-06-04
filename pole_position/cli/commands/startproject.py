@@ -14,7 +14,6 @@ from pole_position.cli.services.project_name import (
 )
 from pole_position.cli.usage import print_command_help
 
-
 DATABASE_CHOICES = "|".join(SUPPORTED_DATABASES)
 USAGE = (
     "Usage: polepos start <project_name> "
@@ -73,15 +72,17 @@ def run(args: list[str]) -> None:
     except ValueError as exc:
         print(str(exc))
         print(USAGE)
-        raise SystemExit(1)
+        raise SystemExit(1) from exc
 
     package_name = normalize_package_name(project_name)
     try:
-        database_option = get_database_option(database, package_name=package_name)
+        database_option = get_database_option(
+            database, package_name=package_name
+        )
     except ValueError as exc:
         print(str(exc))
         print(USAGE)
-        raise SystemExit(1)
+        raise SystemExit(1) from exc
     project_path = Path(project_name)
 
     if project_path.exists():
@@ -101,7 +102,10 @@ def run(args: list[str]) -> None:
     command_prefix = "PYTHONDONTWRITEBYTECODE=1 " if no_bytecode else ""
 
     if no_bytecode:
-        print("Configured generated local Python commands to start without bytecode writes.")
+        print(
+            "Configured generated local Python commands to start without "
+            "bytecode writes."
+        )
 
     if install:
         try:
@@ -110,7 +114,7 @@ def run(args: list[str]) -> None:
             print(f"Dependencies installed successfully with {installer}.")
         except RuntimeError as exc:
             print(str(exc))
-            raise SystemExit(1)
+            raise SystemExit(1) from exc
 
     print("")
     print("Next steps:")

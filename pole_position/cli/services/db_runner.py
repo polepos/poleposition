@@ -47,7 +47,8 @@ def _build_alembic_command(
     if python is None:
         raise RuntimeError(
             "Could not find a Python runner for Alembic. "
-            "Use `uv sync --extra dev`, or activate a virtualenv with project dependencies "
+            "Use `uv sync --extra dev`, or activate a virtualenv with "
+            "project dependencies "
             "installed via pip."
         )
 

@@ -3,14 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Generic, TypeVar
 
-
 V = TypeVar("V")
 _MISSING = object()
 
 
 @dataclass
 class _TrieNode(Generic[V]):
-    children: dict[str, "_TrieNode[V]"] = field(default_factory=dict)
+    children: dict[str, _TrieNode[V]] = field(default_factory=dict)
     value: V | object = _MISSING
 
 

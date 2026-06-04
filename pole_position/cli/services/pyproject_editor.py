@@ -1,10 +1,11 @@
 import re
 from pathlib import Path
 
-from pole_position.cli.services.dependency_contract import dependency_contract_satisfied
-from pole_position.cli.services.dependency_contract import dependency_names_match
-from pole_position.cli.services.dependency_contract import parse_dependency_entry
-
+from pole_position.cli.services.dependency_contract import (
+    dependency_contract_satisfied,
+    dependency_names_match,
+    parse_dependency_entry,
+)
 
 SECTION_HEADER_PATTERN = re.compile(r"^\s*\[([^\]]+)\]\s*(?:#.*)?$")
 DEPENDENCIES_ARRAY_PATTERN = re.compile(
@@ -39,11 +40,13 @@ def ensure_project_dependency_text(
 
     lines = content.splitlines()
     project_start, project_end = _find_project_section(lines, path_label)
-    array_start, array_end, array_indent, inline_values = _find_project_dependencies(
-        lines,
-        project_start,
-        project_end,
-        path_label,
+    array_start, array_end, array_indent, inline_values = (
+        _find_project_dependencies(
+            lines,
+            project_start,
+            project_end,
+            path_label,
+        )
     )
     existing_dependencies = _dependency_values(
         lines=lines,
@@ -61,7 +64,9 @@ def ensure_project_dependency_text(
             start_index=array_start,
             end_index=array_end,
             array_indent=array_indent,
-            dependencies=_replace_or_append_dependency(inline_values, dependency),
+            dependencies=_replace_or_append_dependency(
+                inline_values, dependency
+            ),
         )
     else:
         replaced_dependency = _replace_dependency_line(
@@ -277,7 +282,9 @@ def _insert_dependency_line(
     array_indent: str,
     dependency: str,
 ) -> None:
-    entry_indent = _dependency_entry_indent(lines, start_index, end_index, array_indent)
+    entry_indent = _dependency_entry_indent(
+        lines, start_index, end_index, array_indent
+    )
     dependency_line = f'{entry_indent}"{dependency}",'
     insert_at = end_index
 
@@ -306,7 +313,9 @@ def _dependency_entry_indent(
     return f"{array_indent}    "
 
 
-def _dependency_lines(*, dependencies: list[str], entry_indent: str) -> list[str]:
+def _dependency_lines(
+    *, dependencies: list[str], entry_indent: str
+) -> list[str]:
     return [
         f'{entry_indent}"{dependency}",'
         for dependency in sorted(dependencies, key=str.lower)

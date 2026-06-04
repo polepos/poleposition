@@ -3,20 +3,25 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from pole_position.cli.services.module_templates import (
-    CrudFeatureSet,
     DEFAULT_CRUD_FEATURES,
-    ModuleTemplate,
     SUPPORTED_MODULE_TEMPLATES,
+    CrudFeatureSet,
+    ModuleTemplate,
     build_module_template,
     llm_env_block,
     llm_integration_files,
     llm_settings_block,
 )
-from pole_position.cli.services.project_locator import find_package_root, find_project_root
-from pole_position.cli.services.project_manifest import manifest_path
-from pole_position.cli.services.project_manifest import read_project_manifest
-from pole_position.cli.services.project_manifest import record_manifest_integration
-from pole_position.cli.services.project_manifest import record_manifest_module
+from pole_position.cli.services.project_locator import (
+    find_package_root,
+    find_project_root,
+)
+from pole_position.cli.services.project_manifest import (
+    manifest_path,
+    read_project_manifest,
+    record_manifest_integration,
+    record_manifest_module,
+)
 
 ROUTER_IMPORTS_MARKER = "# polepos:router-imports"
 ROUTER_INCLUDES_MARKER = "# polepos:router-includes"
@@ -52,7 +57,8 @@ def add_module(
     if template not in SUPPORTED_MODULE_TEMPLATES:
         supported = ", ".join(SUPPORTED_MODULE_TEMPLATES)
         raise ValueError(
-            f"Unsupported module template '{template}'. Expected one of: {supported}."
+            f"Unsupported module template '{template}'. Expected one of: "
+            f"{supported}."
         )
 
     project_root = find_project_root(cwd)
@@ -82,13 +88,19 @@ def add_module(
 
     _update_modules_init(modules_root / "__init__.py", module_name)
     updated_files.append(modules_root / "__init__.py")
-    _update_api_router(package_root / "api" / "router.py", package_name, module_name)
+    _update_api_router(
+        package_root / "api" / "router.py", package_name, module_name
+    )
     updated_files.append(package_root / "api" / "router.py")
     if template_spec.update_db_models:
-        _update_db_models(package_root / "db" / "models.py", package_name, module_name)
+        _update_db_models(
+            package_root / "db" / "models.py", package_name, module_name
+        )
         updated_files.append(package_root / "db" / "models.py")
     if template_spec.ensure_llm_integrations:
-        updated_files.extend(_ensure_llm_integrations(package_root, package_name))
+        updated_files.extend(
+            _ensure_llm_integrations(package_root, package_name)
+        )
     if template_spec.ensure_llm_settings:
         if _ensure_llm_settings(package_root / "settings.py"):
             updated_files.append(package_root / "settings.py")
@@ -182,8 +194,10 @@ def _validate_add_module_preflight(
         db_models_path = package_root / "db" / "models.py"
         if not db_models_path.is_file() and not (package_root / "db").exists():
             problems.append(
-                "Database-backed module templates require generated db/ wiring. "
-                "Use `polepos add module <name> --api-only` in a database-free project."
+                "Database-backed module templates require generated db/ "
+                "wiring. "
+                "Use `polepos add module <name> --api-only` in a "
+                "database-free project."
             )
         else:
             _collect_missing_marker(
@@ -224,19 +238,25 @@ def _collect_existing_generated_file(problems: list[str], path: Path) -> None:
         problems.append(f"Generated file already exists: {path}")
 
 
-def _collect_manifest_read_error(problems: list[str], project_root: Path) -> None:
+def _collect_manifest_read_error(
+    problems: list[str], project_root: Path
+) -> None:
     manifest = read_project_manifest(project_root)
     if manifest.read_error is not None:
         problems.append(manifest.read_error)
 
 
-def _collect_missing_marker(problems: list[str], path: Path, marker: str) -> None:
+def _collect_missing_marker(
+    problems: list[str], path: Path, marker: str
+) -> None:
     lines = _read_managed_file_lines(problems, path)
     if lines is None:
         return
 
     if marker not in lines:
-        problems.append(f"Required managed marker '{marker}' is missing in {path}")
+        problems.append(
+            f"Required managed marker '{marker}' is missing in {path}"
+        )
 
 
 def _collect_python_parse_error(problems: list[str], path: Path) -> None:
@@ -247,7 +267,8 @@ def _collect_python_parse_error(problems: list[str], path: Path) -> None:
         ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     except UnicodeDecodeError as exc:
         problems.append(
-            f"Could not read managed Python file for module add: {path}: {exc.reason}"
+            f"Could not read managed Python file for module add: {path}: "
+            f"{exc.reason}"
         )
     except SyntaxError as exc:
         problems.append(
@@ -276,7 +297,8 @@ def _collect_existing_managed_module_references(
 
     if template_spec.update_db_models and _line_exists(
         models_path,
-        f"    from {package_name}.modules.{module_name} import model  # noqa: F401",
+        f"    from {package_name}.modules.{module_name} import model  # "
+        f"noqa: F401",
     ):
         stale_references.append(f"model import in {models_path}")
 
@@ -299,7 +321,9 @@ def _line_exists(path: Path, line: str) -> bool:
         return False
 
 
-def _has_router_reference(path: Path, package_name: str, module_name: str) -> bool:
+def _has_router_reference(
+    path: Path, package_name: str, module_name: str
+) -> bool:
     if not path.is_file():
         return False
 
@@ -375,7 +399,9 @@ def _collect_missing_marker_unless_entries_exist(
         return
 
     if marker not in content.splitlines():
-        problems.append(f"Required managed marker '{marker}' is missing in {path}")
+        problems.append(
+            f"Required managed marker '{marker}' is missing in {path}"
+        )
 
 
 def _read_managed_file_text(problems: list[str], path: Path) -> str | None:
@@ -387,12 +413,15 @@ def _read_managed_file_text(problems: list[str], path: Path) -> str | None:
         return path.read_text(encoding="utf-8")
     except UnicodeDecodeError as exc:
         problems.append(
-            f"Could not read managed text file for module add: {path}: {exc.reason}"
+            f"Could not read managed text file for module add: {path}: "
+            f"{exc.reason}"
         )
         return None
 
 
-def _read_managed_file_lines(problems: list[str], path: Path) -> list[str] | None:
+def _read_managed_file_lines(
+    problems: list[str], path: Path
+) -> list[str] | None:
     content = _read_managed_file_text(problems, path)
     if content is None:
         return None
@@ -413,7 +442,9 @@ def _write_module_files(module_root: Path, files: dict[str, str]) -> list[Path]:
     return written
 
 
-def _write_module_tests(tests_root: Path, template_spec: ModuleTemplate) -> list[Path]:
+def _write_module_tests(
+    tests_root: Path, template_spec: ModuleTemplate
+) -> list[Path]:
     integration_root = tests_root / "integration"
     unit_root = tests_root / "unit"
     integration_root.mkdir(parents=True, exist_ok=True)
@@ -445,10 +476,12 @@ def _update_modules_init(path: Path, module_name: str) -> None:
 
 def _update_api_router(path: Path, package_name: str, module_name: str) -> None:
     import_line = (
-        f"from {package_name}.modules.{module_name}.router import router as {module_name}_router"
+        f"from {package_name}.modules.{module_name}.router import router as "
+        f"{module_name}_router"
     )
     include_line = (
-        f'api_router.include_router({module_name}_router, prefix="/{module_name}", '
+        f"api_router.include_router({module_name}_router, "
+        f'prefix="/{module_name}", '
         f'tags=["{module_name}"])'
     )
 
@@ -466,7 +499,10 @@ def _update_api_router(path: Path, package_name: str, module_name: str) -> None:
 
 
 def _update_db_models(path: Path, package_name: str, module_name: str) -> None:
-    import_line = f"    from {package_name}.modules.{module_name} import model  # noqa: F401"
+    import_line = (
+        f"    from {package_name}.modules.{module_name} import model  # noqa: "
+        f"F401"
+    )
     _insert_sorted_line_before_marker(
         path=path,
         line=import_line,
@@ -475,7 +511,9 @@ def _update_db_models(path: Path, package_name: str, module_name: str) -> None:
     )
 
 
-def _ensure_llm_integrations(package_root: Path, package_name: str) -> list[Path]:
+def _ensure_llm_integrations(
+    package_root: Path, package_name: str
+) -> list[Path]:
     written: list[Path] = []
     for relative_path, content in llm_integration_files(package_name).items():
         path = package_root / relative_path
@@ -513,7 +551,8 @@ def _insert_line_before_marker(path: Path, line: str, marker: str) -> None:
         lines = path.read_text(encoding="utf-8").splitlines()
     except UnicodeDecodeError as exc:
         raise RuntimeError(
-            f"Could not read managed text file for module add: {path}: {exc.reason}"
+            f"Could not read managed text file for module add: {path}: "
+            f"{exc.reason}"
         ) from exc
     marker_index = _find_marker_index(lines, marker, path)
 
@@ -535,7 +574,8 @@ def _insert_sorted_line_before_marker(
         lines = path.read_text(encoding="utf-8").splitlines()
     except UnicodeDecodeError as exc:
         raise RuntimeError(
-            f"Could not read managed text file for module add: {path}: {exc.reason}"
+            f"Could not read managed text file for module add: {path}: "
+            f"{exc.reason}"
         ) from exc
     marker_index = _find_marker_index(lines, marker, path)
 
@@ -545,10 +585,7 @@ def _insert_sorted_line_before_marker(
         match_prefix=match_prefix,
     )
 
-    managed_blocks = [
-        lines[start : end + 1]
-        for start, end in managed_ranges
-    ]
+    managed_blocks = [lines[start : end + 1] for start, end in managed_ranges]
     if any(block == [line] for block in managed_blocks):
         return
 
@@ -623,7 +660,8 @@ def _ensure_block_entries_before_marker_or_anchor(
         lines = path.read_text(encoding="utf-8").splitlines()
     except UnicodeDecodeError as exc:
         raise RuntimeError(
-            f"Could not read managed text file for module add: {path}: {exc.reason}"
+            f"Could not read managed text file for module add: {path}: "
+            f"{exc.reason}"
         ) from exc
     missing_lines = _missing_block_lines(
         lines=lines,
@@ -724,7 +762,10 @@ def _missing_block_lines(
         commented_key = _commented_env_line_key(line)
         if commented_key is None:
             continue
-        if commented_key not in active_keys and commented_key not in commented_keys:
+        if (
+            commented_key not in active_keys
+            and commented_key not in commented_keys
+        ):
             missing_lines.append(line)
 
     return missing_lines
@@ -741,7 +782,8 @@ def _insert_block_before_marker_or_anchor(
         lines = path.read_text(encoding="utf-8").splitlines()
     except UnicodeDecodeError as exc:
         raise RuntimeError(
-            f"Could not read managed text file for module add: {path}: {exc.reason}"
+            f"Could not read managed text file for module add: {path}: "
+            f"{exc.reason}"
         ) from exc
     insert_at = _find_insert_index(lines=lines, marker=marker, anchor=anchor)
 
@@ -786,10 +828,13 @@ def _module_next_steps(
 
     if template_spec.update_db_models:
         steps.append(
-            f'After model changes, run `polepos db revision -m "add {module_name} table"`'
+            f'After model changes, run `polepos db revision -m "add '
+            f'{module_name} table"`'
         )
 
     if template_spec.ensure_llm_settings:
-        steps.append("Set LLM_API_KEY in .env before calling the generated endpoint")
+        steps.append(
+            "Set LLM_API_KEY in .env before calling the generated endpoint"
+        )
 
     return tuple(steps)

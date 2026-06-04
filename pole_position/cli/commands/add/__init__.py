@@ -1,10 +1,11 @@
 from pole_position.cli.command import Command
 from pole_position.cli.commands.add.auth import command as auth_cmd
-from pole_position.cli.commands.add.integration import command as integration_cmd
+from pole_position.cli.commands.add.integration import (
+    command as integration_cmd,
+)
 from pole_position.cli.commands.add.module import command as module_cmd
 from pole_position.cli.registry import CommandRegistry
 from pole_position.cli.usage import print_command_help
-
 
 subcommands = CommandRegistry()
 subcommands.register(auth_cmd)

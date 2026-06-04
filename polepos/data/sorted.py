@@ -6,7 +6,6 @@ from bisect import insort_right
 from collections.abc import Iterable, Iterator, MutableMapping, MutableSet
 from typing import Generic, TypeVar, overload
 
-
 K = TypeVar("K")
 T = TypeVar("T")
 V = TypeVar("V")
@@ -53,12 +52,10 @@ class SortedList(Generic[T]):
         return len(self._items)
 
     @overload
-    def __getitem__(self, index: int) -> T:
-        ...
+    def __getitem__(self, index: int) -> T: ...
 
     @overload
-    def __getitem__(self, index: slice) -> list[T]:
-        ...
+    def __getitem__(self, index: slice) -> list[T]: ...
 
     def __getitem__(self, index: int | slice) -> T | list[T]:
         return self._items[index]

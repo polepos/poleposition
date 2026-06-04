@@ -1,16 +1,17 @@
+import re
 from dataclasses import dataclass
 from pathlib import Path
-import re
 
 from pole_position.cli.services.module_templates.crud_features import (
     DEFAULT_CRUD_FEATURES,
     CrudFeatureSet,
 )
 
-
 MANIFEST_FILE_NAME = ".poleposition.toml"
 SECTION_PATTERN = re.compile(r"^\s*\[([^\]]+)\]\s*$")
-ASSIGNMENT_PATTERN = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_-]*)\s*=\s*(.+?)\s*$")
+ASSIGNMENT_PATTERN = re.compile(
+    r"^\s*([A-Za-z_][A-Za-z0-9_-]*)\s*=\s*(.+?)\s*$"
+)
 MODULE_TEMPLATE_VALUE_PATTERN = re.compile(
     r"^(?P<template>[A-Za-z0-9_-]+)(?:\[(?P<features>[A-Za-z0-9_, -]*)\])?$"
 )
@@ -73,9 +74,7 @@ def parse_manifest_module_template(value: str) -> ManifestModuleTemplate:
         return ManifestModuleTemplate(name=template)
 
     feature_labels = {
-        label.strip()
-        for label in raw_features.split(",")
-        if label.strip()
+        label.strip() for label in raw_features.split(",") if label.strip()
     }
     if template != "crud":
         raise ValueError(
@@ -104,7 +103,8 @@ def read_project_manifest(project_root: Path) -> ProjectManifest:
         manifest_lines = path.read_text(encoding="utf-8").splitlines()
     except UnicodeDecodeError as exc:
         return ProjectManifest(
-            read_error=f"Could not read project manifest as UTF-8: {path}: {exc.reason}",
+            read_error=f"Could not read project manifest as UTF-8: {path}: "
+            f"{exc.reason}",
             exists=True,
         )
 
@@ -150,7 +150,9 @@ def read_project_manifest(project_root: Path) -> ProjectManifest:
     )
 
 
-def write_project_manifest(project_root: Path, manifest: ProjectManifest) -> None:
+def write_project_manifest(
+    project_root: Path, manifest: ProjectManifest
+) -> None:
     package_name = manifest.package_name or ""
     database = manifest.database or "custom"
     modules = manifest.module_templates
@@ -175,9 +177,13 @@ def write_project_manifest(project_root: Path, manifest: ProjectManifest) -> Non
             lines.append(f"{integration_name} = {enabled}")
             continue
 
-        lines.append(f"{integration_name} = {invalid_integrations[integration_name]}")
+        lines.append(
+            f"{integration_name} = {invalid_integrations[integration_name]}"
+        )
 
-    manifest_path(project_root).write_text("\n".join(lines) + "\n", encoding="utf-8")
+    manifest_path(project_root).write_text(
+        "\n".join(lines) + "\n", encoding="utf-8"
+    )
 
 
 def record_manifest_module(
@@ -256,7 +262,9 @@ def record_manifest_integration(
     )
 
 
-def remove_manifest_integration(*, project_root: Path, integration_name: str) -> None:
+def remove_manifest_integration(
+    *, project_root: Path, integration_name: str
+) -> None:
     manifest = read_project_manifest(project_root)
     if not manifest.exists or manifest.read_error is not None:
         return
@@ -306,10 +314,6 @@ def _parse_value(raw_value: str) -> str | bool:
         return True
     if value.lower() == "false":
         return False
-    if (
-        len(value) >= 2
-        and value[0] == value[-1]
-        and value[0] in {"'", '"'}
-    ):
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
         return value[1:-1]
     return value

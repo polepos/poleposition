@@ -4,8 +4,10 @@ from pole_position.cli.services.module_templates.crud_features import (
 )
 from pole_position.cli.services.module_templates.naming import to_class_name
 from pole_position.cli.services.module_templates.renderer import render_template
-from pole_position.cli.services.module_templates.spec import CRUD_MODULE_TEMPLATE_CONTRACT
-from pole_position.cli.services.module_templates.spec import ModuleTemplate
+from pole_position.cli.services.module_templates.spec import (
+    CRUD_MODULE_TEMPLATE_CONTRACT,
+    ModuleTemplate,
+)
 
 
 def build_crud_template(
@@ -46,7 +48,9 @@ def build_crud_template(
             "crud/tests/integration.py.tpl",
             context,
         ),
-        unit_test_name=CRUD_MODULE_TEMPLATE_CONTRACT.unit_test_name(module_name),
+        unit_test_name=CRUD_MODULE_TEMPLATE_CONTRACT.unit_test_name(
+            module_name
+        ),
         unit_test_content=render_template(
             "crud/tests/unit.py.tpl",
             context,
@@ -74,7 +78,9 @@ def _crud_context(
         **_schemas_context(class_name, features),
         **_router_context(module_name, class_name, features),
         **_service_context(module_name, class_name, features),
-        **_integration_test_context(package_name, module_name, class_name, features),
+        **_integration_test_context(
+            package_name, module_name, class_name, features
+        ),
         **_unit_test_context(class_name, features),
     }
 
@@ -102,7 +108,8 @@ def _model_context(features: CrudFeatureSet) -> dict[str, str]:
         "model_utc_now": utc_now,
         "model_tenant_field": _line_if(
             features.tenant_scoped,
-            "    tenant_id: Mapped[str] = mapped_column(String(64), index=True)\n",
+            "    tenant_id: Mapped[str] = mapped_column(String(64), "
+            "index=True)\n",
         ),
         "model_timestamp_fields": _line_if(
             features.timestamps,
@@ -127,7 +134,9 @@ def _model_context(features: CrudFeatureSet) -> dict[str, str]:
     }
 
 
-def _repository_context(class_name: str, features: CrudFeatureSet) -> dict[str, str]:
+def _repository_context(
+    class_name: str, features: CrudFeatureSet
+) -> dict[str, str]:
     sqlalchemy_imports = ["select"]
     if features.pagination:
         sqlalchemy_imports.insert(0, "func")
@@ -156,7 +165,9 @@ def _repository_context(class_name: str, features: CrudFeatureSet) -> dict[str, 
             features.pagination,
             "        statement = statement.offset(offset).limit(limit)\n",
         ),
-        "repository_count_method": _repository_count_method(class_name, features),
+        "repository_count_method": _repository_count_method(
+            class_name, features
+        ),
         "repository_get_parameters": _keyword_parameters(
             [("tenant_id: str", features.tenant_scoped)]
         ),
@@ -176,11 +187,13 @@ def _repository_filters(class_name: str, features: CrudFeatureSet) -> str:
     lines: list[str] = []
     if features.tenant_scoped:
         lines.append(
-            f"        statement = statement.where({class_name}.tenant_id == tenant_id)"
+            f"        statement = statement.where({class_name}.tenant_id "
+            f"== tenant_id)"
         )
     if features.soft_delete:
         lines.append(
-            f"        statement = statement.where({class_name}.deleted_at.is_(None))"
+            f"        statement = "
+            f"statement.where({class_name}.deleted_at.is_(None))"
         )
     return "\n".join(lines) + ("\n" if lines else "")
 
@@ -189,7 +202,9 @@ def _repository_count_method(class_name: str, features: CrudFeatureSet) -> str:
     if not features.pagination:
         return ""
 
-    parameters = _keyword_parameters([("tenant_id: str", features.tenant_scoped)])
+    parameters = _keyword_parameters(
+        [("tenant_id: str", features.tenant_scoped)]
+    )
     filters = _repository_filters(class_name, features)
     return (
         "\n"
@@ -219,18 +234,22 @@ def _repository_delete_body(features: CrudFeatureSet) -> str:
     return "        self.db.delete(item)\n        self.db.commit()\n"
 
 
-def _schemas_context(class_name: str, features: CrudFeatureSet) -> dict[str, str]:
+def _schemas_context(
+    class_name: str, features: CrudFeatureSet
+) -> dict[str, str]:
     read_fields = ["    id: int"]
     create_fields = []
     if features.tenant_scoped:
         create_fields.append(
-            '    tenant_id: str = Field(min_length=1, max_length=64)'
+            "    tenant_id: str = Field(min_length=1, max_length=64)"
         )
         read_fields.append("    tenant_id: str")
     create_fields.append("    name: str = Field(min_length=3, max_length=120)")
     read_fields.append("    name: str")
     if features.timestamps:
-        read_fields.extend(["    created_at: datetime", "    updated_at: datetime"])
+        read_fields.extend(
+            ["    created_at: datetime", "    updated_at: datetime"]
+        )
     if features.soft_delete:
         read_fields.append("    deleted_at: datetime | None = None")
 
@@ -265,9 +284,15 @@ def _router_context(
     features: CrudFeatureSet,
 ) -> dict[str, str]:
     list_response_model = (
-        f"{class_name}Page" if features.pagination else f"list[{class_name}Read]"
+        f"{class_name}Page"
+        if features.pagination
+        else f"list[{class_name}Read]"
     )
-    schema_imports = [f"{class_name}Create", f"{class_name}Read", f"{class_name}Update"]
+    schema_imports = [
+        f"{class_name}Create",
+        f"{class_name}Read",
+        f"{class_name}Update",
+    ]
     if features.pagination:
         schema_imports.insert(1, f"{class_name}Page")
 
@@ -277,7 +302,9 @@ def _router_context(
             ", Query",
         ),
         "router_api_deps_imports": (
-            "db_session, get_current_user" if features.auth_required else "db_session"
+            "db_session, get_current_user"
+            if features.auth_required
+            else "db_session"
         ),
         "router_schema_imports": _multiline_import_names(schema_imports),
         "router_dependencies": (
@@ -302,7 +329,9 @@ def _router_context(
                 ("tenant_id=tenant_id", features.tenant_scoped),
             ]
         ),
-        "router_update_parameters": _router_update_parameters(class_name, features),
+        "router_update_parameters": _router_update_parameters(
+            class_name, features
+        ),
         "router_update_call_args": _call_arguments(
             [
                 ("item_id", True),
@@ -382,7 +411,9 @@ def _service_context(
             ]
         ),
         "service_list_return_type": list_return_type,
-        "service_list_body": _service_list_body(module_name, class_name, features),
+        "service_list_body": _service_list_body(
+            module_name, class_name, features
+        ),
         "service_get_parameters": _keyword_parameters(
             [("tenant_id: str", features.tenant_scoped)]
         ),
@@ -428,7 +459,8 @@ def _service_list_body(
     if not features.pagination:
         return (
             f'        logger.info("Listing {module_name}")\n'
-            f"        return self.repository.list({_inline_call_arguments(_list_args(features))})"
+            f"        return "
+            f"self.repository.list({_inline_call_arguments(_list_args(features))})"
         )
 
     list_args = _inline_call_arguments(
@@ -436,7 +468,8 @@ def _service_list_body(
     )
     count_args = _inline_call_arguments(_list_args(features))
     return (
-        f'        logger.info("Listing {module_name}", extra={{"limit": limit, "offset": offset}})\n'
+        f'        logger.info("Listing {module_name}", extra={{"limit": '
+        f'limit, "offset": offset}})\n'
         f"        items = self.repository.list({list_args})\n"
         f"        total = self.repository.count({count_args})\n"
         f"        return {class_name}Page(\n"
@@ -454,10 +487,14 @@ def _integration_test_context(
     class_name: str,
     features: CrudFeatureSet,
 ) -> dict[str, str]:
-    create_payload = {
-        "tenant_id": "tenant-a",
-        "name": f"Main {class_name}",
-    } if features.tenant_scoped else {"name": f"Main {class_name}"}
+    create_payload = (
+        {
+            "tenant_id": "tenant-a",
+            "name": f"Main {class_name}",
+        }
+        if features.tenant_scoped
+        else {"name": f"Main {class_name}"}
+    )
     update_payload = {"name": f"Updated {class_name}"}
 
     return {
@@ -469,8 +506,9 @@ def _integration_test_context(
             features.auth_required,
             "\n\n"
             "def _auth_headers() -> dict[str, str]:\n"
-            "    token = create_access_token(subject=\"test-user\", roles=[\"user\"])\n"
-            "    return {\"Authorization\": f\"Bearer {token}\"}\n",
+            '    token = create_access_token(subject="test-user", '
+            'roles=["user"])\n'
+            '    return {"Authorization": f"Bearer {token}"}\n',
         ),
         "integration_headers_argument": _line_if(
             features.auth_required,
@@ -481,15 +519,18 @@ def _integration_test_context(
         "integration_item_query_suffix": (
             "?tenant_id=tenant-a" if features.tenant_scoped else ""
         ),
-        "integration_list_query_suffix": _integration_list_query_suffix(features),
+        "integration_list_query_suffix": _integration_list_query_suffix(
+            features
+        ),
         "integration_list_assertions": _integration_list_assertions(
             class_name,
             features,
         ),
-        "integration_timestamp_assertions": _integration_timestamp_assertions(features),
-        "integration_soft_delete_assertions": _integration_soft_delete_assertions(
-            module_name,
+        "integration_timestamp_assertions": _integration_timestamp_assertions(
             features
+        ),
+        "integration_soft_delete_assertions": (
+            _integration_soft_delete_assertions(module_name, features)
         ),
         "integration_auth_required_test": _integration_auth_required_test(
             module_name,
@@ -507,19 +548,22 @@ def _integration_list_query_suffix(features: CrudFeatureSet) -> str:
     return f"?{'&'.join(query_params)}" if query_params else ""
 
 
-def _integration_list_assertions(class_name: str, features: CrudFeatureSet) -> str:
+def _integration_list_assertions(
+    class_name: str, features: CrudFeatureSet
+) -> str:
     if features.pagination:
         return (
             "    list_payload = list_response.json()\n"
-            "    assert list_payload[\"total\"] == 1\n"
-            "    assert list_payload[\"limit\"] == 10\n"
-            "    assert list_payload[\"offset\"] == 0\n"
-            f"    assert list_payload[\"items\"][0][\"name\"] == \"Updated {class_name}\"\n"
+            '    assert list_payload["total"] == 1\n'
+            '    assert list_payload["limit"] == 10\n'
+            '    assert list_payload["offset"] == 0\n'
+            f'    assert list_payload["items"][0]["name"] == "Updated '
+            f'{class_name}"\n'
         )
 
     return (
         "    list_payload = list_response.json()\n"
-        f"    assert list_payload[0][\"name\"] == \"Updated {class_name}\"\n"
+        f'    assert list_payload[0]["name"] == "Updated {class_name}"\n'
     )
 
 
@@ -548,22 +592,24 @@ def _integration_soft_delete_assertions(
         features.auth_required,
         "        headers=_auth_headers(),\n",
     )
-    list_url = f"/api/v1/{module_name}/{_integration_list_query_suffix(features)}"
+    list_url = (
+        f"/api/v1/{module_name}/{_integration_list_query_suffix(features)}"
+    )
     if features.pagination:
         return (
             "\n"
             "    list_after_delete_response = client.get(\n"
-            f"        \"{list_url}\",\n"
+            f'        "{list_url}",\n'
             f"{headers_argument}"
             "    )\n"
             "    assert list_after_delete_response.status_code == 200\n"
-            "    assert list_after_delete_response.json()[\"total\"] == 0\n"
+            '    assert list_after_delete_response.json()["total"] == 0\n'
         )
 
     return (
         "\n"
         "    list_after_delete_response = client.get(\n"
-        f"        \"{list_url}\",\n"
+        f'        "{list_url}",\n'
         f"{headers_argument}"
         "    )\n"
         "    assert list_after_delete_response.status_code == 200\n"
@@ -582,19 +628,23 @@ def _integration_auth_required_test(
         "\n\n"
         f"def test_{module_name}_requires_auth(client: TestClient) -> None:\n"
         "    response = client.get(\n"
-        f"        \"/api/v1/{module_name}/{_integration_list_query_suffix(features)}\",\n"
+        f"        "
+        f'"/api/v1/{module_name}/{_integration_list_query_suffix(features)}",\n'
         "    )\n"
         "    assert response.status_code == 401\n"
     )
 
 
-def _unit_test_context(class_name: str, features: CrudFeatureSet) -> dict[str, str]:
+def _unit_test_context(
+    class_name: str, features: CrudFeatureSet
+) -> dict[str, str]:
     tenant_update_argument = _line_if(
         features.tenant_scoped,
         '        tenant_id="tenant-a",\n',
     )
     get_assertion = (
-        '    service.repository.get.assert_called_once_with(123, tenant_id="tenant-a")'
+        "    service.repository.get.assert_called_once_with(123, "
+        'tenant_id="tenant-a")'
         if features.tenant_scoped
         else "    service.repository.get.assert_called_once_with(123)"
     )

@@ -1,9 +1,8 @@
-from pathlib import Path
 import os
 import py_compile
 import subprocess
 import sys
-
+from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -59,14 +58,28 @@ def test_add_auth_creates_auth_workflow_and_wiring(tmp_path: Path) -> None:
     for path in expected_files:
         assert path.exists(), f"Expected generated auth file is missing: {path}"
 
-    router_content = (package_root / "api" / "router.py").read_text(encoding="utf-8")
-    models_content = (package_root / "db" / "models.py").read_text(encoding="utf-8")
-    pyproject_content = (project_root / "pyproject.toml").read_text(encoding="utf-8")
+    router_content = (package_root / "api" / "router.py").read_text(
+        encoding="utf-8"
+    )
+    models_content = (package_root / "db" / "models.py").read_text(
+        encoding="utf-8"
+    )
+    pyproject_content = (project_root / "pyproject.toml").read_text(
+        encoding="utf-8"
+    )
     manifest = (project_root / ".poleposition.toml").read_text(encoding="utf-8")
 
-    assert "from myapp.auth.router import router as auth_router" in router_content
-    assert 'api_router.include_router(auth_router, prefix="/auth", tags=["auth"])' in router_content
-    assert "from myapp.auth import model as auth_model  # noqa: F401" in models_content
+    assert (
+        "from myapp.auth.router import router as auth_router" in router_content
+    )
+    assert (
+        'api_router.include_router(auth_router, prefix="/auth", tags=["auth"])'
+        in router_content
+    )
+    assert (
+        "from myapp.auth import model as auth_model  # noqa: F401"
+        in models_content
+    )
     assert '"pwdlib[argon2]>=0.2.0",' in pyproject_content
     assert "auth = true" in manifest
     assert "{{" not in (auth_root / "router.py").read_text(encoding="utf-8")
@@ -111,13 +124,18 @@ def test_add_auth_preflight_fails_before_writing_when_router_is_non_utf8(
     result = run_cli(project_root, "add", "auth")
 
     assert result.returncode != 0
-    assert "Cannot add auth because the project layout is not ready" in result.stdout
+    assert (
+        "Cannot add auth because the project layout is not ready"
+        in result.stdout
+    )
     assert "Could not read managed text file for auth add" in result.stdout
     assert "api/router.py" in result.stdout
     assert "UnicodeDecodeError" not in result.stdout
     assert "UnicodeDecodeError" not in result.stderr
     assert not (package_root / "auth" / "model.py").exists()
-    assert not (project_root / "tests" / "integration" / "test_auth.py").exists()
+    assert not (
+        project_root / "tests" / "integration" / "test_auth.py"
+    ).exists()
 
 
 def test_add_auth_preflight_fails_before_writing_when_manifest_is_non_utf8(
@@ -134,10 +152,15 @@ def test_add_auth_preflight_fails_before_writing_when_manifest_is_non_utf8(
     result = run_cli(project_root, "add", "auth")
 
     assert result.returncode != 0
-    assert "Cannot add auth because the project layout is not ready" in result.stdout
+    assert (
+        "Cannot add auth because the project layout is not ready"
+        in result.stdout
+    )
     assert "Could not read project manifest as UTF-8" in result.stdout
     assert "UnicodeDecodeError" not in result.stdout
     assert "UnicodeDecodeError" not in result.stderr
     assert not (package_root / "auth" / "model.py").exists()
-    assert not (project_root / "tests" / "integration" / "test_auth.py").exists()
+    assert not (
+        project_root / "tests" / "integration" / "test_auth.py"
+    ).exists()
     assert manifest_path.read_bytes() == b"\xff\xfe\x00"

@@ -1,11 +1,15 @@
 from pathlib import Path
 
 from pole_position.cli.command import Command
-from pole_position.cli.services.integration_creator import AddedIntegrationResult
-from pole_position.cli.services.integration_creator import add_integration
-from pole_position.cli.services.project_name import normalize_package_name, validate_project_name
+from pole_position.cli.services.integration_creator import (
+    AddedIntegrationResult,
+    add_integration,
+)
+from pole_position.cli.services.project_name import (
+    normalize_package_name,
+    validate_project_name,
+)
 from pole_position.cli.usage import print_command_help
-
 
 HELP_OPTIONS = {"-h", "--help"}
 
@@ -44,11 +48,11 @@ def run(args: list[str]) -> None:
         result = add_integration(integration_name)
     except RuntimeError as exc:
         print(str(exc))
-        raise SystemExit(1)
+        raise SystemExit(1) from exc
     except ValueError as exc:
         print(str(exc))
         _print_usage()
-        raise SystemExit(1)
+        raise SystemExit(1) from exc
 
     _print_success(result)
 

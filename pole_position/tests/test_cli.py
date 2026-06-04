@@ -1,13 +1,12 @@
-from pathlib import Path
 import os
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 
 from pole_position.cli.command import Command
 from pole_position.cli.registry import CommandRegistry
-
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -158,5 +157,7 @@ def test_command_registry_rejects_conflicting_registration():
 
     registry.register(command)
 
-    with pytest.raises(RuntimeError, match="Command already registered: example"):
+    with pytest.raises(
+        RuntimeError, match="Command already registered: example"
+    ):
         registry.register(conflicting_command)

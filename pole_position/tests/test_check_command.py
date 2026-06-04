@@ -6,7 +6,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -104,7 +103,8 @@ def test_check_json_reports_issues(tmp_path: Path) -> None:
                 f"{project_root / 'tests' / 'integration' / 'test_status.py'}"
             ),
             "remediation": (
-                "Restore the generated path, or intentionally opt out and document "
+                "Restore the generated path, or intentionally opt out and "
+                "document "
                 "the drift."
             ),
         }
@@ -131,7 +131,8 @@ def test_check_reports_non_utf8_managed_file(tmp_path: Path) -> None:
                 f"{settings_path}: invalid start byte"
             ),
             "remediation": (
-                "Restore the file as UTF-8 text or replace it with generated content."
+                "Restore the file as UTF-8 text or replace it with "
+                "generated content."
             ),
         }
     ]
@@ -155,7 +156,10 @@ def test_check_reports_non_utf8_legacy_database_free_settings(
     assert result.returncode != 0
     payload = json.loads(result.stdout)
     assert payload["issues"][0]["code"] == "PPCHK023"
-    assert "Could not read generated text file as UTF-8" in payload["issues"][0]["message"]
+    assert (
+        "Could not read generated text file as UTF-8"
+        in payload["issues"][0]["message"]
+    )
     assert str(settings_path) in payload["issues"][0]["message"]
     assert "UnicodeDecodeError" not in result.stdout
     assert "UnicodeDecodeError" not in result.stderr
@@ -180,7 +184,8 @@ def test_check_reports_non_utf8_manifest(tmp_path: Path) -> None:
             f"{manifest_path}: invalid start byte"
         ),
         "remediation": (
-            "Restore .poleposition.toml as UTF-8 TOML or remove the corrupt file."
+            "Restore .poleposition.toml as UTF-8 TOML or remove the "
+            "corrupt file."
         ),
     }
     assert "UnicodeDecodeError" not in result.stdout
@@ -201,7 +206,10 @@ def test_check_fix_skips_non_utf8_managed_file_and_reports_issue(
 
     assert result.returncode != 0
     assert "No automatic fixes were applied." in result.stdout
-    assert "[PPCHK023] Could not read generated text file as UTF-8" in result.stdout
+    assert (
+        "[PPCHK023] Could not read generated text file as UTF-8"
+        in result.stdout
+    )
     assert str(router_path) in result.stdout
     assert "UnicodeDecodeError" not in result.stdout
     assert "UnicodeDecodeError" not in result.stderr
@@ -285,7 +293,9 @@ def test_check_passes_after_added_api_only_module(tmp_path: Path) -> None:
     assert create_result.returncode == 0
 
     project_root = tmp_path / "myapp"
-    add_result = run_cli(project_root, "add", "module", "webhooks", "--api-only")
+    add_result = run_cli(
+        project_root, "add", "module", "webhooks", "--api-only"
+    )
 
     assert add_result.returncode == 0
 
@@ -348,7 +358,8 @@ def test_check_reports_missing_auth_dependency_and_router_wiring(
     router_path = project_root / "src" / "myapp" / "api" / "router.py"
     router_path.write_text(
         router_path.read_text(encoding="utf-8").replace(
-            'api_router.include_router(auth_router, prefix="/auth", tags=["auth"])\n',
+            'api_router.include_router(auth_router, prefix="/auth", '
+            'tags=["auth"])\n',
             "",
         ),
         encoding="utf-8",
@@ -450,13 +461,18 @@ def test_check_reports_database_free_database_remnants(tmp_path: Path) -> None:
 
     assert result.returncode != 0
     assert "PolePosition project check failed." in result.stdout
-    assert "Database-free project contains database-specific content" in result.stdout
+    assert (
+        "Database-free project contains database-specific content"
+        in result.stdout
+    )
     assert "api/deps.py" in result.stdout
     assert "Dockerfile" in result.stdout
     assert "README.md" in result.stdout
 
 
-def test_check_passes_after_added_messaging_integrations(tmp_path: Path) -> None:
+def test_check_passes_after_added_messaging_integrations(
+    tmp_path: Path,
+) -> None:
     create_result = run_cli(tmp_path, "start", "myapp")
     assert create_result.returncode == 0
 
@@ -495,7 +511,8 @@ def test_check_json_fails_outside_project(tmp_path: Path) -> None:
     assert payload["issues"] == [
         {
             "code": "PPCHK000",
-            "message": "Current directory does not look like a PolePosition project.",
+            "message": "Current directory does not look like a "
+            "PolePosition project.",
             "remediation": (
                 "Run the command from a PolePosition project root or a nested "
                 "directory inside one."
@@ -521,7 +538,9 @@ def test_check_reports_missing_managed_marker(tmp_path: Path) -> None:
     assert result.returncode != 0
     assert "PolePosition project check failed." in result.stdout
     assert "[PPCHK021]" in result.stdout
-    assert "Managed marker '# polepos:router-imports' is missing" in result.stdout
+    assert (
+        "Managed marker '# polepos:router-imports' is missing" in result.stdout
+    )
     assert "Fix: Restore the listed # polepos marker" in result.stdout
     assert "api/router.py" in result.stdout
 
@@ -538,7 +557,8 @@ def test_check_reports_issue_codes_and_remediation_for_lifecycle_drift(
 
     router_path = project_root / "src" / "myapp" / "api" / "router.py"
     router_content = router_path.read_text(encoding="utf-8").replace(
-        'api_router.include_router(garage_router, prefix="/garage", tags=["garage"])',
+        'api_router.include_router(garage_router, prefix="/garage", '
+        'tags=["garage"])',
         "# garage router is wired manually",
     )
     router_path.write_text(router_content, encoding="utf-8")
@@ -547,12 +567,17 @@ def test_check_reports_issue_codes_and_remediation_for_lifecycle_drift(
 
     assert result.returncode != 0
     assert "[PPCHK034]" in result.stdout
-    assert "Lifecycle module 'garage' is missing API router include" in result.stdout
+    assert (
+        "Lifecycle module 'garage' is missing API router include"
+        in result.stdout
+    )
     assert "Fix: Restore the router include" in result.stdout
     assert "polepos remove module garage --wiring-only" in result.stdout
 
 
-def test_check_reports_missing_core_path_after_loose_project_detection(tmp_path: Path) -> None:
+def test_check_reports_missing_core_path_after_loose_project_detection(
+    tmp_path: Path,
+) -> None:
     create_result = run_cli(tmp_path, "start", "myapp")
     assert create_result.returncode == 0
 
@@ -568,7 +593,9 @@ def test_check_reports_missing_core_path_after_loose_project_detection(tmp_path:
     assert "api/router.py" in result.stdout
 
 
-def test_check_accepts_multiline_added_module_router_wiring(tmp_path: Path) -> None:
+def test_check_accepts_multiline_added_module_router_wiring(
+    tmp_path: Path,
+) -> None:
     create_result = run_cli(tmp_path, "start", "myapp")
     assert create_result.returncode == 0
 
@@ -586,7 +613,8 @@ def test_check_accepts_multiline_added_module_router_wiring(tmp_path: Path) -> N
             ")"
         ),
     ).replace(
-        'api_router.include_router(garage_router, prefix="/garage", tags=["garage"])',
+        'api_router.include_router(garage_router, prefix="/garage", '
+        'tags=["garage"])',
         (
             "api_router.include_router(\n"
             "    garage_router,\n"
@@ -603,7 +631,9 @@ def test_check_accepts_multiline_added_module_router_wiring(tmp_path: Path) -> N
     assert "PolePosition project check passed." in result.stdout
 
 
-def test_check_reports_missing_added_module_router_wiring(tmp_path: Path) -> None:
+def test_check_reports_missing_added_module_router_wiring(
+    tmp_path: Path,
+) -> None:
     create_result = run_cli(tmp_path, "start", "myapp")
     assert create_result.returncode == 0
 
@@ -613,7 +643,8 @@ def test_check_reports_missing_added_module_router_wiring(tmp_path: Path) -> Non
 
     router_path = project_root / "src" / "myapp" / "api" / "router.py"
     router_content = router_path.read_text(encoding="utf-8").replace(
-        'api_router.include_router(garage_router, prefix="/garage", tags=["garage"])',
+        'api_router.include_router(garage_router, prefix="/garage", '
+        'tags=["garage"])',
         "# garage router is wired manually",
     )
     router_path.write_text(router_content, encoding="utf-8")
@@ -621,7 +652,10 @@ def test_check_reports_missing_added_module_router_wiring(tmp_path: Path) -> Non
     result = run_cli(project_root, "check")
 
     assert result.returncode != 0
-    assert "Lifecycle module 'garage' is missing API router include" in result.stdout
+    assert (
+        "Lifecycle module 'garage' is missing API router include"
+        in result.stdout
+    )
     assert "api/router.py" in result.stdout
 
 
@@ -672,12 +706,15 @@ def test_check_reports_orphan_custom_module_references_after_marker(
             "",
         )
         .replace(
-            'api_router.include_router(garage_router, prefix="/garage", tags=["garage"])\n',
+            'api_router.include_router(garage_router, prefix="/garage", '
+            'tags=["garage"])\n',
             "",
         )
         + "\n"
-        + "from myapp.modules.garage.router import router as garage_custom_router\n"
-        + 'api_router.include_router(garage_custom_router, prefix="/garage-custom", tags=["garage_custom"])\n',
+        + "from myapp.modules.garage.router import router as "
+        "garage_custom_router\n"
+        + "api_router.include_router(garage_custom_router, "
+        'prefix="/garage-custom", tags=["garage_custom"])\n',
         encoding="utf-8",
     )
 
@@ -728,10 +765,14 @@ def test_check_reports_missing_status_router_wiring(tmp_path: Path) -> None:
 
     assert result.returncode != 0
     assert "[PPCHK022]" in result.stdout
-    assert "Starter module 'status' is missing API router include" in result.stdout
+    assert (
+        "Starter module 'status' is missing API router include" in result.stdout
+    )
 
 
-def test_check_reports_missing_added_module_model_wiring(tmp_path: Path) -> None:
+def test_check_reports_missing_added_module_model_wiring(
+    tmp_path: Path,
+) -> None:
     create_result = run_cli(tmp_path, "start", "myapp")
     assert create_result.returncode == 0
 
@@ -817,7 +858,10 @@ def test_check_reports_missing_ai_prompt_module_files(tmp_path: Path) -> None:
     result = run_cli(project_root, "check")
 
     assert result.returncode != 0
-    assert "Lifecycle module 'assistant' is missing generated path" in result.stdout
+    assert (
+        "Lifecycle module 'assistant' is missing generated path"
+        in result.stdout
+    )
     assert "orchestrator.py" in result.stdout
     assert "prompts.py" in result.stdout
     assert "missing model import" not in result.stdout
@@ -830,7 +874,9 @@ def test_check_reports_missing_api_only_module_files_without_model_requirement(
     assert create_result.returncode == 0
 
     project_root = tmp_path / "myapp"
-    add_result = run_cli(project_root, "add", "module", "webhooks", "--api-only")
+    add_result = run_cli(
+        project_root, "add", "module", "webhooks", "--api-only"
+    )
     assert add_result.returncode == 0
 
     module_root = project_root / "src" / "myapp" / "modules" / "webhooks"
@@ -839,7 +885,9 @@ def test_check_reports_missing_api_only_module_files_without_model_requirement(
     result = run_cli(project_root, "check")
 
     assert result.returncode != 0
-    assert "Lifecycle module 'webhooks' is missing generated path" in result.stdout
+    assert (
+        "Lifecycle module 'webhooks' is missing generated path" in result.stdout
+    )
     assert "services/webhooks_service.py" in result.stdout
     assert "missing model import" not in result.stdout
 
@@ -865,7 +913,10 @@ def test_check_reports_missing_crud_module_files(tmp_path: Path) -> None:
     result = run_cli(project_root, "check")
 
     assert result.returncode != 0
-    assert "Lifecycle module 'customers' is missing generated path" in result.stdout
+    assert (
+        "Lifecycle module 'customers' is missing generated path"
+        in result.stdout
+    )
     assert "services/customers_crud_service.py" in result.stdout
 
 
@@ -985,7 +1036,9 @@ def test_check_reports_kafka_dependency_below_required_version(
     assert "aiokafka>=0.12.0" in result.stdout
 
 
-def test_check_accepts_normalized_rabbitmq_dependency_name(tmp_path: Path) -> None:
+def test_check_accepts_normalized_rabbitmq_dependency_name(
+    tmp_path: Path,
+) -> None:
     create_result = run_cli(tmp_path, "start", "myapp")
     assert create_result.returncode == 0
 
@@ -1008,7 +1061,9 @@ def test_check_accepts_normalized_rabbitmq_dependency_name(tmp_path: Path) -> No
     assert "PolePosition project check passed." in result.stdout
 
 
-def test_check_reports_missing_rabbitmq_settings_and_env(tmp_path: Path) -> None:
+def test_check_reports_missing_rabbitmq_settings_and_env(
+    tmp_path: Path,
+) -> None:
     create_result = run_cli(tmp_path, "start", "myapp")
     assert create_result.returncode == 0
 
@@ -1049,12 +1104,7 @@ def test_check_reports_missing_redis_integration_file(tmp_path: Path) -> None:
     assert add_result.returncode == 0
 
     (
-        project_root
-        / "src"
-        / "myapp"
-        / "integrations"
-        / "redis"
-        / "cache.py"
+        project_root / "src" / "myapp" / "integrations" / "redis" / "cache.py"
     ).unlink()
 
     result = run_cli(project_root, "check")
@@ -1126,7 +1176,9 @@ def test_check_reports_missing_rq_integration_file(tmp_path: Path) -> None:
     add_result = run_cli(project_root, "add", "integration", "rq")
     assert add_result.returncode == 0
 
-    (project_root / "src" / "myapp" / "integrations" / "rq" / "jobs.py").unlink()
+    (
+        project_root / "src" / "myapp" / "integrations" / "rq" / "jobs.py"
+    ).unlink()
 
     result = run_cli(project_root, "check")
 
@@ -1228,7 +1280,9 @@ def test_check_reports_commented_required_integration_settings_and_env(
     assert "KAFKA_COMPRESSION_TYPE" not in result.stdout
 
 
-def test_check_reports_missing_llm_integration_file_and_env(tmp_path: Path) -> None:
+def test_check_reports_missing_llm_integration_file_and_env(
+    tmp_path: Path,
+) -> None:
     create_result = run_cli(tmp_path, "start", "myapp")
     assert create_result.returncode == 0
 
@@ -1329,8 +1383,12 @@ def test_check_fix_restores_router_include_marker_after_multiline_include(
     assert fix_result.returncode == 0
     assert "PolePosition project check passed." in fix_result.stdout
     fixed_lines = router_path.read_text(encoding="utf-8").splitlines()
-    include_end_index = fixed_lines.index(")", fixed_lines.index("api_router.include_router("))
-    assert fixed_lines.index("# polepos:router-includes") == include_end_index + 1
+    include_end_index = fixed_lines.index(
+        ")", fixed_lines.index("api_router.include_router(")
+    )
+    assert (
+        fixed_lines.index("# polepos:router-includes") == include_end_index + 1
+    )
 
     add_result = run_cli(project_root, "add", "module", "garage")
 
@@ -1344,7 +1402,9 @@ def test_check_fix_json_reports_fixed_paths(tmp_path: Path) -> None:
     assert create_result.returncode == 0
 
     project_root = tmp_path / "myapp"
-    modules_init_path = project_root / "src" / "myapp" / "modules" / "__init__.py"
+    modules_init_path = (
+        project_root / "src" / "myapp" / "modules" / "__init__.py"
+    )
     modules_init_path.write_text(
         modules_init_path.read_text(encoding="utf-8").replace(
             "    # polepos:module-exports\n",
@@ -1381,10 +1441,7 @@ def test_check_database_free_project_ignores_sqlalchemy_named_dependencies(
     pyproject_path.write_text(
         pyproject_path.read_text(encoding="utf-8").replace(
             '    "pydantic>=2.0.0",\n',
-            (
-                '    "pydantic>=2.0.0",\n'
-                '    "sqlalchemy-utils>=0.41.0",\n'
-            ),
+            ('    "pydantic>=2.0.0",\n    "sqlalchemy-utils>=0.41.0",\n'),
         ),
         encoding="utf-8",
     )
@@ -1518,7 +1575,7 @@ def test_check_reports_status_router_include_with_added_prefix(
         router_path.read_text(encoding="utf-8").replace(
             'api_router.include_router(status_router, tags=["status"])',
             (
-                'api_router.include_router('
+                "api_router.include_router("
                 'status_router, prefix="/status", tags=["status"])'
             ),
         ),
@@ -1528,7 +1585,9 @@ def test_check_reports_status_router_include_with_added_prefix(
     result = run_cli(project_root, "check")
 
     assert result.returncode != 0
-    assert "Starter module 'status' is missing API router include" in result.stdout
+    assert (
+        "Starter module 'status' is missing API router include" in result.stdout
+    )
 
 
 def test_check_normalizes_manifest_database_mode_case(tmp_path: Path) -> None:

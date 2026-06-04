@@ -4,7 +4,6 @@ from collections import deque
 from collections.abc import Iterable, Iterator
 from typing import Generic, TypeVar
 
-
 T = TypeVar("T")
 
 
@@ -125,7 +124,7 @@ class Graph(Generic[T]):
         if not self.directed:
             raise ValueError("topological_sort requires a directed graph")
 
-        indegree = {node: 0 for node in self._adjacency}
+        indegree = dict.fromkeys(self._adjacency, 0)
         for neighbors in self._adjacency.values():
             for neighbor in neighbors:
                 indegree[neighbor] += 1
@@ -144,7 +143,9 @@ class Graph(Generic[T]):
             raise ValueError("graph contains a cycle")
         return ordered
 
-    def _reconstruct_path(self, parents: dict[T, T | None], target: T) -> list[T]:
+    def _reconstruct_path(
+        self, parents: dict[T, T | None], target: T
+    ) -> list[T]:
         path = [target]
         current = target
         while parents[current] is not None:

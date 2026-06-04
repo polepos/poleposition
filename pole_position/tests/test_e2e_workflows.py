@@ -1,4 +1,3 @@
-from pathlib import Path
 import json
 import os
 import shutil
@@ -6,10 +5,10 @@ import socket
 import subprocess
 import sys
 import time
+from pathlib import Path
 from urllib import request
 
 import pytest
-
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -96,7 +95,9 @@ def find_free_port() -> int:
         return sock.getsockname()[1]
 
 
-def wait_for_status(port: int, timeout_seconds: float = 20.0) -> dict[str, object]:
+def wait_for_status(
+    port: int, timeout_seconds: float = 20.0
+) -> dict[str, object]:
     deadline = time.time() + timeout_seconds
     url = f"http://127.0.0.1:{port}/api/v1/status"
     last_error: Exception | None = None
@@ -118,7 +119,10 @@ def wait_for_status(port: int, timeout_seconds: float = 20.0) -> dict[str, objec
     os.environ.get("POLEPOSITION_RUN_E2E") != "1",
     reason="Set POLEPOSITION_RUN_E2E=1 to run end-to-end workflow tests.",
 )
-@pytest.mark.skipif(shutil.which("uv") is None, reason="uv is required for end-to-end workflow tests.")
+@pytest.mark.skipif(
+    shutil.which("uv") is None,
+    reason="uv is required for end-to-end workflow tests.",
+)
 def test_e2e_start_project_and_run_generated_tests(tmp_path: Path) -> None:
     create_result = run_cli(tmp_path, "start", "myapp")
 
@@ -131,7 +135,9 @@ def test_e2e_start_project_and_run_generated_tests(tmp_path: Path) -> None:
 
     env_example = project_root / ".env.example"
     env_file = project_root / ".env"
-    env_file.write_text(env_example.read_text(encoding="utf-8"), encoding="utf-8")
+    env_file.write_text(
+        env_example.read_text(encoding="utf-8"), encoding="utf-8"
+    )
 
     uv_cache_dir = tmp_path / ".uv-cache"
     sync_result = run_in_project(
@@ -144,11 +150,14 @@ def test_e2e_start_project_and_run_generated_tests(tmp_path: Path) -> None:
     )
 
     assert sync_result.returncode == 0, (
-        f"uv sync --extra dev failed\nstdout:\n{sync_result.stdout}\nstderr:\n{sync_result.stderr}"
+        f"uv sync --extra dev "
+        f"failed\nstdout:\n{sync_result.stdout}\nstderr:\n{sync_result.stderr}"
     )
     assert list(project_root.rglob("*.egg-info")) == []
 
-    pytest_result = run_in_project(project_root, "uv", "run", "pytest", uv_cache_dir=uv_cache_dir)
+    pytest_result = run_in_project(
+        project_root, "uv", "run", "pytest", uv_cache_dir=uv_cache_dir
+    )
 
     assert pytest_result.returncode == 0, (
         f"Generated project tests failed\nstdout:\n{pytest_result.stdout}\n"
@@ -159,7 +168,8 @@ def test_e2e_start_project_and_run_generated_tests(tmp_path: Path) -> None:
     check_result = run_cli(project_root, "check")
 
     assert check_result.returncode == 0, (
-        f"Generated project check failed after pytest\nstdout:\n{check_result.stdout}\n"
+        f"Generated project check failed after "
+        f"pytest\nstdout:\n{check_result.stdout}\n"
         f"stderr:\n{check_result.stderr}"
     )
 
@@ -169,7 +179,10 @@ def test_e2e_start_project_and_run_generated_tests(tmp_path: Path) -> None:
     os.environ.get("POLEPOSITION_RUN_E2E") != "1",
     reason="Set POLEPOSITION_RUN_E2E=1 to run end-to-end workflow tests.",
 )
-@pytest.mark.skipif(shutil.which("uv") is None, reason="uv is required for end-to-end workflow tests.")
+@pytest.mark.skipif(
+    shutil.which("uv") is None,
+    reason="uv is required for end-to-end workflow tests.",
+)
 def test_e2e_start_project_and_run_generated_app(tmp_path: Path) -> None:
     create_result = run_cli(tmp_path, "start", "myapp")
 
@@ -180,7 +193,8 @@ def test_e2e_start_project_and_run_generated_app(tmp_path: Path) -> None:
     port = find_free_port()
     env_file = project_root / ".env"
     env_file.write_text(
-        env_example.read_text(encoding="utf-8") + f"\nAPP_RELOAD=false\nAPP_PORT={port}\n",
+        env_example.read_text(encoding="utf-8")
+        + f"\nAPP_RELOAD=false\nAPP_PORT={port}\n",
         encoding="utf-8",
     )
 
@@ -195,7 +209,8 @@ def test_e2e_start_project_and_run_generated_app(tmp_path: Path) -> None:
     )
 
     assert sync_result.returncode == 0, (
-        f"uv sync --extra dev failed\nstdout:\n{sync_result.stdout}\nstderr:\n{sync_result.stderr}"
+        f"uv sync --extra dev "
+        f"failed\nstdout:\n{sync_result.stdout}\nstderr:\n{sync_result.stderr}"
     )
 
     process = start_in_project(
@@ -218,7 +233,7 @@ def test_e2e_start_project_and_run_generated_app(tmp_path: Path) -> None:
             "Generated app failed to start with `uv run python -m myapp.run`\n"
             f"stdout:\n{stdout}\n"
             f"stderr:\n{stderr}"
-        )
+        ) from None
     finally:
         if process.poll() is None:
             process.terminate()
@@ -233,13 +248,16 @@ def test_e2e_start_project_and_run_generated_app(tmp_path: Path) -> None:
 @pytest.mark.docker_e2e
 @pytest.mark.skipif(
     os.environ.get("POLEPOSITION_RUN_DOCKER_E2E") != "1",
-    reason="Set POLEPOSITION_RUN_DOCKER_E2E=1 to run Docker end-to-end workflow tests.",
+    reason="Set POLEPOSITION_RUN_DOCKER_E2E=1 to run Docker "
+    "end-to-end workflow tests.",
 )
 @pytest.mark.skipif(
     shutil.which("docker") is None,
     reason="docker is required for Docker end-to-end workflow tests.",
 )
-def test_e2e_start_project_and_run_generated_app_with_docker(tmp_path: Path) -> None:
+def test_e2e_start_project_and_run_generated_app_with_docker(
+    tmp_path: Path,
+) -> None:
     create_result = run_cli(tmp_path, "start", "myapp")
 
     assert create_result.returncode == 0, create_result.stderr
@@ -262,9 +280,12 @@ def test_e2e_start_project_and_run_generated_app_with_docker(tmp_path: Path) -> 
     uv_cache_dir = tmp_path / ".uv-cache"
 
     try:
-        up_result = run_compose(project_root, "up", "--build", "-d", uv_cache_dir=uv_cache_dir)
+        up_result = run_compose(
+            project_root, "up", "--build", "-d", uv_cache_dir=uv_cache_dir
+        )
         assert up_result.returncode == 0, (
-            f"docker compose up failed\nstdout:\n{up_result.stdout}\nstderr:\n{up_result.stderr}"
+            f"docker compose up "
+            f"failed\nstdout:\n{up_result.stdout}\nstderr:\n{up_result.stderr}"
         )
 
         migrate_result = run_compose(
@@ -289,7 +310,9 @@ def test_e2e_start_project_and_run_generated_app_with_docker(tmp_path: Path) -> 
         assert status_payload["status"] == "ok"
         assert status_payload["service"] == "myapp"
     finally:
-        down_result = run_compose(project_root, "down", "-v", uv_cache_dir=uv_cache_dir)
+        down_result = run_compose(
+            project_root, "down", "-v", uv_cache_dir=uv_cache_dir
+        )
         if down_result.returncode != 0:
             print(
                 "docker compose down failed\n"

@@ -8,7 +8,6 @@ from polepos.data.sorted import SortedDict, SortedList, SortedSet
 from polepos.data.trie import Trie
 from polepos.data.union_find import UnionFind
 
-
 __all__ = [
     "Graph",
     "IndexedPriorityQueue",

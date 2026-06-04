@@ -13,7 +13,9 @@ class ModuleTemplateContract:
     detection_file_names: tuple[str, ...] = ()
 
     def integration_test_name(self, module_name: str) -> str:
-        return self.integration_test_name_template.format(module_name=module_name)
+        return self.integration_test_name_template.format(
+            module_name=module_name
+        )
 
     def unit_test_name(self, module_name: str) -> str:
         return self.unit_test_name_template.format(module_name=module_name)

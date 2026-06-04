@@ -6,7 +6,6 @@ from pole_position.cli.commands.db.upgrade import command as upgrade_cmd
 from pole_position.cli.registry import CommandRegistry
 from pole_position.cli.usage import print_command_help
 
-
 subcommands = CommandRegistry()
 subcommands.register(downgrade_cmd)
 subcommands.register(revision_cmd)

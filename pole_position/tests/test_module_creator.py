@@ -19,8 +19,12 @@ def test_insert_line_before_marker_is_idempotent(tmp_path: Path) -> None:
     path = tmp_path / "router.py"
     path.write_text("# marker\n", encoding="utf-8")
 
-    _insert_line_before_marker(path, "api_router.include_router(example_router)", "# marker")
-    _insert_line_before_marker(path, "api_router.include_router(example_router)", "# marker")
+    _insert_line_before_marker(
+        path, "api_router.include_router(example_router)", "# marker"
+    )
+    _insert_line_before_marker(
+        path, "api_router.include_router(example_router)", "# marker"
+    )
 
     assert path.read_text(encoding="utf-8").splitlines() == [
         "api_router.include_router(example_router)",
@@ -28,7 +32,9 @@ def test_insert_line_before_marker_is_idempotent(tmp_path: Path) -> None:
     ]
 
 
-def test_insert_sorted_line_before_marker_preserves_custom_prefix(tmp_path: Path) -> None:
+def test_insert_sorted_line_before_marker_preserves_custom_prefix(
+    tmp_path: Path,
+) -> None:
     path = tmp_path / "router.py"
     path.write_text(
         "\n".join(
@@ -89,7 +95,9 @@ def test_insert_block_uses_marker_before_anchor(tmp_path: Path) -> None:
     ]
 
 
-def test_preflight_reports_existing_generated_test_files(tmp_path: Path) -> None:
+def test_preflight_reports_existing_generated_test_files(
+    tmp_path: Path,
+) -> None:
     project_root = tmp_path / "shop-api"
     package_root = project_root / "src" / "shop_api"
     module_root = package_root / "modules" / "garage"
@@ -118,7 +126,9 @@ def test_preflight_reports_existing_generated_test_files(tmp_path: Path) -> None
     assert "test_garage.py" in str(exc_info.value)
 
 
-def test_ai_preflight_allows_existing_llm_settings_without_markers(tmp_path: Path) -> None:
+def test_ai_preflight_allows_existing_llm_settings_without_markers(
+    tmp_path: Path,
+) -> None:
     project_root = tmp_path / "shop-api"
     package_root = project_root / "src" / "shop_api"
     _write_required_preflight_files(project_root, package_root)
@@ -189,7 +199,9 @@ def test_ai_preflight_reports_partial_llm_settings_without_markers(
     assert "polepos:llm-env" in str(exc_info.value)
 
 
-def _write_required_preflight_files(project_root: Path, package_root: Path) -> None:
+def _write_required_preflight_files(
+    project_root: Path, package_root: Path
+) -> None:
     _write_text(
         package_root / "modules" / "__init__.py",
         "    # polepos:module-exports\n",

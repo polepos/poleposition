@@ -1,7 +1,9 @@
-from pole_position.cli.services.dependency_contract import dependency_contract_satisfied
-from pole_position.cli.services.dependency_contract import dependency_names_match
-from pole_position.cli.services.dependency_contract import parse_dependency_entry
-from pole_position.cli.services.dependency_contract import quoted_dependency_values
+from pole_position.cli.services.dependency_contract import (
+    dependency_contract_satisfied,
+    dependency_names_match,
+    parse_dependency_entry,
+    quoted_dependency_values,
+)
 
 
 def test_dependency_contract_requires_extras_and_min_version() -> None:
@@ -25,7 +27,9 @@ def test_dependency_contract_requires_extras_and_min_version() -> None:
 
 
 def test_dependency_names_match_normalized_names() -> None:
-    assert dependency_names_match("pydantic-settings>=2.0.0", "pydantic_settings")
+    assert dependency_names_match(
+        "pydantic-settings>=2.0.0", "pydantic_settings"
+    )
     assert dependency_names_match("SQLAlchemy ~= 2.0", "sqlalchemy")
     assert not dependency_names_match("sqlalchemy>=2.0.0", "alembic")
 

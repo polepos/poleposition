@@ -1,10 +1,8 @@
 from pathlib import Path
 
 from pole_position.cli.command import Command
-from pole_position.cli.services.auth_creator import AddedAuthResult
-from pole_position.cli.services.auth_creator import add_auth
+from pole_position.cli.services.auth_creator import AddedAuthResult, add_auth
 from pole_position.cli.usage import print_command_help
-
 
 USAGE = "Usage: polepos add auth"
 HELP_OPTIONS = {"-h", "--help"}
@@ -24,7 +22,7 @@ def run(args: list[str]) -> None:
         result = add_auth()
     except RuntimeError as exc:
         print(str(exc))
-        raise SystemExit(1)
+        raise SystemExit(1) from exc
 
     _print_success(result)
 

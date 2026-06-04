@@ -10,7 +10,6 @@ from pole_position.cli.services.module_creator import (
 )
 from pole_position.cli.services.project_checker import _discover_core_project
 
-
 SETTINGS_MARKERS = [
     "    # polepos:auth-settings",
     "    # polepos:integration-settings",
@@ -39,8 +38,12 @@ def fix_project(cwd: Path | None = None) -> ProjectFixResult:
     project_root, package_root = _discover_core_project(cwd)
     fixed_files: list[Path] = []
 
-    _collect_changed(fixed_files, _fix_api_router(package_root / "api" / "router.py"))
-    _collect_changed(fixed_files, _fix_db_models(package_root / "db" / "models.py"))
+    _collect_changed(
+        fixed_files, _fix_api_router(package_root / "api" / "router.py")
+    )
+    _collect_changed(
+        fixed_files, _fix_db_models(package_root / "db" / "models.py")
+    )
     _collect_changed(
         fixed_files,
         _fix_modules_init(package_root / "modules" / "__init__.py"),
@@ -55,7 +58,9 @@ def fix_project(cwd: Path | None = None) -> ProjectFixResult:
     )
 
 
-def _collect_changed(fixed_files: list[Path], changed_path: Path | None) -> None:
+def _collect_changed(
+    fixed_files: list[Path], changed_path: Path | None
+) -> None:
     if changed_path is not None:
         fixed_files.append(changed_path)
 
@@ -142,7 +147,9 @@ def _fix_db_models(path: Path) -> Path | None:
         if not line.startswith("def import_models("):
             continue
         insert_index = index + 1
-        while insert_index < len(lines) and lines[insert_index].strip().startswith("#"):
+        while insert_index < len(lines) and lines[
+            insert_index
+        ].strip().startswith("#"):
             insert_index += 1
         lines.insert(insert_index, MODEL_IMPORTS_MARKER)
         _write_lines(path, lines)

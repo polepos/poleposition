@@ -2,7 +2,6 @@ from pole_position.cli.command import Command
 from pole_position.cli.services.db_runner import run_alembic_command
 from pole_position.cli.usage import print_command_help
 
-
 USAGE = 'Usage: polepos db revision -m "<message>"'
 
 
@@ -32,7 +31,7 @@ def run(args: list[str]) -> None:
         run_alembic_command("revision", ["--autogenerate", "-m", message])
     except RuntimeError as exc:
         print(str(exc))
-        raise SystemExit(1)
+        raise SystemExit(1) from exc
 
 
 command = Command(

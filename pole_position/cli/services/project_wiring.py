@@ -53,7 +53,10 @@ def include_router_keywords_match(node: ast.Call, module_name: str) -> bool:
     prefix = literal_keyword_value(node, "prefix")
     tags = literal_keyword_value(node, "tags")
 
-    return prefix == f"/{module_name}" and tags in ([module_name], (module_name,))
+    return prefix == f"/{module_name}" and tags in (
+        [module_name],
+        (module_name,),
+    )
 
 
 def literal_keyword_value(node: ast.Call, keyword_name: str) -> object:
@@ -124,7 +127,10 @@ def module_name_from_router_include(
     tags = literal_keyword_value(node, "tags")
     if isinstance(prefix, str) and prefix.startswith("/"):
         module_name = prefix.strip("/")
-        if module_name.isidentifier() and tags in ([module_name], (module_name,)):
+        if module_name.isidentifier() and tags in (
+            [module_name],
+            (module_name,),
+        ):
             return module_name
 
     return None
@@ -139,7 +145,9 @@ def module_name_from_model_reference(
 
     if isinstance(node, ast.Import):
         for alias in node.names:
-            module_name = module_name_from_import_module(alias.name, package_name)
+            module_name = module_name_from_import_module(
+                alias.name, package_name
+            )
             if module_name is not None:
                 return module_name
 

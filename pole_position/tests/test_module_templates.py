@@ -3,9 +3,9 @@ from itertools import combinations
 import pytest
 
 from pole_position.cli.services.module_templates import (
-    CrudFeatureSet,
     CRUD_FEATURE_NAMES,
     SUPPORTED_MODULE_TEMPLATES,
+    CrudFeatureSet,
     build_module_template,
     get_module_template_contract,
     llm_env_block,
@@ -17,7 +17,12 @@ from pole_position.cli.services.module_templates.renderer import render_template
 
 
 def test_supported_module_templates_are_stable() -> None:
-    assert SUPPORTED_MODULE_TEMPLATES == ("standard", "crud", "ai-prompt", "api-only")
+    assert SUPPORTED_MODULE_TEMPLATES == (
+        "standard",
+        "crud",
+        "ai-prompt",
+        "api-only",
+    )
 
 
 def test_to_class_name_normalizes_module_names() -> None:
@@ -51,7 +56,9 @@ def test_standard_template_contract() -> None:
     )
 
     assert set(template.files) == set(contract.file_names_for("customers"))
-    assert template.integration_test_name == contract.integration_test_name("customers")
+    assert template.integration_test_name == contract.integration_test_name(
+        "customers"
+    )
     assert template.unit_test_name == contract.unit_test_name("customers")
     assert template.update_db_models is contract.update_db_models
     assert template.ensure_llm_integrations is contract.ensure_llm_integrations
@@ -59,10 +66,14 @@ def test_standard_template_contract() -> None:
     assert '"services"' in template.files["__init__.py"]
     assert '"service"' not in template.files["__init__.py"]
     service_content = template.files["services/customers_service.py"]
-    assert "from shop_api.bootstrap.logging import get_logger" in service_content
+    assert (
+        "from shop_api.bootstrap.logging import get_logger" in service_content
+    )
     assert 'extra={"item_name": payload.name}' in service_content
     assert 'extra={"name": payload.name}' not in service_content
-    assert 'client.post("/api/v1/customers/"' in template.integration_test_content
+    assert (
+        'client.post("/api/v1/customers/"' in template.integration_test_content
+    )
 
 
 def test_crud_template_contract() -> None:
@@ -74,14 +85,19 @@ def test_crud_template_contract() -> None:
     )
 
     assert set(template.files) == set(contract.file_names_for("customers"))
-    assert template.integration_test_name == contract.integration_test_name("customers")
+    assert template.integration_test_name == contract.integration_test_name(
+        "customers"
+    )
     assert template.unit_test_name == contract.unit_test_name("customers")
     assert template.update_db_models is contract.update_db_models
     assert "services/customers_crud_service.py" in template.files
-    assert "def get_customers" in template.files["services/customers_crud_service.py"]
+    assert (
+        "def get_customers"
+        in template.files["services/customers_crud_service.py"]
+    )
     assert "def update(self" in template.files["repository.py"]
     assert "@router.delete" in template.files["router.py"]
-    assert 'client.patch(' in template.integration_test_content
+    assert "client.patch(" in template.integration_test_content
 
 
 def test_crud_template_supports_enterprise_feature_options() -> None:
@@ -115,8 +131,13 @@ def test_crud_template_supports_enterprise_feature_options() -> None:
     assert "tenant_id: Mapped[str]" in model_content
     assert "CustomersPage" in schemas_content
     assert "limit: int = Query(default=100, ge=1, le=500)" in router_content
-    assert "APIRouter(dependencies=[Depends(get_current_user)])" in router_content
-    assert "statement = statement.offset(offset).limit(limit)" in repository_content
+    assert (
+        "APIRouter(dependencies=[Depends(get_current_user)])" in router_content
+    )
+    assert (
+        "statement = statement.offset(offset).limit(limit)"
+        in repository_content
+    )
     assert "item.deleted_at = utc_now()" in repository_content
     assert "headers=_auth_headers()" in template.integration_test_content
 
@@ -146,7 +167,11 @@ def test_crud_feature_combinations_render_compileable_python() -> None:
         assert all("}}" not in content for content in rendered_content)
         for file_name, content in template.files.items():
             compile(content, file_name, "exec")
-        compile(template.integration_test_content, template.integration_test_name, "exec")
+        compile(
+            template.integration_test_content,
+            template.integration_test_name,
+            "exec",
+        )
         compile(template.unit_test_content, template.unit_test_name, "exec")
 
 
@@ -159,7 +184,9 @@ def test_ai_prompt_template_contract() -> None:
     )
 
     assert set(template.files) == set(contract.file_names_for("assistant"))
-    assert template.integration_test_name == contract.integration_test_name("assistant")
+    assert template.integration_test_name == contract.integration_test_name(
+        "assistant"
+    )
     assert template.unit_test_name == contract.unit_test_name("assistant")
     assert template.update_db_models is contract.update_db_models
     assert template.ensure_llm_integrations is contract.ensure_llm_integrations
@@ -179,7 +206,9 @@ def test_api_only_template_contract() -> None:
     )
 
     assert set(template.files) == set(contract.file_names_for("webhooks"))
-    assert template.integration_test_name == contract.integration_test_name("webhooks")
+    assert template.integration_test_name == contract.integration_test_name(
+        "webhooks"
+    )
     assert template.unit_test_name == contract.unit_test_name("webhooks")
     assert template.update_db_models is False
     assert "model.py" not in template.files
@@ -190,7 +219,9 @@ def test_api_only_template_contract() -> None:
     service_content = template.files["services/webhooks_service.py"]
     assert 'extra={"payload_name": payload.name}' in service_content
     assert 'extra={"name": payload.name}' not in service_content
-    assert 'client.post("/api/v1/webhooks/"' in template.integration_test_content
+    assert (
+        'client.post("/api/v1/webhooks/"' in template.integration_test_content
+    )
 
 
 def test_unknown_module_template_raises_clear_error() -> None:
@@ -217,7 +248,10 @@ def test_llm_integration_files_contract() -> None:
         "integrations/llm/provider.py",
         "integrations/llm/schemas.py",
     }
-    assert "from shop_api.settings import get_settings" in files["integrations/llm/factory.py"]
+    assert (
+        "from shop_api.settings import get_settings"
+        in files["integrations/llm/factory.py"]
+    )
     assert "{{" not in "\n".join(files.values())
     assert "}}" not in "\n".join(files.values())
 

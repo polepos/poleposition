@@ -1,7 +1,6 @@
 import keyword
 import re
 
-
 PATH_SEPARATORS = {"/", "\\"}
 PROJECT_METADATA_NAME_PATTERN = re.compile(
     r"^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$"
@@ -46,11 +45,13 @@ def validate_project_name(project_name: str) -> None:
     if not package_name.isidentifier():
         raise ValueError(
             f"Invalid project name '{project_name}'. "
-            f"Derived package name '{package_name}' is not a valid Python identifier."
+            f"Derived package name '{package_name}' is not a valid Python "
+            f"identifier."
         )
 
     if keyword.iskeyword(package_name):
         raise ValueError(
             f"Invalid project name '{project_name}'. "
-            f"Derived package name '{package_name}' is a reserved Python keyword."
+            f"Derived package name '{package_name}' is a reserved Python "
+            f"keyword."
         )

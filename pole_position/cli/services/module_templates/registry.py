@@ -1,15 +1,24 @@
-from pole_position.cli.services.module_templates.api_only import build_api_only_template
-from pole_position.cli.services.module_templates.ai_prompt import build_ai_prompt_template
+from pole_position.cli.services.module_templates.ai_prompt import (
+    build_ai_prompt_template,
+)
+from pole_position.cli.services.module_templates.api_only import (
+    build_api_only_template,
+)
 from pole_position.cli.services.module_templates.crud import build_crud_template
-from pole_position.cli.services.module_templates.crud_features import CrudFeatureSet
-from pole_position.cli.services.module_templates.spec import API_ONLY_MODULE_TEMPLATE_CONTRACT
-from pole_position.cli.services.module_templates.spec import AI_PROMPT_MODULE_TEMPLATE_CONTRACT
-from pole_position.cli.services.module_templates.spec import CRUD_MODULE_TEMPLATE_CONTRACT
-from pole_position.cli.services.module_templates.spec import ModuleTemplate
-from pole_position.cli.services.module_templates.spec import ModuleTemplateContract
-from pole_position.cli.services.module_templates.spec import STANDARD_MODULE_TEMPLATE_CONTRACT
-from pole_position.cli.services.module_templates.standard import build_standard_template
-
+from pole_position.cli.services.module_templates.crud_features import (
+    CrudFeatureSet,
+)
+from pole_position.cli.services.module_templates.spec import (
+    AI_PROMPT_MODULE_TEMPLATE_CONTRACT,
+    API_ONLY_MODULE_TEMPLATE_CONTRACT,
+    CRUD_MODULE_TEMPLATE_CONTRACT,
+    STANDARD_MODULE_TEMPLATE_CONTRACT,
+    ModuleTemplate,
+    ModuleTemplateContract,
+)
+from pole_position.cli.services.module_templates.standard import (
+    build_standard_template,
+)
 
 MODULE_TEMPLATE_CONTRACTS = {
     STANDARD_MODULE_TEMPLATE_CONTRACT.name: STANDARD_MODULE_TEMPLATE_CONTRACT,
@@ -35,7 +44,8 @@ def get_module_template_contract(template: str) -> ModuleTemplateContract:
     except KeyError as exc:
         supported = ", ".join(SUPPORTED_MODULE_TEMPLATES)
         raise ValueError(
-            f"Unsupported module template '{template}'. Expected one of: {supported}."
+            f"Unsupported module template '{template}'. Expected one of: "
+            f"{supported}."
         ) from exc
 
 

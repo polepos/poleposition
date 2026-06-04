@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import heapq
+from dataclasses import dataclass
 from typing import Generic, TypeVar
-
 
 K = TypeVar("K")
 P = TypeVar("P")

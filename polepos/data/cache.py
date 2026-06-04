@@ -1,11 +1,10 @@
 from __future__ import annotations
 
+import time
 from collections import OrderedDict
 from collections.abc import Callable, Iterator, MutableMapping
 from dataclasses import dataclass
-import time
 from typing import Generic, TypeVar
-
 
 K = TypeVar("K")
 V = TypeVar("V")
@@ -94,7 +93,9 @@ class TTLCache(MutableMapping[K, V], Generic[K, V]):
         self._expire()
         if key in self._items:
             self._items.move_to_end(key)
-        self._items[key] = _TTLItem(value=value, expires_at=self._timer() + self.ttl)
+        self._items[key] = _TTLItem(
+            value=value, expires_at=self._timer() + self.ttl
+        )
         self._evict_to_limit()
 
     def __delitem__(self, key: K) -> None:
@@ -117,9 +118,7 @@ class TTLCache(MutableMapping[K, V], Generic[K, V]):
     def _expire(self) -> None:
         now = self._timer()
         expired_keys = [
-            key
-            for key, item in self._items.items()
-            if item.expires_at <= now
+            key for key, item in self._items.items() if item.expires_at <= now
         ]
         for key in expired_keys:
             self._items.pop(key, None)

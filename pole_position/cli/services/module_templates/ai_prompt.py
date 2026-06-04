@@ -1,10 +1,14 @@
 from pole_position.cli.services.module_templates.naming import to_class_name
 from pole_position.cli.services.module_templates.renderer import render_template
-from pole_position.cli.services.module_templates.spec import AI_PROMPT_MODULE_TEMPLATE_CONTRACT
-from pole_position.cli.services.module_templates.spec import ModuleTemplate
+from pole_position.cli.services.module_templates.spec import (
+    AI_PROMPT_MODULE_TEMPLATE_CONTRACT,
+    ModuleTemplate,
+)
 
 
-def build_ai_prompt_template(*, package_name: str, module_name: str) -> ModuleTemplate:
+def build_ai_prompt_template(
+    *, package_name: str, module_name: str
+) -> ModuleTemplate:
     class_name = to_class_name(module_name)
     context = {
         "package_name": package_name,
@@ -14,10 +18,14 @@ def build_ai_prompt_template(*, package_name: str, module_name: str) -> ModuleTe
 
     return ModuleTemplate(
         files={
-            "__init__.py": render_template("ai_prompt/__init__.py.tpl", context),
+            "__init__.py": render_template(
+                "ai_prompt/__init__.py.tpl", context
+            ),
             "schemas.py": render_template("ai_prompt/schemas.py.tpl", context),
             "prompts.py": render_template("ai_prompt/prompts.py.tpl", context),
-            "orchestrator.py": render_template("ai_prompt/orchestrator.py.tpl", context),
+            "orchestrator.py": render_template(
+                "ai_prompt/orchestrator.py.tpl", context
+            ),
             "services/__init__.py": render_template(
                 "ai_prompt/services/__init__.py.tpl",
                 context,
@@ -35,7 +43,9 @@ def build_ai_prompt_template(*, package_name: str, module_name: str) -> ModuleTe
             "ai_prompt/tests/integration.py.tpl",
             context,
         ),
-        unit_test_name=AI_PROMPT_MODULE_TEMPLATE_CONTRACT.unit_test_name(module_name),
+        unit_test_name=AI_PROMPT_MODULE_TEMPLATE_CONTRACT.unit_test_name(
+            module_name
+        ),
         unit_test_content=render_template(
             "ai_prompt/tests/unit.py.tpl",
             context,

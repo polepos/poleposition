@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 TEMPLATE_ROOT = Path(__file__).parent / "files"
 
 

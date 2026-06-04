@@ -7,15 +7,19 @@ from pole_position.cli.services.module_creator import (
     ROUTER_INCLUDES_MARKER,
 )
 from pole_position.cli.services.module_templates.renderer import render_template
-from pole_position.cli.services.project_locator import find_package_root, find_project_root
-from pole_position.cli.services.project_manifest import manifest_path
-from pole_position.cli.services.project_manifest import read_project_manifest
-from pole_position.cli.services.project_manifest import record_manifest_integration
+from pole_position.cli.services.project_locator import (
+    find_package_root,
+    find_project_root,
+)
+from pole_position.cli.services.project_manifest import (
+    manifest_path,
+    read_project_manifest,
+    record_manifest_integration,
+)
 from pole_position.cli.services.pyproject_editor import (
     ensure_project_dependency,
     ensure_project_dependency_text,
 )
-
 
 AUTH_DEPENDENCY = "pwdlib[argon2]>=0.2.0"
 
@@ -67,7 +71,9 @@ def add_auth(cwd: Path | None = None) -> AddedAuthResult:
     ensure_project_dependency(pyproject_path, AUTH_DEPENDENCY)
     updated_files.append(pyproject_path)
 
-    record_manifest_integration(project_root=project_root, integration_name="auth")
+    record_manifest_integration(
+        project_root=project_root, integration_name="auth"
+    )
     project_manifest_path = manifest_path(project_root)
     if project_manifest_path.is_file():
         updated_files.append(project_manifest_path)
@@ -102,7 +108,8 @@ def _validate_add_auth_preflight(
     if not (package_root / "db" / "models.py").is_file():
         problems.append(
             "Auth workflow requires generated db/ wiring. "
-            "Projects created with `--db none` need an explicit database layer first."
+            "Projects created with `--db none` need an explicit database "
+            "layer first."
         )
 
     for relative_path in auth_files:
@@ -144,7 +151,9 @@ def _validate_add_auth_preflight(
         )
 
 
-def _collect_missing_marker(problems: list[str], path: Path, marker: str) -> None:
+def _collect_missing_marker(
+    problems: list[str], path: Path, marker: str
+) -> None:
     if not path.is_file():
         problems.append(f"Required managed file is missing: {path}")
         return
@@ -153,21 +162,28 @@ def _collect_missing_marker(problems: list[str], path: Path, marker: str) -> Non
         lines = path.read_text(encoding="utf-8").splitlines()
     except UnicodeDecodeError as exc:
         problems.append(
-            f"Could not read managed text file for auth add: {path}: {exc.reason}"
+            f"Could not read managed text file for auth add: {path}: "
+            f"{exc.reason}"
         )
         return
 
     if marker not in lines:
-        problems.append(f"Required managed marker '{marker}' is missing in {path}")
+        problems.append(
+            f"Required managed marker '{marker}' is missing in {path}"
+        )
 
 
-def _collect_manifest_read_error(problems: list[str], project_root: Path) -> None:
+def _collect_manifest_read_error(
+    problems: list[str], project_root: Path
+) -> None:
     manifest = read_project_manifest(project_root)
     if manifest.read_error is not None:
         problems.append(manifest.read_error)
 
 
-def _collect_patchable_project_dependency(problems: list[str], path: Path) -> None:
+def _collect_patchable_project_dependency(
+    problems: list[str], path: Path
+) -> None:
     if not path.is_file():
         problems.append(f"Required managed file is missing: {path}")
         return
@@ -180,7 +196,8 @@ def _collect_patchable_project_dependency(problems: list[str], path: Path) -> No
         )
     except UnicodeDecodeError as exc:
         problems.append(
-            f"Could not read managed text file for auth add: {path}: {exc.reason}"
+            f"Could not read managed text file for auth add: {path}: "
+            f"{exc.reason}"
         )
     except RuntimeError as exc:
         problems.append(str(exc))
@@ -205,7 +222,9 @@ def _auth_test_files(package_name: str) -> dict[str, str]:
             "tests/integration.py",
             context,
         ),
-        "unit/test_auth_service.py": _render_auth_template("tests/unit.py", context),
+        "unit/test_auth_service.py": _render_auth_template(
+            "tests/unit.py", context
+        ),
     }
 
 
@@ -228,8 +247,12 @@ def _write_test_files(tests_root: Path, files: dict[str, str]) -> list[Path]:
 
 
 def _update_api_router(path: Path, package_name: str) -> bool:
-    import_line = f"from {package_name}.auth.router import router as auth_router"
-    include_line = 'api_router.include_router(auth_router, prefix="/auth", tags=["auth"])'
+    import_line = (
+        f"from {package_name}.auth.router import router as auth_router"
+    )
+    include_line = (
+        'api_router.include_router(auth_router, prefix="/auth", tags=["auth"])'
+    )
 
     changed = _insert_line_before_marker(
         path=path,
@@ -247,7 +270,9 @@ def _update_api_router(path: Path, package_name: str) -> bool:
 
 
 def _update_db_models(path: Path, package_name: str) -> bool:
-    import_line = f"    from {package_name}.auth import model as auth_model  # noqa: F401"
+    import_line = (
+        f"    from {package_name}.auth import model as auth_model  # noqa: F401"
+    )
     return _insert_line_before_marker(
         path=path,
         line=import_line,

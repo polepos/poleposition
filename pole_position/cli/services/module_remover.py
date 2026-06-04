@@ -1,33 +1,40 @@
 import ast
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
-import shutil
 
-from pole_position.cli.services.module_creator import MODEL_IMPORTS_MARKER
-from pole_position.cli.services.module_creator import MODULE_EXPORTS_MARKER
-from pole_position.cli.services.module_creator import ROUTER_IMPORTS_MARKER
-from pole_position.cli.services.module_creator import ROUTER_INCLUDES_MARKER
-from pole_position.cli.services.module_templates import DEFAULT_MODULE_TEMPLATE
-from pole_position.cli.services.module_templates import DEFAULT_CRUD_FEATURES
-from pole_position.cli.services.module_templates import CrudFeatureSet
-from pole_position.cli.services.module_templates import ModuleTemplateContract
-from pole_position.cli.services.module_templates import SUPPORTED_MODULE_TEMPLATES
-from pole_position.cli.services.module_templates import build_module_template
-from pole_position.cli.services.module_templates import get_module_template_contract
-from pole_position.cli.services.module_templates import llm_env_block
-from pole_position.cli.services.module_templates import llm_integration_files
-from pole_position.cli.services.module_templates import llm_settings_block
-from pole_position.cli.services.module_templates import module_template_detection_contracts
+from pole_position.cli.services.module_creator import (
+    MODEL_IMPORTS_MARKER,
+    MODULE_EXPORTS_MARKER,
+    ROUTER_IMPORTS_MARKER,
+    ROUTER_INCLUDES_MARKER,
+)
+from pole_position.cli.services.module_templates import (
+    DEFAULT_CRUD_FEATURES,
+    DEFAULT_MODULE_TEMPLATE,
+    SUPPORTED_MODULE_TEMPLATES,
+    CrudFeatureSet,
+    ModuleTemplateContract,
+    build_module_template,
+    get_module_template_contract,
+    llm_env_block,
+    llm_integration_files,
+    llm_settings_block,
+    module_template_detection_contracts,
+)
 from pole_position.cli.services.project_checker import LEGACY_RACES_UNIT_TEST
-from pole_position.cli.services.project_locator import find_package_root
-from pole_position.cli.services.project_locator import find_project_root
-from pole_position.cli.services.project_manifest import ManifestModuleTemplate
-from pole_position.cli.services.project_manifest import manifest_path
-from pole_position.cli.services.project_manifest import parse_manifest_module_template
-from pole_position.cli.services.project_manifest import read_project_manifest
-from pole_position.cli.services.project_manifest import remove_manifest_integration
-from pole_position.cli.services.project_manifest import remove_manifest_module
-
+from pole_position.cli.services.project_locator import (
+    find_package_root,
+    find_project_root,
+)
+from pole_position.cli.services.project_manifest import (
+    ManifestModuleTemplate,
+    manifest_path,
+    parse_manifest_module_template,
+    read_project_manifest,
+    remove_manifest_integration,
+    remove_manifest_module,
+)
 
 STARTER_MODULES = {"status"}
 PYTHON_CACHE_DIRECTORIES = {"__pycache__"}
@@ -74,7 +81,9 @@ def remove_module(
     modules_root = package_root / "modules"
     module_root = modules_root / module_name
 
-    detected_template = _detect_module_template(project_root, module_root, module_name)
+    detected_template = _detect_module_template(
+        project_root, module_root, module_name
+    )
     template_contract = detected_template.contract
     _validate_remove_module_preflight(
         project_root=project_root,
@@ -110,7 +119,9 @@ def remove_module(
             modules_root=modules_root,
             removed_module_name=module_name,
         )
-        and _is_generated_llm_scaffold_pristine(project_root, package_root, package_name)
+        and _is_generated_llm_scaffold_pristine(
+            project_root, package_root, package_name
+        )
     )
     include_migration_next_step = (
         template_contract.update_db_models and (package_root / "db").exists()
@@ -186,7 +197,9 @@ def remove_module(
 
     if template_contract.update_db_models:
         models_path = package_root / "db" / "models.py"
-        if _remove_line(models_path, _model_import_line(package_name, module_name)):
+        if _remove_line(
+            models_path, _model_import_line(package_name, module_name)
+        ):
             updated_files.append(models_path)
 
     removed_paths.extend(
@@ -199,8 +212,12 @@ def remove_module(
 
     if remove_llm_shared:
         updated_files.extend(_remove_llm_settings(project_root, package_root))
-        removed_paths.extend(_remove_llm_integration_files(package_root, package_name))
-        remove_manifest_integration(project_root=project_root, integration_name="llm")
+        removed_paths.extend(
+            _remove_llm_integration_files(package_root, package_name)
+        )
+        remove_manifest_integration(
+            project_root=project_root, integration_name="llm"
+        )
 
     remove_manifest_module(project_root=project_root, module_name=module_name)
     if manifest_would_change:
@@ -268,7 +285,9 @@ def _detect_custom_changes(
         unit_test_path: template.unit_test_content,
     }
     for path, expected_content in expected_tests.items():
-        if path.is_file() and not _generated_file_matches(path, expected_content):
+        if path.is_file() and not _generated_file_matches(
+            path, expected_content
+        ):
             changes.append(f"Modified generated test file: {path}")
 
     return changes
@@ -299,7 +318,9 @@ def _detect_custom_test_changes(
     }
 
     for path, expected_content in expected_tests.items():
-        if path.is_file() and not _generated_file_matches(path, expected_content):
+        if path.is_file() and not _generated_file_matches(
+            path, expected_content
+        ):
             changes.append(f"Modified generated test file: {path}")
 
     return changes
@@ -328,7 +349,8 @@ def _custom_changes_message(
     formatted_changes = "\n".join(f"- {change}" for change in custom_changes)
     if wiring_only:
         return (
-            "Cannot clean module wiring because generated tests appear to contain "
+            "Cannot clean module wiring because generated tests appear to "
+            "contain "
             "custom changes:\n"
             f"{formatted_changes}\n"
             f"Use `polepos remove module {module_name} --wiring-only --force` "
@@ -338,7 +360,8 @@ def _custom_changes_message(
     return (
         "Cannot remove module because it appears to contain custom changes:\n"
         f"{formatted_changes}\n"
-        f"Use `polepos remove module {module_name} --force` to remove it anyway."
+        f"Use `polepos remove module {module_name} --force` to remove it "
+        f"anyway."
     )
 
 
@@ -354,7 +377,9 @@ def _planned_removed_paths(
 ) -> list[Path]:
     removed_paths = [
         path
-        for path in _generated_test_paths(project_root, module_name, template_contract)
+        for path in _generated_test_paths(
+            project_root, module_name, template_contract
+        )
         if path.exists()
     ]
 
@@ -390,11 +415,15 @@ def _planned_updated_files(
 
     if template_contract.update_db_models:
         models_path = package_root / "db" / "models.py"
-        if _line_exists(models_path, _model_import_line(package_name, module_name)):
+        if _line_exists(
+            models_path, _model_import_line(package_name, module_name)
+        ):
             updated_files.append(models_path)
 
     if remove_llm_shared:
-        updated_files.extend(_planned_llm_settings_updates(project_root, package_root))
+        updated_files.extend(
+            _planned_llm_settings_updates(project_root, package_root)
+        )
 
     if _manifest_would_change(
         project_root=project_root,
@@ -459,7 +488,9 @@ def _router_wiring_ranges(
     return [line_range for line_range in ranges if line_range is not None]
 
 
-def _planned_llm_settings_updates(project_root: Path, package_root: Path) -> list[Path]:
+def _planned_llm_settings_updates(
+    project_root: Path, package_root: Path
+) -> list[Path]:
     updated_files: list[Path] = []
     settings_path = package_root / "settings.py"
     env_path = project_root / ".env.example"
@@ -472,7 +503,9 @@ def _planned_llm_settings_updates(project_root: Path, package_root: Path) -> lis
     return updated_files
 
 
-def _planned_llm_integration_paths(package_root: Path, package_name: str) -> list[Path]:
+def _planned_llm_integration_paths(
+    package_root: Path, package_name: str
+) -> list[Path]:
     removed_paths: list[Path] = []
     integrations_root = package_root / "integrations"
     llm_root = integrations_root / "llm"
@@ -529,7 +562,8 @@ def _remove_next_steps(
     steps.append("Run `polepos check`")
     if include_migration_note:
         steps.append(
-            "Create a migration if removing the module also removes database tables"
+            "Create a migration if removing the module also removes "
+            "database tables"
         )
     return tuple(steps)
 
@@ -550,7 +584,12 @@ def _detect_module_template(
             )
 
     for contract in module_template_detection_contracts():
-        unit_test = project_root / "tests" / "unit" / contract.unit_test_name(module_name)
+        unit_test = (
+            project_root
+            / "tests"
+            / "unit"
+            / contract.unit_test_name(module_name)
+        )
         if unit_test.exists():
             return DetectedModuleTemplate(contract=contract)
 
@@ -570,7 +609,9 @@ def _detect_module_contract(
     module_root: Path,
     module_name: str,
 ) -> ModuleTemplateContract:
-    return _detect_module_template(project_root, module_root, module_name).contract
+    return _detect_module_template(
+        project_root, module_root, module_name
+    ).contract
 
 
 def _supported_manifest_module_template(
@@ -641,7 +682,9 @@ def _validate_remove_module_preflight(
         module_name=module_name,
     )
 
-    if template_contract.update_db_models and (module_exists or models_path.is_file()):
+    if template_contract.update_db_models and (
+        module_exists or models_path.is_file()
+    ):
         _collect_missing_marker(problems, models_path, MODEL_IMPORTS_MARKER)
         _collect_unsupported_reference(
             problems=problems,
@@ -683,13 +726,14 @@ def _has_removable_module_remnants(
 
     if any(
         path.exists()
-        for path in _generated_test_paths(project_root, module_name, template_contract)
+        for path in _generated_test_paths(
+            project_root, module_name, template_contract
+        )
     ):
         return True
 
-    return (
-        template_contract.update_db_models
-        and _line_exists(models_path, _model_import_line(package_name, module_name))
+    return template_contract.update_db_models and _line_exists(
+        models_path, _model_import_line(package_name, module_name)
     )
 
 
@@ -712,7 +756,9 @@ def _manifest_would_change(
     )
 
 
-def _has_router_remnant(path: Path, package_name: str, module_name: str) -> bool:
+def _has_router_remnant(
+    path: Path, package_name: str, module_name: str
+) -> bool:
     if not path.is_file():
         return False
 
@@ -731,13 +777,17 @@ def _has_router_remnant(path: Path, package_name: str, module_name: str) -> bool
     )
 
 
-def _collect_missing_marker(problems: list[str], path: Path, marker: str) -> None:
+def _collect_missing_marker(
+    problems: list[str], path: Path, marker: str
+) -> None:
     lines = _read_file_lines(problems, path)
     if lines is None:
         return
 
     if marker not in lines:
-        problems.append(f"Required managed marker '{marker}' is missing in {path}")
+        problems.append(
+            f"Required managed marker '{marker}' is missing in {path}"
+        )
 
 
 def _collect_unsupported_reference(
@@ -760,7 +810,8 @@ def _collect_unsupported_reference(
             continue
         if any(token in line for token in reference_tokens):
             problems.append(
-                f"Module {description} for removal is not in a managed layout: {path}"
+                f"Module {description} for removal is not in a managed "
+                f"layout: {path}"
             )
             return
 
@@ -792,10 +843,13 @@ def _collect_unsupported_router_wiring(
         for line_range in _router_import_reference_ranges(tree, router_module)
     ):
         problems.append(
-            f"Module router import for removal is not in a managed layout: {path}"
+            f"Module router import for removal is not in a managed "
+            f"layout: {path}"
         )
 
-    router_aliases = _router_aliases_from_imports(tree, router_module) | {router_alias}
+    router_aliases = _router_aliases_from_imports(tree, router_module) | {
+        router_alias
+    }
     managed_include_range = _find_router_include_range(
         tree,
         router_alias,
@@ -810,7 +864,8 @@ def _collect_unsupported_router_wiring(
         )
     ):
         problems.append(
-            f"Module router include for removal is not in a managed layout: {path}"
+            f"Module router include for removal is not in a managed "
+            f"layout: {path}"
         )
 
 
@@ -822,7 +877,9 @@ def _parse_python_source(
     try:
         return ast.parse(content, filename=str(path))
     except SyntaxError as exc:
-        problems.append(f"Could not parse managed Python file for removal: {path}: {exc}")
+        problems.append(
+            f"Could not parse managed Python file for removal: {path}: {exc}"
+        )
         return None
 
 
@@ -835,7 +892,8 @@ def _read_file_text(problems: list[str], path: Path) -> str | None:
         return path.read_text(encoding="utf-8")
     except UnicodeDecodeError as exc:
         problems.append(
-            f"Could not read managed text file for removal: {path}: {exc.reason}"
+            f"Could not read managed text file for removal: {path}: "
+            f"{exc.reason}"
         )
         return None
 
@@ -853,7 +911,10 @@ def _module_export_line(module_name: str) -> str:
 
 
 def _model_import_line(package_name: str, module_name: str) -> str:
-    return f"    from {package_name}.modules.{module_name} import model  # noqa: F401"
+    return (
+        f"    from {package_name}.modules.{module_name} import model  # noqa: "
+        f"F401"
+    )
 
 
 def _remove_line(path: Path, line: str) -> bool:
@@ -875,7 +936,9 @@ def _remove_lines(path: Path, lines_to_remove: list[str]) -> bool:
     return True
 
 
-def _remove_router_wiring(path: Path, package_name: str, module_name: str) -> bool:
+def _remove_router_wiring(
+    path: Path, package_name: str, module_name: str
+) -> bool:
     content = _read_optional_text(path)
     if not content:
         return False
@@ -889,7 +952,9 @@ def _remove_router_wiring(path: Path, package_name: str, module_name: str) -> bo
         _find_router_import_range(tree, router_module, router_alias),
         _find_router_include_range(tree, router_alias, module_name),
     ]
-    ranges_to_remove = [line_range for line_range in ranges if line_range is not None]
+    ranges_to_remove = [
+        line_range for line_range in ranges if line_range is not None
+    ]
 
     if not ranges_to_remove:
         return False
@@ -938,7 +1003,9 @@ def _router_import_reference_ranges(
     return ranges
 
 
-def _router_aliases_from_imports(tree: ast.Module, router_module: str) -> set[str]:
+def _router_aliases_from_imports(
+    tree: ast.Module, router_module: str
+) -> set[str]:
     aliases: set[str] = set()
     for node in ast.walk(tree):
         if not isinstance(node, ast.ImportFrom):
@@ -964,7 +1031,9 @@ def _find_router_include_range(
             continue
         if not _is_api_router_include_call(node.value):
             continue
-        if not node.value.args or not _is_name(node.value.args[0], router_alias):
+        if not node.value.args or not _is_name(
+            node.value.args[0], router_alias
+        ):
             continue
         if _include_router_keywords_match(node.value, module_name):
             return _node_line_range(node)
@@ -1006,7 +1075,10 @@ def _router_include_references_module(
             return True
     if _literal_keyword_value(node, "prefix") == f"/{module_name}":
         return True
-    return _literal_keyword_value(node, "tags") in ([module_name], (module_name,))
+    return _literal_keyword_value(node, "tags") in (
+        [module_name],
+        (module_name,),
+    )
 
 
 def _node_line_range(node: ast.AST) -> tuple[int, int] | None:
@@ -1034,7 +1106,10 @@ def _include_router_keywords_match(node: ast.Call, module_name: str) -> bool:
     prefix = _literal_keyword_value(node, "prefix")
     tags = _literal_keyword_value(node, "tags")
 
-    return prefix == f"/{module_name}" and tags in ([module_name], (module_name,))
+    return prefix == f"/{module_name}" and tags in (
+        [module_name],
+        (module_name,),
+    )
 
 
 def _literal_keyword_value(node: ast.Call, keyword_name: str) -> object:
@@ -1059,7 +1134,9 @@ def _remove_generated_tests(
 ) -> list[Path]:
     removed_paths: list[Path] = []
 
-    for path in _generated_test_paths(project_root, module_name, template_contract):
+    for path in _generated_test_paths(
+        project_root, module_name, template_contract
+    ):
         if path.exists():
             path.unlink()
             removed_paths.append(path)
@@ -1079,11 +1156,15 @@ def _generated_test_paths(
             / "integration"
             / template_contract.integration_test_name(module_name)
         ),
-        project_root / "tests" / "unit" / template_contract.unit_test_name(module_name),
+        project_root
+        / "tests"
+        / "unit"
+        / template_contract.unit_test_name(module_name),
     ]
     # Legacy: older scaffolds shipped a "races" starter whose unit test used the
     # singular name (test_race_service.py). Clean it up only when that legacy
-    # file is actually present, matching project_checker._is_legacy_starter_module.
+    # file is actually present, matching
+    # project_checker._is_legacy_starter_module.
     if module_name == "races":
         legacy_unit_test = project_root / LEGACY_RACES_UNIT_TEST
         if legacy_unit_test.is_file():
@@ -1101,7 +1182,9 @@ def _has_remaining_ai_prompt_module(
     for module_root in modules_root.iterdir():
         if not module_root.is_dir() or module_root.name == removed_module_name:
             continue
-        contract = _detect_module_contract(project_root, module_root, module_root.name)
+        contract = _detect_module_contract(
+            project_root, module_root, module_root.name
+        )
         if contract.name == "ai-prompt":
             return True
 
@@ -1123,13 +1206,17 @@ def _remove_llm_settings(project_root: Path, package_root: Path) -> list[Path]:
 
 
 def _llm_setting_prefixes() -> list[str]:
-    return [line.strip().split(":", 1)[0] + ":" for line in llm_settings_block()]
+    return [
+        line.strip().split(":", 1)[0] + ":" for line in llm_settings_block()
+    ]
 
 
 def _llm_env_prefixes() -> list[str]:
     env_prefixes = []
     for line in llm_env_block():
-        env_prefixes.append(line.split("=", 1)[0] + "=" if "=" in line else line)
+        env_prefixes.append(
+            line.split("=", 1)[0] + "=" if "=" in line else line
+        )
         if line.startswith("# ") and "=" in line:
             env_prefixes.append(line[2:].split("=", 1)[0] + "=")
     return env_prefixes
@@ -1197,7 +1284,9 @@ def _remove_lines_by_prefix(path: Path, prefixes: list[str]) -> bool:
     return True
 
 
-def _remove_llm_integration_files(package_root: Path, package_name: str) -> list[Path]:
+def _remove_llm_integration_files(
+    package_root: Path, package_name: str
+) -> list[Path]:
     removed_paths: list[Path] = []
     integrations_root = package_root / "integrations"
     llm_root = integrations_root / "llm"

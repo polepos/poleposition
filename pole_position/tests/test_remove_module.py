@@ -1,9 +1,8 @@
-from pathlib import Path
 import os
 import shutil
 import subprocess
 import sys
-
+from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -57,17 +56,26 @@ def test_remove_standard_module_cleans_generated_wiring(tmp_path: Path):
     assert result.returncode == 0
     assert "Removed module: garage" in result.stdout
     assert "Template: standard" in result.stdout
-    assert "Create a migration if removing the module also removes database tables" in (
-        result.stdout
+    assert (
+        "Create a migration if removing the module also removes database tables"
+        in (result.stdout)
     )
 
     package_root = project_root / "src" / "myapp"
     assert not (package_root / "modules" / "garage").exists()
-    assert not (project_root / "tests" / "integration" / "test_garage.py").exists()
-    assert not (project_root / "tests" / "unit" / "test_garage_service.py").exists()
+    assert not (
+        project_root / "tests" / "integration" / "test_garage.py"
+    ).exists()
+    assert not (
+        project_root / "tests" / "unit" / "test_garage_service.py"
+    ).exists()
 
-    router_content = (package_root / "api" / "router.py").read_text(encoding="utf-8")
-    db_models_content = (package_root / "db" / "models.py").read_text(encoding="utf-8")
+    router_content = (package_root / "api" / "router.py").read_text(
+        encoding="utf-8"
+    )
+    db_models_content = (package_root / "db" / "models.py").read_text(
+        encoding="utf-8"
+    )
     modules_init_content = (package_root / "modules" / "__init__.py").read_text(
         encoding="utf-8"
     )
@@ -76,9 +84,9 @@ def test_remove_standard_module_cleans_generated_wiring(tmp_path: Path):
     assert "modules.garage" not in router_content
     assert "modules.garage" not in db_models_content
     assert '"garage"' not in modules_init_content
-    assert "garage =" not in (
-        project_root / ".poleposition.toml"
-    ).read_text(encoding="utf-8")
+    assert "garage =" not in (project_root / ".poleposition.toml").read_text(
+        encoding="utf-8"
+    )
 
     check_result = run_cli(project_root, "check")
     assert check_result.returncode == 0
@@ -126,15 +134,15 @@ def test_remove_featured_crud_module_cleans_generated_wiring(tmp_path: Path):
     assert "modules.customers" not in (
         package_root / "db" / "models.py"
     ).read_text(encoding="utf-8")
-    assert "customers =" not in (
-        project_root / ".poleposition.toml"
-    ).read_text(encoding="utf-8")
+    assert "customers =" not in (project_root / ".poleposition.toml").read_text(
+        encoding="utf-8"
+    )
 
     check_result = run_cli(project_root, "check")
     assert check_result.returncode == 0
 
 
-def test_remove_standard_module_cleans_remnants_when_module_directory_is_missing(
+def test_remove_standard_module_cleans_remnants_when_dir_missing(
     tmp_path: Path,
 ):
     create_result = run_cli(tmp_path, "start", "myapp")
@@ -155,8 +163,12 @@ def test_remove_standard_module_cleans_remnants_when_module_directory_is_missing
     assert "tests/integration/test_garage.py" in result.stdout
     assert "tests/unit/test_garage_service.py" in result.stdout
 
-    router_content = (package_root / "api" / "router.py").read_text(encoding="utf-8")
-    db_models_content = (package_root / "db" / "models.py").read_text(encoding="utf-8")
+    router_content = (package_root / "api" / "router.py").read_text(
+        encoding="utf-8"
+    )
+    db_models_content = (package_root / "db" / "models.py").read_text(
+        encoding="utf-8"
+    )
     modules_init_content = (package_root / "modules" / "__init__.py").read_text(
         encoding="utf-8"
     )
@@ -165,21 +177,27 @@ def test_remove_standard_module_cleans_remnants_when_module_directory_is_missing
     assert "modules.garage" not in router_content
     assert "modules.garage" not in db_models_content
     assert '"garage"' not in modules_init_content
-    assert not (project_root / "tests" / "integration" / "test_garage.py").exists()
-    assert not (project_root / "tests" / "unit" / "test_garage_service.py").exists()
+    assert not (
+        project_root / "tests" / "integration" / "test_garage.py"
+    ).exists()
+    assert not (
+        project_root / "tests" / "unit" / "test_garage_service.py"
+    ).exists()
 
     check_result = run_cli(project_root, "check")
     assert check_result.returncode == 0
 
 
-def test_remove_api_only_module_cleans_remnants_when_module_directory_is_missing(
+def test_remove_api_only_module_cleans_remnants_when_dir_missing(
     tmp_path: Path,
 ):
     create_result = run_cli(tmp_path, "start", "myapp", "--db", "none")
     assert create_result.returncode == 0
 
     project_root = tmp_path / "myapp"
-    add_result = run_cli(project_root, "add", "module", "webhooks", "--api-only")
+    add_result = run_cli(
+        project_root, "add", "module", "webhooks", "--api-only"
+    )
     assert add_result.returncode == 0
 
     package_root = project_root / "src" / "myapp"
@@ -197,7 +215,9 @@ def test_remove_api_only_module_cleans_remnants_when_module_directory_is_missing
     assert '"webhooks"' not in (
         package_root / "modules" / "__init__.py"
     ).read_text(encoding="utf-8")
-    assert not (project_root / "tests" / "integration" / "test_webhooks.py").exists()
+    assert not (
+        project_root / "tests" / "integration" / "test_webhooks.py"
+    ).exists()
     assert not (
         project_root / "tests" / "unit" / "test_webhooks_api_service.py"
     ).exists()
@@ -206,7 +226,9 @@ def test_remove_api_only_module_cleans_remnants_when_module_directory_is_missing
     assert check_result.returncode == 0
 
 
-def test_remove_module_trace_reports_plan_without_changing_files(tmp_path: Path):
+def test_remove_module_trace_reports_plan_without_changing_files(
+    tmp_path: Path,
+):
     create_result = run_cli(tmp_path, "start", "myapp")
     assert create_result.returncode == 0
 
@@ -229,9 +251,9 @@ def test_remove_module_trace_reports_plan_without_changing_files(tmp_path: Path)
     package_root = project_root / "src" / "myapp"
     assert (package_root / "modules" / "garage").exists()
     assert (project_root / "tests" / "integration" / "test_garage.py").exists()
-    assert "garage_router" in (
-        package_root / "api" / "router.py"
-    ).read_text(encoding="utf-8")
+    assert "garage_router" in (package_root / "api" / "router.py").read_text(
+        encoding="utf-8"
+    )
 
 
 def test_remove_module_cleans_manifest_only_remnant(tmp_path: Path):
@@ -261,7 +283,9 @@ def test_remove_module_cleans_manifest_only_remnant(tmp_path: Path):
     assert check_result.returncode == 0
 
 
-def test_remove_module_rejects_custom_module_files_without_force(tmp_path: Path):
+def test_remove_module_rejects_custom_module_files_without_force(
+    tmp_path: Path,
+):
     create_result = run_cli(tmp_path, "start", "myapp")
     assert create_result.returncode == 0
 
@@ -282,12 +306,14 @@ def test_remove_module_rejects_custom_module_files_without_force(tmp_path: Path)
     assert "polepos remove module garage --force" in result.stdout
     assert custom_file.exists()
     assert (project_root / "tests" / "integration" / "test_garage.py").exists()
-    assert "garage_router" in (
-        package_root / "api" / "router.py"
-    ).read_text(encoding="utf-8")
+    assert "garage_router" in (package_root / "api" / "router.py").read_text(
+        encoding="utf-8"
+    )
 
 
-def test_remove_module_wiring_only_preserves_custom_module_files(tmp_path: Path):
+def test_remove_module_wiring_only_preserves_custom_module_files(
+    tmp_path: Path,
+):
     create_result = run_cli(tmp_path, "start", "myapp")
     assert create_result.returncode == 0
 
@@ -299,15 +325,24 @@ def test_remove_module_wiring_only_preserves_custom_module_files(tmp_path: Path)
     custom_file = package_root / "modules" / "garage" / "custom_logic.py"
     custom_file.write_text("CUSTOM_VALUE = 1\n", encoding="utf-8")
 
-    result = run_cli(project_root, "remove", "module", "garage", "--wiring-only")
+    result = run_cli(
+        project_root, "remove", "module", "garage", "--wiring-only"
+    )
 
     assert result.returncode == 0
     assert "Cleaned module wiring: garage" in result.stdout
-    assert "Move, delete, or rewire the preserved module directory" in result.stdout
+    assert (
+        "Move, delete, or rewire the preserved module directory"
+        in result.stdout
+    )
     assert (package_root / "modules" / "garage").exists()
     assert custom_file.exists()
-    assert not (project_root / "tests" / "integration" / "test_garage.py").exists()
-    assert not (project_root / "tests" / "unit" / "test_garage_service.py").exists()
+    assert not (
+        project_root / "tests" / "integration" / "test_garage.py"
+    ).exists()
+    assert not (
+        project_root / "tests" / "unit" / "test_garage_service.py"
+    ).exists()
 
     assert "garage_router" not in (
         package_root / "api" / "router.py"
@@ -332,18 +367,22 @@ def test_remove_module_wiring_only_rejects_custom_tests_without_force(
 
     package_root = project_root / "src" / "myapp"
     unit_test = project_root / "tests" / "unit" / "test_garage_service.py"
-    unit_test.write_text("def test_customized():\n    assert True\n", encoding="utf-8")
+    unit_test.write_text(
+        "def test_customized():\n    assert True\n", encoding="utf-8"
+    )
 
-    result = run_cli(project_root, "remove", "module", "garage", "--wiring-only")
+    result = run_cli(
+        project_root, "remove", "module", "garage", "--wiring-only"
+    )
 
     assert result.returncode != 0
     assert "Cannot clean module wiring" in result.stdout
     assert "Modified generated test file" in result.stdout
     assert "--wiring-only --force" in result.stdout
     assert unit_test.exists()
-    assert "garage_router" in (
-        package_root / "api" / "router.py"
-    ).read_text(encoding="utf-8")
+    assert "garage_router" in (package_root / "api" / "router.py").read_text(
+        encoding="utf-8"
+    )
 
     force_result = run_cli(
         project_root,
@@ -379,7 +418,9 @@ def test_remove_module_force_removes_custom_module_files(tmp_path: Path):
     assert result.returncode == 0
     assert "Removed module: garage" in result.stdout
     assert not (package_root / "modules" / "garage").exists()
-    assert not (project_root / "tests" / "integration" / "test_garage.py").exists()
+    assert not (
+        project_root / "tests" / "integration" / "test_garage.py"
+    ).exists()
     assert "garage_router" not in (
         package_root / "api" / "router.py"
     ).read_text(encoding="utf-8")
@@ -409,7 +450,9 @@ def test_remove_module_force_removes_non_utf8_generated_module_file(
     assert "UnicodeDecodeError" not in blocked_result.stdout
     assert router_path.exists()
 
-    force_result = run_cli(project_root, "remove", "module", "garage", "--force")
+    force_result = run_cli(
+        project_root, "remove", "module", "garage", "--force"
+    )
 
     assert force_result.returncode == 0
     assert "Removed module: garage" in force_result.stdout
@@ -437,7 +480,9 @@ def test_remove_module_ignores_python_cache_artifacts(tmp_path: Path):
     assert result.returncode == 0
     assert "custom changes" not in result.stdout
     assert not (package_root / "modules" / "garage").exists()
-    assert not (project_root / "tests" / "integration" / "test_garage.py").exists()
+    assert not (
+        project_root / "tests" / "integration" / "test_garage.py"
+    ).exists()
 
     check_result = run_cli(project_root, "check")
     assert check_result.returncode == 0
@@ -448,7 +493,9 @@ def test_remove_api_only_module_does_not_require_model_wiring(tmp_path: Path):
     assert create_result.returncode == 0
 
     project_root = tmp_path / "myapp"
-    add_result = run_cli(project_root, "add", "module", "webhooks", "--api-only")
+    add_result = run_cli(
+        project_root, "add", "module", "webhooks", "--api-only"
+    )
     assert add_result.returncode == 0
 
     result = run_cli(project_root, "remove", "module", "webhooks")
@@ -459,7 +506,9 @@ def test_remove_api_only_module_does_not_require_model_wiring(tmp_path: Path):
 
     package_root = project_root / "src" / "myapp"
     assert not (package_root / "modules" / "webhooks").exists()
-    assert not (project_root / "tests" / "integration" / "test_webhooks.py").exists()
+    assert not (
+        project_root / "tests" / "integration" / "test_webhooks.py"
+    ).exists()
     assert not (
         project_root / "tests" / "unit" / "test_webhooks_api_service.py"
     ).exists()
@@ -491,7 +540,9 @@ def test_remove_races_module_also_removes_legacy_unit_test_name(tmp_path: Path):
     assert not legacy_unit_test.exists()
 
 
-def test_remove_last_ai_prompt_module_cleans_llm_shared_scaffold(tmp_path: Path):
+def test_remove_last_ai_prompt_module_cleans_llm_shared_scaffold(
+    tmp_path: Path,
+):
     create_result = run_cli(tmp_path, "start", "myapp")
     assert create_result.returncode == 0
 
@@ -529,7 +580,7 @@ def test_remove_last_ai_prompt_module_cleans_llm_shared_scaffold(tmp_path: Path)
     assert check_result.returncode == 0
 
 
-def test_remove_ai_prompt_module_cleans_remnants_when_module_directory_is_missing(
+def test_remove_ai_prompt_module_cleans_remnants_when_dir_missing(
     tmp_path: Path,
 ):
     create_result = run_cli(tmp_path, "start", "myapp")
@@ -561,7 +612,9 @@ def test_remove_ai_prompt_module_cleans_remnants_when_module_directory_is_missin
         package_root / "modules" / "__init__.py"
     ).read_text(encoding="utf-8")
     assert not (package_root / "integrations" / "llm").exists()
-    assert not (project_root / "tests" / "integration" / "test_assistant.py").exists()
+    assert not (
+        project_root / "tests" / "integration" / "test_assistant.py"
+    ).exists()
     assert not (
         project_root / "tests" / "unit" / "test_assistant_orchestrator.py"
     ).exists()
@@ -573,7 +626,7 @@ def test_remove_ai_prompt_module_cleans_remnants_when_module_directory_is_missin
     assert check_result.returncode == 0
 
 
-def test_remove_last_ai_prompt_module_cleans_llm_scaffold_with_other_integrations(
+def test_remove_last_ai_prompt_module_cleans_llm_scaffold_with_others(
     tmp_path: Path,
 ):
     create_result = run_cli(tmp_path, "start", "myapp")
@@ -611,17 +664,25 @@ def test_remove_last_ai_prompt_module_cleans_llm_scaffold_with_other_integration
     assert check_result.returncode == 0
 
 
-def test_remove_last_ai_prompt_module_preserves_custom_llm_scaffold(tmp_path: Path):
+def test_remove_last_ai_prompt_module_preserves_custom_llm_scaffold(
+    tmp_path: Path,
+):
     create_result = run_cli(tmp_path, "start", "myapp")
     assert create_result.returncode == 0
 
     project_root = tmp_path / "myapp"
-    add_result = run_cli(project_root, "add", "module", "assistant", "--template", "ai-prompt")
+    add_result = run_cli(
+        project_root, "add", "module", "assistant", "--template", "ai-prompt"
+    )
     assert add_result.returncode == 0
 
     package_root = project_root / "src" / "myapp"
-    custom_provider = package_root / "integrations" / "llm" / "custom_provider.py"
-    custom_provider.write_text("class CustomProvider:\n    pass\n", encoding="utf-8")
+    custom_provider = (
+        package_root / "integrations" / "llm" / "custom_provider.py"
+    )
+    custom_provider.write_text(
+        "class CustomProvider:\n    pass\n", encoding="utf-8"
+    )
 
     result = run_cli(project_root, "remove", "module", "assistant")
 
@@ -646,7 +707,9 @@ def test_remove_ai_prompt_module_does_not_crash_when_llm_settings_are_missing(
     assert create_result.returncode == 0
 
     project_root = tmp_path / "myapp"
-    add_result = run_cli(project_root, "add", "module", "assistant", "--template", "ai-prompt")
+    add_result = run_cli(
+        project_root, "add", "module", "assistant", "--template", "ai-prompt"
+    )
     assert add_result.returncode == 0
 
     package_root = project_root / "src" / "myapp"
@@ -666,15 +729,19 @@ def test_remove_ai_prompt_module_does_not_crash_when_llm_settings_are_missing(
     assert (package_root / "integrations" / "llm").exists()
 
 
-def test_remove_ai_prompt_module_keeps_shared_llm_scaffold_when_another_ai_module_exists(
+def test_remove_ai_prompt_module_keeps_shared_llm_scaffold_when_other_ai_exists(
     tmp_path: Path,
 ):
     create_result = run_cli(tmp_path, "start", "myapp")
     assert create_result.returncode == 0
 
     project_root = tmp_path / "myapp"
-    first_result = run_cli(project_root, "add", "module", "assistant", "--template", "ai-prompt")
-    second_result = run_cli(project_root, "add", "module", "copilot", "--template", "ai-prompt")
+    first_result = run_cli(
+        project_root, "add", "module", "assistant", "--template", "ai-prompt"
+    )
+    second_result = run_cli(
+        project_root, "add", "module", "copilot", "--template", "ai-prompt"
+    )
     assert first_result.returncode == 0
     assert second_result.returncode == 0
 
@@ -722,7 +789,8 @@ def test_remove_module_accepts_multiline_router_wiring(
     package_root = project_root / "src" / "myapp"
     router_path = package_root / "api" / "router.py"
     router_content = router_path.read_text(encoding="utf-8").replace(
-        'api_router.include_router(garage_router, prefix="/garage", tags=["garage"])',
+        'api_router.include_router(garage_router, prefix="/garage", '
+        'tags=["garage"])',
         (
             "api_router.include_router(\n"
             "    garage_router,\n"
@@ -754,7 +822,8 @@ def test_remove_module_fails_before_deleting_when_router_alias_drifted(
     router_path = package_root / "api" / "router.py"
     router_content = router_path.read_text(encoding="utf-8").replace(
         "from myapp.modules.garage.router import router as garage_router",
-        "from myapp.modules.garage.router import router as custom_garage_router",
+        "from myapp.modules.garage.router import router as "
+        "custom_garage_router",
     )
     router_path.write_text(router_content, encoding="utf-8")
 
@@ -819,7 +888,7 @@ def test_remove_module_fails_before_deleting_when_router_is_non_utf8(
     assert (project_root / "tests" / "integration" / "test_garage.py").exists()
 
 
-def test_remove_module_fails_before_deleting_when_custom_router_reference_exists(
+def test_remove_module_fails_before_delete_when_custom_router_ref_exists(
     tmp_path: Path,
 ):
     create_result = run_cli(tmp_path, "start", "myapp")
@@ -834,8 +903,10 @@ def test_remove_module_fails_before_deleting_when_custom_router_reference_exists
     router_path.write_text(
         router_path.read_text(encoding="utf-8")
         + "\n"
-        + "from myapp.modules.garage.router import router as garage_custom_router\n"
-        + 'api_router.include_router(garage_custom_router, prefix="/garage-custom", tags=["garage_custom"])\n',
+        + "from myapp.modules.garage.router import router as "
+        "garage_custom_router\n"
+        + "api_router.include_router(garage_custom_router, "
+        'prefix="/garage-custom", tags=["garage_custom"])\n',
         encoding="utf-8",
     )
 

@@ -10,8 +10,8 @@ def test_polepos_data_exports_runtime_structures() -> None:
         SortedDict,
         SortedList,
         SortedSet,
-        TTLCache,
         Trie,
+        TTLCache,
         UnionFind,
     )
 

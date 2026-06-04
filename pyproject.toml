@@ -85,3 +85,30 @@ exclude_lines = [
     "if TYPE_CHECKING:",
     'if __name__ == "__main__":',
 ]
+
+# Code follows the Google Python Style Guide, enforced via Ruff.
+# See https://google.github.io/styleguide/pyguide.html and docs/code-style.md.
+[tool.ruff]
+line-length = 80
+target-version = "py310"
+# Generated project templates embed {{placeholders}} and are not valid Python
+# on disk, so they are excluded from linting/formatting.
+extend-exclude = ["pole_position/template"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort (Google import grouping/ordering)
+    "N",   # pep8-naming (Google naming conventions)
+    "UP",  # pyupgrade (modern, supported idioms)
+    "B",   # flake8-bugbear (incl. B904 "raise ... from")
+    "C4",  # flake8-comprehensions
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["pole_position", "polepos"]
+
+[tool.ruff.format]
+docstring-code-format = true

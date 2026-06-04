@@ -6,13 +6,14 @@ from pole_position.cli.services.database_options import (
     DEFAULT_DATABASE,
     get_database_option,
 )
-from pole_position.cli.services.dependency_contract import dependency_names_match
-from pole_position.cli.services.dependency_contract import parse_dependency_entry
+from pole_position.cli.services.dependency_contract import (
+    dependency_names_match,
+    parse_dependency_entry,
+)
 from pole_position.cli.services.template_renderer import (
     build_context,
     render_project_files,
 )
-
 
 DATABASE_DEPENDENCIES = (
     "alembic",
@@ -69,7 +70,9 @@ def _rename_source_package(project_path: Path, package_name: str) -> None:
     target_package_dir = src_root / package_name
 
     if not source_package_dir.exists():
-        raise RuntimeError(f"Template source package not found: {source_package_dir}")
+        raise RuntimeError(
+            f"Template source package not found: {source_package_dir}"
+        )
 
     source_package_dir.rename(target_package_dir)
 
@@ -95,7 +98,9 @@ def _remove_database_scaffold(
     _remove_pyproject_database_dependencies(project_path / "pyproject.toml")
     _remove_env_database_values(project_path / ".env.example")
     _write_database_free_compose(project_path / "compose.yaml")
-    _write_database_free_api_deps(package_root / "api" / "deps.py", package_name)
+    _write_database_free_api_deps(
+        package_root / "api" / "deps.py", package_name
+    )
     _remove_settings_database_url(package_root / "settings.py")
     _remove_lifespan_model_imports(package_root / "bootstrap" / "lifespan.py")
     _remove_run_database_summary(package_root / "run.py")
@@ -160,7 +165,10 @@ def _write_database_free_compose(path: Path) -> None:
 
 def _write_database_free_api_deps(path: Path, package_name: str) -> None:
     path.write_text(
-        f"""from {package_name}.auth.dependencies import get_current_user, require_roles
+        f"""from {package_name}.auth.dependencies import (
+    get_current_user,
+    require_roles,
+)
 
 
 __all__ = [
@@ -235,7 +243,9 @@ def _remove_class_attribute(
                 isinstance(statement.target, ast.Name)
                 and statement.target.id == attribute_name
             ):
-                ranges.append(_node_line_range(statement, path_label=path_label))
+                ranges.append(
+                    _node_line_range(statement, path_label=path_label)
+                )
 
     return _remove_line_ranges(content, ranges)
 
@@ -321,7 +331,9 @@ def _remove_import_alias(
         return content
 
     kept_names = [
-        alias.name if alias.asname is None else f"{alias.name} as {alias.asname}"
+        alias.name
+        if alias.asname is None
+        else f"{alias.name} as {alias.asname}"
         for alias in node.names
         if alias.name != imported_name
     ]
@@ -333,7 +345,8 @@ def _remove_import_alias(
     indent = " " * node.col_offset
     relative_level = "." * node.level
     lines[start:end] = [
-        f"{indent}from {relative_level}{node.module or ''} import {', '.join(kept_names)}"
+        f"{indent}from {relative_level}{node.module or ''} import "
+        f"{', '.join(kept_names)}"
     ]
     return "\n".join(lines) + "\n"
 
@@ -388,7 +401,9 @@ def _parse_python_content(content: str, *, path_label: str) -> ast.Module:
     try:
         return ast.parse(content)
     except SyntaxError as exc:
-        raise RuntimeError(f"Cannot update generated Python file: {path_label}") from exc
+        raise RuntimeError(
+            f"Cannot update generated Python file: {path_label}"
+        ) from exc
 
 
 def _node_line_range(node: ast.AST, *, path_label: str) -> tuple[int, int]:

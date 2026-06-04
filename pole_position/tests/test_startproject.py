@@ -1,9 +1,9 @@
-from pathlib import Path
 import ast
 import os
 import py_compile
 import subprocess
 import sys
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -13,6 +13,8 @@ from pole_position.cli.services.project_creator import (
     _remove_pyproject_database_dependencies,
     _remove_run_database_summary,
     _remove_settings_database_url,
+)
+from pole_position.cli.services.project_creator import (
     create_project as create_project_from_template,
 )
 
@@ -63,7 +65,9 @@ def _assigns_name(node: ast.Assign, name: str) -> bool:
 
 
 def _assigns_call(node: ast.Assign, target_name: str, call_name: str) -> bool:
-    return _assigns_name(node, target_name) and _call_name(node.value) == call_name
+    return (
+        _assigns_name(node, target_name) and _call_name(node.value) == call_name
+    )
 
 
 def _call_name(node: ast.AST) -> str | None:
@@ -85,12 +89,14 @@ def test_create_project(tmp_path: Path):
     assert "uv sync --extra dev" in result.stdout
     assert (tmp_path / project_name).exists()
     assert (tmp_path / project_name / "src").exists()
-   
+
+
 def test_startproject_alias(tmp_path: Path):
     result = run_cli(tmp_path, "startproject", "aliasapp")
 
     assert result.returncode == 0
     assert (tmp_path / "aliasapp").exists()
+
 
 def test_invalid_project_name(tmp_path: Path):
     result = run_cli(tmp_path, "start", "invalid name")
@@ -107,7 +113,9 @@ def test_start_rejects_project_name_with_path_separator(tmp_path: Path):
     assert not (tmp_path / "foo").exists()
 
 
-def test_start_rejects_project_name_invalid_for_pyproject_metadata(tmp_path: Path):
+def test_start_rejects_project_name_invalid_for_pyproject_metadata(
+    tmp_path: Path,
+):
     result = run_cli(tmp_path, "start", "foo@bar")
 
     assert result.returncode != 0
@@ -140,6 +148,7 @@ def test_existing_directory(tmp_path: Path):
 
     assert result.returncode != 0
     assert "already exists" in result.stdout
+
 
 def test_package_name_normalization(tmp_path: Path):
     result = run_cli(tmp_path, "start", "my-app")
@@ -180,7 +189,9 @@ def test_start_with_postgres_database_option(tmp_path: Path):
     settings = (package_root / "settings.py").read_text(encoding="utf-8")
     compose_file = (project_root / "compose.yaml").read_text(encoding="utf-8")
 
-    expected_url = "postgresql+psycopg://postgres:postgres@localhost:5432/pg_app"
+    expected_url = (
+        "postgresql+psycopg://postgres:postgres@localhost:5432/pg_app"
+    )
     assert f"DATABASE_URL={expected_url}" in env_example
     assert "POSTGRES_DB=pg_app" in env_example
     assert f'default="{expected_url}"' in settings
@@ -266,9 +277,9 @@ def test_create_project_normalizes_database_option_for_database_free_scaffold(
         database="NONE",
     )
 
-    api_deps = (
-        project_root / "src" / "api_app" / "api" / "deps.py"
-    ).read_text(encoding="utf-8")
+    api_deps = (project_root / "src" / "api_app" / "api" / "deps.py").read_text(
+        encoding="utf-8"
+    )
 
     assert not (project_root / "alembic.ini").exists()
     assert not (project_root / "migrations").exists()
@@ -459,7 +470,9 @@ def test_generated_project_does_not_copy_pycache(tmp_path: Path):
     assert generated_pycache == []
 
 
-def test_generated_project_renders_database_and_module_placeholders(tmp_path: Path):
+def test_generated_project_renders_database_and_module_placeholders(
+    tmp_path: Path,
+):
     result = run_cli(tmp_path, "start", "demo-app")
 
     assert result.returncode == 0
@@ -479,22 +492,35 @@ def test_generated_project_renders_database_and_module_placeholders(tmp_path: Pa
     dockerfile = (project_root / "Dockerfile").read_text(encoding="utf-8")
     dockerignore = (project_root / ".dockerignore").read_text(encoding="utf-8")
     compose_file = (project_root / "compose.yaml").read_text(encoding="utf-8")
-    logging_module = (package_root / "bootstrap" / "logging.py").read_text(encoding="utf-8")
-    lifespan = (package_root / "bootstrap" / "lifespan.py").read_text(encoding="utf-8")
-    middleware_module = (package_root / "bootstrap" / "middleware.py").read_text(encoding="utf-8")
-    tests_conftest = (project_root / "tests" / "conftest.py").read_text(encoding="utf-8")
+    logging_module = (package_root / "bootstrap" / "logging.py").read_text(
+        encoding="utf-8"
+    )
+    lifespan = (package_root / "bootstrap" / "lifespan.py").read_text(
+        encoding="utf-8"
+    )
+    middleware_module = (
+        package_root / "bootstrap" / "middleware.py"
+    ).read_text(encoding="utf-8")
+    tests_conftest = (project_root / "tests" / "conftest.py").read_text(
+        encoding="utf-8"
+    )
     status_service = (
         package_root / "modules" / "status" / "services" / "status_service.py"
     ).read_text(encoding="utf-8")
-    auth_dependencies = (
-        package_root / "auth" / "dependencies.py"
-    ).read_text(encoding="utf-8")
-    auth_token = (package_root / "auth" / "token.py").read_text(encoding="utf-8")
+    auth_dependencies = (package_root / "auth" / "dependencies.py").read_text(
+        encoding="utf-8"
+    )
+    auth_token = (package_root / "auth" / "token.py").read_text(
+        encoding="utf-8"
+    )
     db_models_path = package_root / "db" / "models.py"
     db_models = db_models_path.read_text(encoding="utf-8")
 
     assert "DATABASE_URL=sqlite:///./poleposition.db" in env_example
-    assert "This file is for coding agents working in this PolePosition-generated" in agents_guide
+    assert (
+        "This file is for coding agents working in this PolePosition-generated"
+        in agents_guide
+    )
     assert "`polepos add module <name>`" in agents_guide
     assert "`polepos remove module <name>`" in agents_guide
     assert "`polepos remove module <name> --wiring-only`" in agents_guide
@@ -515,8 +541,14 @@ def test_generated_project_renders_database_and_module_placeholders(tmp_path: Pa
     assert "CORS_ENABLED=true" in env_example
     assert 'CORS_ALLOW_ORIGINS=["http://localhost:3000"' in env_example
     assert "# CORS_ALLOW_ORIGIN_REGEX=" in env_example
-    assert 'CORS_ALLOW_METHODS=["GET","POST","PUT","PATCH","DELETE","OPTIONS"]' in env_example
-    assert 'CORS_ALLOW_HEADERS=["Authorization","Content-Type","X-Request-ID"]' in env_example
+    assert (
+        'CORS_ALLOW_METHODS=["GET","POST","PUT","PATCH","DELETE","OPTIONS"]'
+        in env_example
+    )
+    assert (
+        'CORS_ALLOW_HEADERS=["Authorization","Content-Type","X-Request-ID"]'
+        in env_example
+    )
     assert 'CORS_EXPOSE_HEADERS=["X-Request-ID"]' in env_example
     assert "CORS_MAX_AGE=600" in env_example
     assert "POSTGRES_DB=app" in env_example
@@ -554,14 +586,20 @@ def test_generated_project_renders_database_and_module_placeholders(tmp_path: Pa
     assert "services:" in compose_file
     assert "image: postgres:16" in compose_file
     assert "DATABASE_URL: postgresql+psycopg://" in compose_file
-    assert 'APP_HOST: 0.0.0.0' in compose_file
+    assert "APP_HOST: 0.0.0.0" in compose_file
     assert '- "${POSTGRES_PORT:-5432}:5432"' in compose_file
-    assert "# polepos:router-imports" in (package_root / "api" / "router.py").read_text(encoding="utf-8")
-    assert "# polepos:router-includes" in (package_root / "api" / "router.py").read_text(encoding="utf-8")
+    assert "# polepos:router-imports" in (
+        package_root / "api" / "router.py"
+    ).read_text(encoding="utf-8")
+    assert "# polepos:router-includes" in (
+        package_root / "api" / "router.py"
+    ).read_text(encoding="utf-8")
     assert "# polepos:model-imports" in db_models
     assert "    pass" in db_models
     compile(db_models, str(db_models_path), "exec")
-    assert "# polepos:module-exports" in (package_root / "modules" / "__init__.py").read_text(encoding="utf-8")
+    assert "# polepos:module-exports" in (
+        package_root / "modules" / "__init__.py"
+    ).read_text(encoding="utf-8")
     assert "# polepos:auth-settings" in settings_module
     assert "# polepos:integration-settings" in settings_module
     assert "# polepos:llm-settings" in settings_module
@@ -569,25 +607,43 @@ def test_generated_project_renders_database_and_module_placeholders(tmp_path: Pa
     assert "# polepos:integration-env" in env_example
     assert "# polepos:llm-env" in env_example
     assert "from demo_app.api.router import api_router" in app_module
-    assert 'uvicorn.run(' in run_module
+    assert "uvicorn.run(" in run_module
     assert '"demo_app.main:app"' in run_module
     assert "from demo_app.app import create_app" in main_module
     assert "app = create_app()" in main_module
     assert "app = create_app()" not in app_module
-    assert "from demo_app.bootstrap.logging import print_startup_table" in run_module
+    assert (
+        "from demo_app.bootstrap.logging import print_startup_table"
+        in run_module
+    )
     assert "print_startup_table(" in run_module
-    assert 'docs_url = f"http://{display_host}:{app_port}/docs"' in logging_module
-    assert 'openapi_url = f"http://{display_host}:{app_port}/openapi.json"' in logging_module
+    assert (
+        'docs_url = f"http://{display_host}:{app_port}/docs"' in logging_module
+    )
+    assert (
+        'openapi_url = f"http://{display_host}:{app_port}/openapi.json"'
+        in logging_module
+    )
     assert "def render_startup_table(" in logging_module
-    assert "def print_startup_table(**kwargs: object) -> None:" in logging_module
+    assert (
+        "def print_startup_table(**kwargs: object) -> None:" in logging_module
+    )
     assert "PolePosition Startup" in logging_module
     assert "host=settings.app_host" in run_module
     assert "workers=settings.uvicorn_workers" in run_module
-    assert "limit_max_requests=settings.uvicorn_limit_max_requests" in run_module
-    assert "limit_max_requests_jitter=settings.uvicorn_limit_max_requests_jitter" in run_module
-    assert "timeout_worker_healthcheck=settings.uvicorn_timeout_worker_healthcheck" in run_module
+    assert (
+        "limit_max_requests=settings.uvicorn_limit_max_requests" in run_module
+    )
+    assert (
+        "limit_max_requests_jitter=settings.uvicorn_limit_max_requests_jitter"
+        in run_module
+    )
+    assert (
+        "timeout_worker_healthcheck=settings.uvicorn_timeout_worker_healthcheck"
+        in run_module
+    )
     assert "sys.dont_write_bytecode = True" not in run_module
-    assert "app_host: str = \"127.0.0.1\"" in settings_module
+    assert 'app_host: str = "127.0.0.1"' in settings_module
     assert "uvicorn_workers: int = 1" in settings_module
     assert 'log_format: str = "text"' in settings_module
     assert "cors_enabled: bool = True" in settings_module
@@ -602,10 +658,18 @@ def test_generated_project_renders_database_and_module_placeholders(tmp_path: Pa
     assert "auth_access_token_expire_minutes: int = 60" in settings_module
     assert 'auth_issuer: str = "demo-app"' in settings_module
     assert "@field_validator(" in settings_module
-    assert 'def empty_string_to_none(cls, value: object) -> object:' in settings_module
-    assert "def parse_list_env(cls, value: object) -> object:" in settings_module
+    assert (
+        "def empty_string_to_none(cls, value: object) -> object:"
+        in settings_module
+    )
+    assert (
+        "def parse_list_env(cls, value: object) -> object:" in settings_module
+    )
     assert "def get_logger(name: str) -> logging.Logger:" in logging_module
-    assert '_request_id_context = ContextVar("request_id", default="-")' in logging_module
+    assert (
+        '_request_id_context = ContextVar("request_id", default="-")'
+        in logging_module
+    )
     assert "def bind_request_id(request_id: str) -> Token:" in logging_module
     assert "def reset_request_id(token: Token) -> None:" in logging_module
     assert "record.request_id = get_request_id()" in logging_module
@@ -614,8 +678,8 @@ def test_generated_project_renders_database_and_module_placeholders(tmp_path: Pa
     assert '"timestamp": datetime.fromtimestamp(' in logging_module
     assert '"request_id": getattr(record, "request_id", "-")' in logging_module
     assert (
-        "from demo_app.bootstrap.logging import bind_request_id, reset_request_id"
-        in middleware_module
+        "from demo_app.bootstrap.logging import bind_request_id, "
+        "reset_request_id" in middleware_module
     )
     assert (
         "from starlette.types import ASGIApp, Message, Receive, Scope, Send"
@@ -625,15 +689,23 @@ def test_generated_project_renders_database_and_module_placeholders(tmp_path: Pa
     assert 'if message["type"] == "http.response.start":' in middleware_module
     assert 'if key.lower() != b"x-request-id"' in middleware_module
     assert (
-        'response_headers.append((b"x-request-id", request_id.encode("latin-1")))'
-        in middleware_module
+        'response_headers.append((b"x-request-id", '
+        'request_id.encode("latin-1")))' in middleware_module
     )
     assert "app.add_middleware(RequestContextMiddleware)" in middleware_module
     assert '@app.middleware("http")' not in middleware_module
-    assert "from fastapi.middleware.cors import CORSMiddleware" in middleware_module
+    assert (
+        "from fastapi.middleware.cors import CORSMiddleware"
+        in middleware_module
+    )
     assert "allow_origins=settings.cors_allow_origins" in middleware_module
-    assert "allow_origin_regex=settings.cors_allow_origin_regex" in middleware_module
-    assert "allow_credentials=settings.cors_allow_credentials" in middleware_module
+    assert (
+        "allow_origin_regex=settings.cors_allow_origin_regex"
+        in middleware_module
+    )
+    assert (
+        "allow_credentials=settings.cors_allow_credentials" in middleware_module
+    )
     assert "allow_methods=settings.cors_allow_methods" in middleware_module
     assert "allow_headers=settings.cors_allow_headers" in middleware_module
     assert "expose_headers=settings.cors_expose_headers" in middleware_module
@@ -677,20 +749,17 @@ def test_generated_app_factory_initializes_settings_inside_create_app(
     )
 
     module_assignments = [
-        node
-        for node in app_tree.body
-        if isinstance(node, ast.Assign)
+        node for node in app_tree.body if isinstance(node, ast.Assign)
     ]
     create_app_assignments = [
-        node
-        for node in create_app.body
-        if isinstance(node, ast.Assign)
+        node for node in create_app.body if isinstance(node, ast.Assign)
     ]
 
-    assert not any(_assigns_name(node, "settings") for node in module_assignments)
     assert not any(
-        _assigns_call(node, "app", "create_app")
-        for node in module_assignments
+        _assigns_name(node, "settings") for node in module_assignments
+    )
+    assert not any(
+        _assigns_call(node, "app", "create_app") for node in module_assignments
     )
     assert any(
         _assigns_call(node, "settings", "get_settings")
@@ -724,14 +793,18 @@ def test_generated_logging_context_includes_request_id(
     monkeypatch.syspath_prepend(str(project_root / "src"))
     monkeypatch.setenv("APP_ENV", "test")
     monkeypatch.setenv("LOG_FORMAT", "json")
-    monkeypatch.setenv("DATABASE_URL", f"sqlite:///{tmp_path / 'request-id.db'}")
+    monkeypatch.setenv(
+        "DATABASE_URL", f"sqlite:///{tmp_path / 'request-id.db'}"
+    )
 
     root_logger = logging.getLogger()
     previous_handlers = list(root_logger.handlers)
     previous_level = root_logger.level
 
     try:
-        logging_module = importlib.import_module(f"{package_name}.bootstrap.logging")
+        logging_module = importlib.import_module(
+            f"{package_name}.bootstrap.logging"
+        )
         logging_module.setup_logging(
             log_format="json",
             app_name="request-id-app",
@@ -747,7 +820,11 @@ def test_generated_logging_context_includes_request_id(
         logging_module.get_logger("request-id-test").info("outside request")
 
         output = capsys.readouterr().out
-        logs = [json.loads(line) for line in output.splitlines() if line.startswith("{")]
+        logs = [
+            json.loads(line)
+            for line in output.splitlines()
+            if line.startswith("{")
+        ]
 
         assert any(
             log.get("message") == "bound request"
@@ -761,9 +838,8 @@ def test_generated_logging_context_includes_request_id(
         )
     finally:
         for module_name in list(sys.modules):
-            if (
-                module_name == package_name
-                or module_name.startswith(f"{package_name}.")
+            if module_name == package_name or module_name.startswith(
+                f"{package_name}."
             ):
                 sys.modules.pop(module_name, None)
         root_logger.handlers.clear()
@@ -778,7 +854,9 @@ def test_generated_project_includes_alembic_support(tmp_path: Path):
 
     project_root = tmp_path / "demo-app"
     pyproject = (project_root / "pyproject.toml").read_text(encoding="utf-8")
-    migrations_env = (project_root / "migrations" / "env.py").read_text(encoding="utf-8")
+    migrations_env = (project_root / "migrations" / "env.py").read_text(
+        encoding="utf-8"
+    )
     readme = (project_root / "README.md").read_text(encoding="utf-8")
 
     assert '"alembic>=' in pyproject
@@ -788,7 +866,9 @@ def test_generated_project_includes_alembic_support(tmp_path: Path):
     assert "target_metadata = Base.metadata" in migrations_env
     assert "polepos db upgrade" in readme
     assert 'polepos db revision -m "add garage table"' in readme
-    assert 'uv run alembic revision --autogenerate -m "add garage table"' in readme
+    assert (
+        'uv run alembic revision --autogenerate -m "add garage table"' in readme
+    )
     assert "alembic.ini\nmigrations/\n  versions/\nsrc/demo_app/" in readme
     assert "\n  db/\n" in readme
     assert "{{project" not in migrations_env
@@ -831,7 +911,9 @@ def test_generated_project_includes_docker_workflow_docs(tmp_path: Path):
     assert "docker compose up --build" in readme
     assert "docker compose run --rm app uv run alembic upgrade head" in readme
     assert "runs Alembic directly inside the generated app container" in readme
-    assert "For host-based development, keep using `polepos db upgrade`." in readme
+    assert (
+        "For host-based development, keep using `polepos db upgrade`." in readme
+    )
 
 
 def test_generated_project_is_migration_first(tmp_path: Path):
@@ -842,7 +924,9 @@ def test_generated_project_is_migration_first(tmp_path: Path):
     project_root = tmp_path / "demo-app"
     package_root = project_root / "src" / "demo_app"
 
-    lifespan = (package_root / "bootstrap" / "lifespan.py").read_text(encoding="utf-8")
+    lifespan = (package_root / "bootstrap" / "lifespan.py").read_text(
+        encoding="utf-8"
+    )
     readme = (project_root / "README.md").read_text(encoding="utf-8")
 
     assert "Base.metadata.create_all" not in lifespan
@@ -858,17 +942,28 @@ def test_no_bytecode_flag_updates_generated_run_instructions(tmp_path: Path):
 
     project_root = tmp_path / "demo-app"
     readme = (project_root / "README.md").read_text(encoding="utf-8")
-    run_module = (project_root / "src" / "demo_app" / "run.py").read_text(encoding="utf-8")
-    migrations_env = (project_root / "migrations" / "env.py").read_text(encoding="utf-8")
-    tests_conftest = (project_root / "tests" / "conftest.py").read_text(encoding="utf-8")
+    run_module = (project_root / "src" / "demo_app" / "run.py").read_text(
+        encoding="utf-8"
+    )
+    migrations_env = (project_root / "migrations" / "env.py").read_text(
+        encoding="utf-8"
+    )
+    tests_conftest = (project_root / "tests" / "conftest.py").read_text(
+        encoding="utf-8"
+    )
 
     expected_migration_command = "PYTHONDONTWRITEBYTECODE=1 polepos db upgrade"
-    expected_run_command = "PYTHONDONTWRITEBYTECODE=1 uv run python -m demo_app.run"
+    expected_run_command = (
+        "PYTHONDONTWRITEBYTECODE=1 uv run python -m demo_app.run"
+    )
     assert expected_migration_command in result.stdout
     assert expected_migration_command in readme
     assert expected_run_command in result.stdout
     assert expected_run_command in readme
-    assert "Configured generated local Python commands to start without bytecode writes." in result.stdout
+    assert (
+        "Configured generated local Python commands to start without "
+        "bytecode writes." in result.stdout
+    )
     assert "generated with `--no-bytecode`" in readme
     assert "PYTHONDONTWRITEBYTECODE=1" in readme
     assert "{{no_bytecode_command_prefix}}" not in readme
@@ -882,7 +977,9 @@ def test_generated_gitignore_ignores_bytecode_artifacts(tmp_path: Path):
 
     assert result.returncode == 0
 
-    gitignore = (tmp_path / "demo-app" / ".gitignore").read_text(encoding="utf-8")
+    gitignore = (tmp_path / "demo-app" / ".gitignore").read_text(
+        encoding="utf-8"
+    )
     assert "__pycache__/" in gitignore
     assert "*.pyc" in gitignore
     assert "*.egg-info/" in gitignore
@@ -894,7 +991,9 @@ def test_generated_env_example_is_safe_to_copy(tmp_path: Path):
 
     assert result.returncode == 0
 
-    env_example = (tmp_path / "demo-app" / ".env.example").read_text(encoding="utf-8")
+    env_example = (tmp_path / "demo-app" / ".env.example").read_text(
+        encoding="utf-8"
+    )
     env_lines = env_example.splitlines()
 
     assert "UVICORN_LIMIT_MAX_REQUESTS=" not in env_lines
@@ -903,12 +1002,16 @@ def test_generated_env_example_is_safe_to_copy(tmp_path: Path):
 
 
 def test_packaging_includes_hidden_template_files() -> None:
-    pyproject = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    pyproject = tomllib.loads(
+        (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    )
     packages = pyproject["tool"]["setuptools"]["packages"]["find"]["include"]
-    package_data = pyproject["tool"]["setuptools"]["package-data"]["pole_position"]
-    exclude_package_data = pyproject["tool"]["setuptools"]["exclude-package-data"][
+    package_data = pyproject["tool"]["setuptools"]["package-data"][
         "pole_position"
     ]
+    exclude_package_data = pyproject["tool"]["setuptools"][
+        "exclude-package-data"
+    ]["pole_position"]
     manifest = (REPO_ROOT / "MANIFEST.in").read_text(encoding="utf-8")
 
     assert "pole_position*" in packages
@@ -920,7 +1023,10 @@ def test_packaging_includes_hidden_template_files() -> None:
     assert "cli/services/module_templates/files/**/*.tpl" in package_data
     assert "template/**/__pycache__/*" in exclude_package_data
     assert "template/**/*.pyc" in exclude_package_data
-    assert "recursive-include pole_position/cli/services/module_templates/files *.tpl" in manifest
+    assert (
+        "recursive-include "
+        "pole_position/cli/services/module_templates/files *.tpl" in manifest
+    )
     assert "recursive-include pole_position/template *" in manifest
     assert "include pole_position/template/AGENTS.md" in manifest
     assert "include pole_position/template/.dockerignore" in manifest
@@ -930,8 +1036,12 @@ def test_packaging_includes_hidden_template_files() -> None:
 
 
 def test_lockfile_version_matches_project_metadata() -> None:
-    pyproject = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    lockfile = tomllib.loads((REPO_ROOT / "uv.lock").read_text(encoding="utf-8"))
+    pyproject = tomllib.loads(
+        (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    )
+    lockfile = tomllib.loads(
+        (REPO_ROOT / "uv.lock").read_text(encoding="utf-8")
+    )
     poleposition_package = next(
         package
         for package in lockfile["package"]

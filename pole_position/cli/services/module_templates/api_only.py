@@ -1,10 +1,14 @@
 from pole_position.cli.services.module_templates.naming import to_class_name
 from pole_position.cli.services.module_templates.renderer import render_template
-from pole_position.cli.services.module_templates.spec import API_ONLY_MODULE_TEMPLATE_CONTRACT
-from pole_position.cli.services.module_templates.spec import ModuleTemplate
+from pole_position.cli.services.module_templates.spec import (
+    API_ONLY_MODULE_TEMPLATE_CONTRACT,
+    ModuleTemplate,
+)
 
 
-def build_api_only_template(*, package_name: str, module_name: str) -> ModuleTemplate:
+def build_api_only_template(
+    *, package_name: str, module_name: str
+) -> ModuleTemplate:
     class_name = to_class_name(module_name)
     context = {
         "package_name": package_name,
@@ -33,7 +37,9 @@ def build_api_only_template(*, package_name: str, module_name: str) -> ModuleTem
             "api_only/tests/integration.py.tpl",
             context,
         ),
-        unit_test_name=API_ONLY_MODULE_TEMPLATE_CONTRACT.unit_test_name(module_name),
+        unit_test_name=API_ONLY_MODULE_TEMPLATE_CONTRACT.unit_test_name(
+            module_name
+        ),
         unit_test_content=render_template(
             "api_only/tests/unit.py.tpl",
             context,

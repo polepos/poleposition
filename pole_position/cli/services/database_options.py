@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 
-
 DEFAULT_DATABASE = "sqlite"
 SUPPORTED_DATABASES = ("sqlite", "postgres", "none")
 

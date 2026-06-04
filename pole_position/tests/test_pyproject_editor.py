@@ -31,7 +31,7 @@ dependencies = [
     ensure_project_dependency(pyproject_path, "aiokafka>=0.12.0")
 
     content = pyproject_path.read_text(encoding="utf-8")
-    assert 'dependencies   =   [' in content
+    assert "dependencies   =   [" in content
     assert '    "aiokafka>=0.12.0",' in content
     assert content.count('"aiokafka>=0.12.0"') == 1
     assert '    "custom>=1.0.0",' in content
@@ -75,7 +75,9 @@ dependencies = ["fastapi>=0.115.0"]
     assert '"fastapi>=0.115.0",' in updated
 
 
-def test_ensure_project_dependency_noops_for_missing_dependency(tmp_path: Path) -> None:
+def test_ensure_project_dependency_noops_for_missing_dependency(
+    tmp_path: Path,
+) -> None:
     pyproject_path = tmp_path / "pyproject.toml"
 
     ensure_project_dependency(pyproject_path, None)

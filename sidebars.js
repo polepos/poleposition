@@ -20,6 +20,7 @@ const sidebars = {
     {type: "doc", id: "project-checks", label: "Project Checks"},
     {type: "doc", id: "upgrade-command", label: "Upgrade Reports"},
     {type: "doc", id: "feature-status", label: "Feature Status"},
+    {type: "doc", id: "code-style", label: "Code Style"},
     {
       type: "category",
       label: "Integrations",

@@ -1,10 +1,14 @@
 from pathlib import Path
 
 from pole_position.cli.command import Command
-from pole_position.cli.services.module_remover import RemovedModuleResult
-from pole_position.cli.services.module_remover import remove_module
-from pole_position.cli.services.project_name import normalize_package_name
-from pole_position.cli.services.project_name import validate_project_name
+from pole_position.cli.services.module_remover import (
+    RemovedModuleResult,
+    remove_module,
+)
+from pole_position.cli.services.project_name import (
+    normalize_package_name,
+    validate_project_name,
+)
 from pole_position.cli.usage import print_command_help
 
 
@@ -67,11 +71,11 @@ def run(args: list[str]) -> None:
         )
     except RuntimeError as exc:
         print(str(exc))
-        raise SystemExit(1)
+        raise SystemExit(1) from exc
     except ValueError as exc:
         print(str(exc))
         _print_usage()
-        raise SystemExit(1)
+        raise SystemExit(1) from exc
 
     _print_success(result)
 
@@ -114,7 +118,10 @@ def _print_trace(result: RemovedModuleResult) -> None:
     print(f"Template: {result.template}")
 
     if result.blocked_by_custom_changes:
-        print("Blocked unless --force is used because custom changes were detected:")
+        print(
+            "Blocked unless --force is used because custom changes were "
+            "detected:"
+        )
     elif result.custom_changes:
         print("Custom changes that would be removed because --force is set:")
 

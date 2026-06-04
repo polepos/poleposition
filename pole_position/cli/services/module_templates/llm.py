@@ -1,4 +1,6 @@
-from pole_position.cli.services.integration_specs import LLM_INTEGRATION_CONTRACT
+from pole_position.cli.services.integration_specs import (
+    LLM_INTEGRATION_CONTRACT,
+)
 from pole_position.cli.services.module_templates.renderer import render_template
 
 
@@ -6,12 +8,24 @@ def llm_integration_files(package_name: str) -> dict[str, str]:
     context = {"package_name": package_name}
 
     files = {
-        "integrations/__init__.py": render_template("llm/integrations_init.py.tpl", context),
-        "integrations/llm/__init__.py": render_template("llm/__init__.py.tpl", context),
-        "integrations/llm/schemas.py": render_template("llm/schemas.py.tpl", context),
-        "integrations/llm/provider.py": render_template("llm/provider.py.tpl", context),
-        "integrations/llm/factory.py": render_template("llm/factory.py.tpl", context),
-        "integrations/llm/openai_client.py": render_template("llm/openai_client.py.tpl", context),
+        "integrations/__init__.py": render_template(
+            "llm/integrations_init.py.tpl", context
+        ),
+        "integrations/llm/__init__.py": render_template(
+            "llm/__init__.py.tpl", context
+        ),
+        "integrations/llm/schemas.py": render_template(
+            "llm/schemas.py.tpl", context
+        ),
+        "integrations/llm/provider.py": render_template(
+            "llm/provider.py.tpl", context
+        ),
+        "integrations/llm/factory.py": render_template(
+            "llm/factory.py.tpl", context
+        ),
+        "integrations/llm/openai_client.py": render_template(
+            "llm/openai_client.py.tpl", context
+        ),
         "integrations/llm/anthropic_client.py": render_template(
             "llm/anthropic_client.py.tpl",
             context,

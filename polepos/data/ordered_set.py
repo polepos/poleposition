@@ -3,7 +3,6 @@ from __future__ import annotations
 from collections.abc import Iterable, Iterator, MutableSet
 from typing import Generic, TypeVar
 
-
 T = TypeVar("T")
 
 

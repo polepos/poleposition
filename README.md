@@ -906,7 +906,7 @@ The repository CI currently runs the CLI test suite on Python `3.10`, `3.11`,
 
 | Workflow | Trigger | What it runs |
 |---|---|---|
-| `CI` | push, pull request, manual dispatch | Repo test suite on Python `3.10`, `3.11`, `3.12`, `3.13`, and `3.14`; Docusaurus production build |
+| `CI` | push, pull request, manual dispatch | Ruff lint + format check (Google Python Style Guide); repo test suite on Python `3.10`, `3.11`, `3.12`, `3.13`, and `3.14`; Docusaurus production build |
 | `E2E` | release tags, relevant pull requests, manual dispatch | Generated-project non-Docker e2e smoke tests on Python `3.11` |
 | `Release` | published GitHub release | Build and verify Python distributions, then publish to PyPI with Trusted Publishing |
 | `Deploy Docs` | pushes to `main`, manual dispatch | Docusaurus production build and GitHub Pages deploy |
@@ -932,6 +932,21 @@ Contributions are welcome.
 Feel free to open an
 [issue](https://github.com/erenertemden/poleposition/issues) or submit a
 [pull request](https://github.com/erenertemden/poleposition/pulls).
+
+### Code style
+
+Python code follows the
+[Google Python Style Guide](https://google.github.io/styleguide/pyguide.html),
+enforced automatically with [Ruff](https://docs.astral.sh/ruff/) (80-column
+lines, sorted imports, `pep8-naming`, and exception chaining). The `CI` workflow
+gates every pull request on it. Before pushing:
+
+```bash
+ruff check pole_position polepos
+ruff format pole_position polepos
+```
+
+See [Code Style](docs/code-style.md) for the full rule set and rationale.
 
 ---
 

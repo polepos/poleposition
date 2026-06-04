@@ -22,13 +22,17 @@ from pole_position.cli.services.module_templates import llm_integration_files
 
 def test_supported_integrations_come_from_creatable_contracts() -> None:
     assert SUPPORTED_INTEGRATIONS == ("kafka", "rabbitmq", "redis", "rq")
-    assert tuple(contract.name for contract in CREATABLE_INTEGRATION_CONTRACTS) == (
+    assert tuple(
+        contract.name for contract in CREATABLE_INTEGRATION_CONTRACTS
+    ) == (
         "kafka",
         "rabbitmq",
         "redis",
         "rq",
     )
-    assert tuple(contract.name for contract in CHECKED_INTEGRATION_CONTRACTS) == (
+    assert tuple(
+        contract.name for contract in CHECKED_INTEGRATION_CONTRACTS
+    ) == (
         "kafka",
         "rabbitmq",
         "redis",
@@ -59,7 +63,7 @@ def test_generated_integration_files_match_contracts() -> None:
     assert "}}" not in "\n".join(rq_files.values())
 
 
-def test_non_creatable_integration_is_not_accepted_by_add_command_contract() -> None:
+def test_non_creatable_integration_rejected_by_add_command_contract() -> None:
     with pytest.raises(ValueError) as exc_info:
         get_creatable_integration_contract("llm")
 

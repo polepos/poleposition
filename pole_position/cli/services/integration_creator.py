@@ -2,24 +2,27 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from pole_position.cli.services.integration_specs import (
-    IntegrationContract,
     KAFKA_INTEGRATION_CONTRACT,
     RABBITMQ_INTEGRATION_CONTRACT,
     REDIS_INTEGRATION_CONTRACT,
     RQ_INTEGRATION_CONTRACT,
-    SUPPORTED_INTEGRATIONS,
+    IntegrationContract,
     get_creatable_integration_contract,
 )
 from pole_position.cli.services.module_templates.renderer import render_template
-from pole_position.cli.services.project_locator import find_package_root, find_project_root
-from pole_position.cli.services.project_manifest import manifest_path
-from pole_position.cli.services.project_manifest import read_project_manifest
-from pole_position.cli.services.project_manifest import record_manifest_integration
+from pole_position.cli.services.project_locator import (
+    find_package_root,
+    find_project_root,
+)
+from pole_position.cli.services.project_manifest import (
+    manifest_path,
+    read_project_manifest,
+    record_manifest_integration,
+)
 from pole_position.cli.services.pyproject_editor import (
     ensure_project_dependency,
     ensure_project_dependency_text,
 )
-
 
 SETTINGS_INTEGRATION_MARKER = "    # polepos:integration-settings"
 SETTINGS_LLM_MARKER = "    # polepos:llm-settings"
@@ -133,7 +136,9 @@ def _validate_add_integration_preflight(
         problems.append(f"Integration already exists: {contract.name}")
 
     _collect_required_file(problems, pyproject_path)
-    _collect_patchable_project_dependency(problems, pyproject_path, contract.dependency)
+    _collect_patchable_project_dependency(
+        problems, pyproject_path, contract.dependency
+    )
     _collect_missing_marker_unless_entries_exist(
         problems,
         package_root / "settings.py",
@@ -162,7 +167,9 @@ def _collect_required_file(problems: list[str], path: Path) -> None:
         problems.append(f"Required managed file is missing: {path}")
 
 
-def _collect_manifest_read_error(problems: list[str], project_root: Path) -> None:
+def _collect_manifest_read_error(
+    problems: list[str], project_root: Path
+) -> None:
     manifest = read_project_manifest(project_root)
     if manifest.read_error is not None:
         problems.append(manifest.read_error)
@@ -185,13 +192,16 @@ def _collect_patchable_project_dependency(
         )
     except UnicodeDecodeError as exc:
         problems.append(
-            f"Could not read managed text file for integration add: {path}: {exc.reason}"
+            f"Could not read managed text file for integration add: "
+            f"{path}: {exc.reason}"
         )
     except RuntimeError as exc:
         problems.append(str(exc))
 
 
-def _collect_missing_marker(problems: list[str], path: Path, marker: str) -> None:
+def _collect_missing_marker(
+    problems: list[str], path: Path, marker: str
+) -> None:
     if not path.is_file():
         problems.append(f"Required managed file is missing: {path}")
         return
@@ -200,12 +210,15 @@ def _collect_missing_marker(problems: list[str], path: Path, marker: str) -> Non
         lines = path.read_text(encoding="utf-8").splitlines()
     except UnicodeDecodeError as exc:
         problems.append(
-            f"Could not read managed text file for integration add: {path}: {exc.reason}"
+            f"Could not read managed text file for integration add: "
+            f"{path}: {exc.reason}"
         )
         return
 
     if marker not in lines:
-        problems.append(f"Required managed marker '{marker}' is missing in {path}")
+        problems.append(
+            f"Required managed marker '{marker}' is missing in {path}"
+        )
 
 
 def _collect_missing_marker_unless_entries_exist(
@@ -224,31 +237,37 @@ def _collect_missing_marker_unless_entries_exist(
         content = path.read_text(encoding="utf-8")
     except UnicodeDecodeError as exc:
         problems.append(
-            f"Could not read managed text file for integration add: {path}: {exc.reason}"
+            f"Could not read managed text file for integration add: "
+            f"{path}: {exc.reason}"
         )
         return
 
-    if all(_entry_exists(content, entry, entry_type=entry_type) for entry in entries):
+    if all(
+        _entry_exists(content, entry, entry_type=entry_type)
+        for entry in entries
+    ):
         return
 
     if marker not in content.splitlines():
-        problems.append(f"Required managed marker '{marker}' is missing in {path}")
+        problems.append(
+            f"Required managed marker '{marker}' is missing in {path}"
+        )
 
 
 def _entry_exists(content: str, entry: str, *, entry_type: str) -> bool:
     if entry_type == "setting":
         return any(
-            _settings_line_key(line) == entry
-            for line in content.splitlines()
+            _settings_line_key(line) == entry for line in content.splitlines()
         )
 
     return any(
-        _active_env_line_key(line) == entry
-        for line in content.splitlines()
+        _active_env_line_key(line) == entry for line in content.splitlines()
     )
 
 
-def _ensure_integration_files(package_root: Path, files: dict[str, str]) -> list[Path]:
+def _ensure_integration_files(
+    package_root: Path, files: dict[str, str]
+) -> list[Path]:
     written: list[Path] = []
     for relative_path, content in files.items():
         path = package_root / relative_path
@@ -276,7 +295,9 @@ def _files_for_contract(
     missing = set(contract.file_names) - set(files)
     extra = set(files) - set(contract.file_names)
     if missing or extra:
-        raise RuntimeError(f"Integration file contract drifted: {contract.name}")
+        raise RuntimeError(
+            f"Integration file contract drifted: {contract.name}"
+        )
 
     return {file_name: files[file_name] for file_name in contract.file_names}
 
@@ -679,20 +700,17 @@ def _missing_block_lines(
 ) -> list[str]:
     if key_for_line is not _env_line_key:
         existing_keys = {
-            key
-            for line in lines
-            if (key := key_for_line(line)) is not None
+            key for line in lines if (key := key_for_line(line)) is not None
         }
         return [
             line
             for line in block
-            if (key := key_for_line(line)) is not None and key not in existing_keys
+            if (key := key_for_line(line)) is not None
+            and key not in existing_keys
         ]
 
     active_keys = {
-        key
-        for line in lines
-        if (key := _active_env_line_key(line)) is not None
+        key for line in lines if (key := _active_env_line_key(line)) is not None
     }
     commented_keys = {
         key
@@ -710,7 +728,10 @@ def _missing_block_lines(
         commented_key = _commented_env_line_key(line)
         if commented_key is None:
             continue
-        if commented_key not in active_keys and commented_key not in commented_keys:
+        if (
+            commented_key not in active_keys
+            and commented_key not in commented_keys
+        ):
             missing_lines.append(line)
 
     return missing_lines

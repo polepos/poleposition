@@ -1,12 +1,15 @@
 import json
 
 from pole_position.cli.command import Command
-from pole_position.cli.services.project_fixer import ProjectFixResult
-from pole_position.cli.services.project_fixer import fix_project
-from pole_position.cli.services.project_checker import ProjectCheckResult
-from pole_position.cli.services.project_checker import check_project
+from pole_position.cli.services.project_checker import (
+    ProjectCheckResult,
+    check_project,
+)
+from pole_position.cli.services.project_fixer import (
+    ProjectFixResult,
+    fix_project,
+)
 from pole_position.cli.usage import print_command_help
-
 
 USAGE = "Usage: polepos check [--json] [--fix]"
 HELP_OPTIONS = {"-h", "--help"}
@@ -40,9 +43,9 @@ def run(args: list[str]) -> None:
     except RuntimeError as exc:
         if json_output:
             _print_json_error(str(exc))
-            raise SystemExit(1)
+            raise SystemExit(1) from exc
         print(str(exc))
-        raise SystemExit(1)
+        raise SystemExit(1) from exc
 
     if json_output:
         _print_json_result(result, fix_result=fix_result)
@@ -98,8 +101,7 @@ def _print_json_result(
     }
     if fix_result is not None:
         payload["fixed"] = [
-            _relative_path(fix_result, path)
-            for path in fix_result.fixed_files
+            _relative_path(fix_result, path) for path in fix_result.fixed_files
         ]
     print(json.dumps(payload, indent=2, sort_keys=True))
 

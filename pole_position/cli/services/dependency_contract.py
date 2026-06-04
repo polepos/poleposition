@@ -1,6 +1,6 @@
+import re
 from collections.abc import Iterable
 from dataclasses import dataclass
-import re
 
 try:
     from packaging.version import InvalidVersion, Version
@@ -9,7 +9,9 @@ except ModuleNotFoundError:  # pragma: no cover - optional dependency
     Version = None  # type: ignore[assignment]
 
 
-DEPENDENCY_NAME_PATTERN = re.compile(r"^\s*(?P<name>[A-Za-z0-9][A-Za-z0-9._-]*)")
+DEPENDENCY_NAME_PATTERN = re.compile(
+    r"^\s*(?P<name>[A-Za-z0-9][A-Za-z0-9._-]*)"
+)
 DEPENDENCY_EXTRAS_PATTERN = re.compile(
     r"^\s*[A-Za-z0-9][A-Za-z0-9._-]*(?:\[(?P<extras>[^\]]*)\])?"
 )

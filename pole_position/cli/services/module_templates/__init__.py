@@ -21,14 +21,13 @@ from pole_position.cli.services.module_templates.registry import (
     module_template_detection_contracts,
 )
 from pole_position.cli.services.module_templates.spec import (
-    API_ONLY_MODULE_TEMPLATE_CONTRACT,
     AI_PROMPT_MODULE_TEMPLATE_CONTRACT,
+    API_ONLY_MODULE_TEMPLATE_CONTRACT,
     CRUD_MODULE_TEMPLATE_CONTRACT,
+    STANDARD_MODULE_TEMPLATE_CONTRACT,
     ModuleTemplate,
     ModuleTemplateContract,
-    STANDARD_MODULE_TEMPLATE_CONTRACT,
 )
-
 
 __all__ = [
     "ModuleTemplate",

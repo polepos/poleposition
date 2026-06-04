@@ -4,7 +4,6 @@ from pole_position.cli.services.project_checker import check_project
 from pole_position.cli.services.project_manifest import read_project_manifest
 from pole_position.cli.usage import print_command_help
 
-
 USAGE = "Usage: polepos upgrade"
 HELP_OPTIONS = {"-h", "--help"}
 
@@ -27,7 +26,7 @@ def run(args: list[str]) -> None:
         result = check_project()
     except RuntimeError as exc:
         print(str(exc))
-        raise SystemExit(1)
+        raise SystemExit(1) from exc
 
     manifest = read_project_manifest(result.project_root)
     modules = manifest.module_templates

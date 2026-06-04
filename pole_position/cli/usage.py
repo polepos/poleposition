@@ -1,10 +1,14 @@
-from dataclasses import dataclass
 import textwrap
+from dataclasses import dataclass
 
 from pole_position.cli.services.database_options import SUPPORTED_DATABASES
-from pole_position.cli.services.integration_creator import SUPPORTED_INTEGRATIONS
-from pole_position.cli.services.module_templates import CRUD_FEATURE_FLAGS
-from pole_position.cli.services.module_templates import SUPPORTED_MODULE_TEMPLATES
+from pole_position.cli.services.integration_specs import (
+    SUPPORTED_INTEGRATIONS,
+)
+from pole_position.cli.services.module_templates import (
+    CRUD_FEATURE_FLAGS,
+    SUPPORTED_MODULE_TEMPLATES,
+)
 
 
 @dataclass(frozen=True)
@@ -38,14 +42,20 @@ COMMAND_HELP: dict[tuple[str, ...], CommandHelp] = {
             f"[--install] [--no-bytecode] [--db {DATABASE_CHOICES}]"
         ),
         summary=(
-            "Create a new FastAPI project with PolePosition's generated lifecycle files.",
-            "Project names may use hyphens and are normalized to Python package names.",
+            "Create a new FastAPI project with PolePosition's generated "
+            "lifecycle files.",
+            "Project names may use hyphens and are normalized to Python "
+            "package names.",
         ),
         options=(
-            OptionHelp("--install", "Install generated project dependencies after creation."),
+            OptionHelp(
+                "--install",
+                "Install generated project dependencies after creation.",
+            ),
             OptionHelp(
                 "--no-bytecode",
-                "Configure generated local commands to start with PYTHONDONTWRITEBYTECODE=1.",
+                "Configure generated local commands to start with "
+                "PYTHONDONTWRITEBYTECODE=1.",
             ),
             OptionHelp(
                 f"--db {DATABASE_CHOICES}",
@@ -59,17 +69,25 @@ COMMAND_HELP: dict[tuple[str, ...], CommandHelp] = {
             "polepos start kafka-worker --db none",
         ),
         notes=(
-            "`sqlite` creates the DB-ready starter with Alembic and SQLAlchemy.",
-            "`postgres` uses a PostgreSQL DATABASE_URL and matching Docker database name.",
-            "`none` omits SQLAlchemy, Alembic, migrations, DATABASE_URL, and db/ wiring.",
+            "`sqlite` creates the DB-ready starter with Alembic and "
+            "SQLAlchemy.",
+            "`postgres` uses a PostgreSQL DATABASE_URL and matching "
+            "Docker database name.",
+            "`none` omits SQLAlchemy, Alembic, migrations, DATABASE_URL, "
+            "and db/ wiring.",
         ),
     ),
     ("add",): CommandHelp(
         path=("add",),
         usage="Usage: polepos add <subcommand>",
-        summary=("Grow the current project with modules, auth, or integration scaffolds.",),
+        summary=(
+            "Grow the current project with modules, auth, or integration "
+            "scaffolds.",
+        ),
         subcommands=(
-            OptionHelp("auth", "Add the optional database-backed auth workflow."),
+            OptionHelp(
+                "auth", "Add the optional database-backed auth workflow."
+            ),
             OptionHelp("integration", "Add an external integration scaffold."),
             OptionHelp("module", "Add a new module to the current project."),
         ),
@@ -78,7 +96,10 @@ COMMAND_HELP: dict[tuple[str, ...], CommandHelp] = {
             "polepos add auth",
             "polepos add integration kafka",
         ),
-        notes=("Run `polepos help add <subcommand>` for subcommand-specific options.",),
+        notes=(
+            "Run `polepos help add <subcommand>` for subcommand-specific "
+            "options.",
+        ),
     ),
     ("add", "module"): CommandHelp(
         path=("add", "module"),
@@ -89,29 +110,36 @@ COMMAND_HELP: dict[tuple[str, ...], CommandHelp] = {
             "[--tenant-scoped] [--auth-required]"
         ),
         summary=(
-            "Generate a module under src/<package>/modules/ and wire generated tests.",
-            "Database-backed templates also update API router and model discovery wiring.",
+            "Generate a module under src/<package>/modules/ and wire "
+            "generated tests.",
+            "Database-backed templates also update API router and model "
+            "discovery wiring.",
         ),
         options=(
             OptionHelp(
                 "--template <template_name>",
-                f"Choose a module template. Templates: {MODULE_TEMPLATE_CHOICES}.",
+                f"Choose a module template. Templates: "
+                f"{MODULE_TEMPLATE_CHOICES}.",
             ),
             OptionHelp(
                 "--api-only",
-                "Shortcut for --template api-only; no model, repository, or db wiring.",
+                "Shortcut for --template api-only; no model, repository, "
+                "or db wiring.",
             ),
             OptionHelp(
                 "--pagination",
-                "CRUD-only: add limit/offset query params and a paginated response.",
+                "CRUD-only: add limit/offset query params and a paginated "
+                "response.",
             ),
             OptionHelp(
                 "--timestamps",
-                "CRUD-only: add created_at and updated_at model/response fields.",
+                "CRUD-only: add created_at and updated_at model/response "
+                "fields.",
             ),
             OptionHelp(
                 "--soft-delete",
-                "CRUD-only: mark rows deleted with deleted_at instead of hard delete.",
+                "CRUD-only: mark rows deleted with deleted_at instead of "
+                "hard delete.",
             ),
             OptionHelp(
                 "--tenant-scoped",
@@ -119,20 +147,24 @@ COMMAND_HELP: dict[tuple[str, ...], CommandHelp] = {
             ),
             OptionHelp(
                 "--auth-required",
-                "CRUD-only: protect generated routes with bearer authentication.",
+                "CRUD-only: protect generated routes with bearer "
+                "authentication.",
             ),
         ),
         examples=(
             "polepos add module customers",
             "polepos add module customers --template crud",
-            "polepos add module customers --template crud --pagination --timestamps",
+            "polepos add module customers --template crud --pagination "
+            "--timestamps",
             "polepos add module webhooks --api-only",
             "polepos add module assistant --template ai-prompt",
         ),
         notes=(
             f"Templates: {MODULE_TEMPLATE_CHOICES}",
-            f"CRUD feature options require --template crud: {CRUD_FEATURE_CHOICES}",
-            "Run `polepos check` after changing generated wiring or module files.",
+            f"CRUD feature options require --template crud: "
+            f"{CRUD_FEATURE_CHOICES}",
+            "Run `polepos check` after changing generated wiring or "
+            "module files.",
             "Create an Alembic revision after changing database-backed models.",
         ),
     ),
@@ -152,7 +184,8 @@ COMMAND_HELP: dict[tuple[str, ...], CommandHelp] = {
                 "Requires a generated database layer; projects created with "
                 "--db none cannot add auth directly."
             ),
-            "Review the generated auth workflow before treating it as a complete auth product.",
+            "Review the generated auth workflow before treating it as a "
+            "complete auth product.",
         ),
     ),
     ("add", "integration"): CommandHelp(
@@ -172,7 +205,8 @@ COMMAND_HELP: dict[tuple[str, ...], CommandHelp] = {
         ),
         notes=(
             f"Integrations: {INTEGRATION_CHOICES}",
-            "Long-running consumers and workers remain explicit runtime processes.",
+            "Long-running consumers and workers remain explicit runtime "
+            "processes.",
         ),
     ),
     ("remove",): CommandHelp(
@@ -180,7 +214,9 @@ COMMAND_HELP: dict[tuple[str, ...], CommandHelp] = {
         usage="Usage: polepos remove <subcommand>",
         summary=("Remove generated resources from the current project.",),
         subcommands=(
-            OptionHelp("module", "Remove a generated module and managed wiring."),
+            OptionHelp(
+                "module", "Remove a generated module and managed wiring."
+            ),
         ),
         examples=("polepos remove module customers",),
         notes=("Run `polepos help remove module` for removal safety options.",),
@@ -193,10 +229,12 @@ COMMAND_HELP: dict[tuple[str, ...], CommandHelp] = {
         ),
         summary=(
             (
-                "Delete generated module files, generated tests, manifest metadata, "
+                "Delete generated module files, generated tests, manifest "
+                "metadata, "
                 "and managed wiring."
             ),
-            "The command is conservative when custom code or unmanaged references are detected.",
+            "The command is conservative when custom code or unmanaged "
+            "references are detected.",
         ),
         options=(
             OptionHelp(
@@ -209,7 +247,8 @@ COMMAND_HELP: dict[tuple[str, ...], CommandHelp] = {
             ),
             OptionHelp(
                 "--wiring-only",
-                "Remove managed wiring and generated tests, but keep module files.",
+                "Remove managed wiring and generated tests, but keep "
+                "module files.",
             ),
         ),
         examples=(
@@ -219,9 +258,11 @@ COMMAND_HELP: dict[tuple[str, ...], CommandHelp] = {
             "polepos remove module customers --force",
         ),
         notes=(
-            "This command does not drop database tables or edit migration history.",
+            "This command does not drop database tables or edit migration "
+            "history.",
             (
-                "Create and review a migration separately when a removed model's "
+                "Create and review a migration separately when a removed "
+                "model's "
                 "table should be dropped."
             ),
         ),
@@ -230,13 +271,15 @@ COMMAND_HELP: dict[tuple[str, ...], CommandHelp] = {
         path=("check",),
         usage="Usage: polepos check [--json] [--fix]",
         summary=(
-            "Validate the generated project contract from the project root or a nested directory.",
+            "Validate the generated project contract from the project "
+            "root or a nested directory.",
             "Checks are read-only unless --fix is used.",
         ),
         options=(
             OptionHelp(
                 "--json",
-                "Print a machine-readable JSON result and exit non-zero on failure.",
+                "Print a machine-readable JSON result and exit non-zero "
+                "on failure.",
             ),
             OptionHelp(
                 "--fix",
@@ -250,20 +293,29 @@ COMMAND_HELP: dict[tuple[str, ...], CommandHelp] = {
         ),
         notes=(
             (
-                "The checker validates structure, managed markers, module wiring, "
+                "The checker validates structure, managed markers, module "
+                "wiring, "
                 "tests, and integrations."
             ),
-            "It does not install dependencies, run migrations, or contact external services.",
+            "It does not install dependencies, run migrations, or contact "
+            "external services.",
         ),
     ),
     ("db",): CommandHelp(
         path=("db",),
         usage="Usage: polepos db <subcommand>",
-        summary=("Run Alembic migration commands through the generated project environment.",),
+        summary=(
+            "Run Alembic migration commands through the generated project "
+            "environment.",
+        ),
         subcommands=(
-            OptionHelp("status", "Show current and target migration revisions."),
+            OptionHelp(
+                "status", "Show current and target migration revisions."
+            ),
             OptionHelp("upgrade", "Apply migrations."),
-            OptionHelp("revision", "Create an autogenerated migration revision."),
+            OptionHelp(
+                "revision", "Create an autogenerated migration revision."
+            ),
             OptionHelp("downgrade", "Revert migrations."),
         ),
         examples=(
@@ -273,9 +325,11 @@ COMMAND_HELP: dict[tuple[str, ...], CommandHelp] = {
             "polepos db downgrade -1",
         ),
         notes=(
-            "Database commands prefer `uv run alembic ...` when uv is available.",
+            "Database commands prefer `uv run alembic ...` when uv is "
+            "available.",
             (
-                "Projects created with --db none do not include Alembic and should "
+                "Projects created with --db none do not include Alembic "
+                "and should "
                 "not use `polepos db`."
             ),
         ),
@@ -283,13 +337,18 @@ COMMAND_HELP: dict[tuple[str, ...], CommandHelp] = {
     ("db", "status"): CommandHelp(
         path=("db", "status"),
         usage="Usage: polepos db status",
-        summary=("Print Alembic's current revision and heads for the generated project.",),
+        summary=(
+            "Print Alembic's current revision and heads for the generated "
+            "project.",
+        ),
         examples=("polepos db status",),
     ),
     ("db", "upgrade"): CommandHelp(
         path=("db", "upgrade"),
         usage="Usage: polepos db upgrade [target]",
-        summary=("Apply migrations up to the selected target. Default target: head.",),
+        summary=(
+            "Apply migrations up to the selected target. Default target: head.",
+        ),
         examples=(
             "polepos db upgrade",
             "polepos db upgrade head",
@@ -325,16 +384,19 @@ COMMAND_HELP: dict[tuple[str, ...], CommandHelp] = {
         path=("upgrade",),
         usage="Usage: polepos upgrade",
         summary=(
-            "Print a read-only upgrade readiness report for the current project.",
+            "Print a read-only upgrade readiness report for the current "
+            "project.",
             (
-                "The report includes CLI version, package, database mode, modules, "
+                "The report includes CLI version, package, database mode, "
+                "modules, "
                 "integrations, and check status."
             ),
         ),
         examples=("polepos upgrade",),
         notes=(
             (
-                "Run this after upgrading PolePosition or before changing generated "
+                "Run this after upgrading PolePosition or before changing "
+                "generated "
                 "lifecycle surfaces."
             ),
         ),
@@ -343,7 +405,8 @@ COMMAND_HELP: dict[tuple[str, ...], CommandHelp] = {
         path=("help",),
         usage="Usage: polepos help [command] [subcommand]",
         summary=(
-            "Print detailed CLI usage. Without a topic, it prints the full command reference.",
+            "Print detailed CLI usage. Without a topic, it prints the "
+            "full command reference.",
         ),
         examples=(
             "polepos help",
@@ -369,8 +432,13 @@ TOP_LEVEL_SECTIONS: tuple[tuple[str, tuple[OptionHelp, ...]], ...] = (
         "Project Lifecycle Commands",
         (
             OptionHelp("start", "Create a new FastAPI project lifecycle."),
-            OptionHelp("add", "Grow the current project with modules, auth, or integrations."),
-            OptionHelp("remove", "Remove generated resources from the current project."),
+            OptionHelp(
+                "add",
+                "Grow the current project with modules, auth, or integrations.",
+            ),
+            OptionHelp(
+                "remove", "Remove generated resources from the current project."
+            ),
             OptionHelp("check", "Validate the current PolePosition project."),
             OptionHelp("db", "Run database and migration commands."),
         ),

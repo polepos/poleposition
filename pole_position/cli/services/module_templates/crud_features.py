@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 
-
 CRUD_FEATURE_FLAGS = {
     "--pagination": "pagination",
     "--timestamps": "timestamps",

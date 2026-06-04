@@ -1,11 +1,9 @@
 import sys
 
-from pole_position.cli.commands import register_commands
 from pole_position.cli.command import Command
-from pole_position.cli.registry import CommandRegistry
-from pole_position.cli.registry import registry
+from pole_position.cli.commands import register_commands
+from pole_position.cli.registry import CommandRegistry, registry
 from pole_position.cli.usage import print_command_help
-
 
 HELP_OPTIONS = {"-h", "--help"}
 
@@ -22,7 +20,9 @@ def main() -> None:
     dispatch_command(registry, args)
 
 
-def dispatch_command(command_registry: CommandRegistry, args: list[str]) -> None:
+def dispatch_command(
+    command_registry: CommandRegistry, args: list[str]
+) -> None:
     command_name = args[0]
     command = command_registry.get(command_name)
 
@@ -33,7 +33,11 @@ def dispatch_command(command_registry: CommandRegistry, args: list[str]) -> None
 
     command_args = args[1:]
 
-    if command.subcommands is not None and command_args and command_args[0] in HELP_OPTIONS:
+    if (
+        command.subcommands is not None
+        and command_args
+        and command_args[0] in HELP_OPTIONS
+    ):
         print_command_usage(command)
         return
 
@@ -63,7 +67,9 @@ def print_command_usage(command: Command) -> None:
         return
 
     for subcommand in command.subcommands.all():
-        aliases = f" ({', '.join(subcommand.aliases)})" if subcommand.aliases else ""
+        aliases = (
+            f" ({', '.join(subcommand.aliases)})" if subcommand.aliases else ""
+        )
         print(f"  {subcommand.name:<12} {subcommand.description}{aliases}")
 
 

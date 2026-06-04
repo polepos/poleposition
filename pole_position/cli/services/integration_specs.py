@@ -45,9 +45,7 @@ KAFKA_INTEGRATION_CONTRACT = IntegrationContract(
         "KAFKA_ACKS",
         "KAFKA_REQUEST_TIMEOUT_MS",
     ),
-    optional_env=(
-        "KAFKA_COMPRESSION_TYPE",
-    ),
+    optional_env=("KAFKA_COMPRESSION_TYPE",),
 )
 
 RABBITMQ_INTEGRATION_CONTRACT = IntegrationContract(
@@ -173,9 +171,7 @@ LLM_INTEGRATION_CONTRACT = IntegrationContract(
         "LLM_TIMEOUT_SECONDS",
         "LLM_TEMPERATURE",
     ),
-    optional_env=(
-        "LLM_MAX_TOKENS",
-    ),
+    optional_env=("LLM_MAX_TOKENS",),
     creatable=False,
 )
 
@@ -191,7 +187,9 @@ INTEGRATION_CONTRACTS = {
 }
 
 CREATABLE_INTEGRATION_CONTRACTS = tuple(
-    contract for contract in INTEGRATION_CONTRACTS.values() if contract.creatable
+    contract
+    for contract in INTEGRATION_CONTRACTS.values()
+    if contract.creatable
 )
 CHECKED_INTEGRATION_CONTRACTS = tuple(INTEGRATION_CONTRACTS.values())
 SUPPORTED_INTEGRATIONS = tuple(
@@ -205,15 +203,19 @@ def get_integration_contract(integration_name: str) -> IntegrationContract:
     except KeyError as exc:
         supported = ", ".join(SUPPORTED_INTEGRATIONS)
         raise ValueError(
-            f"Unsupported integration '{integration_name}'. Expected one of: {supported}."
+            f"Unsupported integration '{integration_name}'. Expected one "
+            f"of: {supported}."
         ) from exc
 
 
-def get_creatable_integration_contract(integration_name: str) -> IntegrationContract:
+def get_creatable_integration_contract(
+    integration_name: str,
+) -> IntegrationContract:
     contract = get_integration_contract(integration_name)
     if not contract.creatable:
         supported = ", ".join(SUPPORTED_INTEGRATIONS)
         raise ValueError(
-            f"Unsupported integration '{integration_name}'. Expected one of: {supported}."
+            f"Unsupported integration '{integration_name}'. Expected one "
+            f"of: {supported}."
         )
     return contract

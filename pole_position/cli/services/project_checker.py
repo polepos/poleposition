@@ -11,33 +11,38 @@ except ModuleNotFoundError:  # pragma: no cover - Python < 3.11 fallback
     except ModuleNotFoundError:
         tomllib = None  # type: ignore[assignment]
 
+from pole_position.cli.services.auth_creator import AUTH_DEPENDENCY
+from pole_position.cli.services.dependency_contract import (
+    dependency_contract_satisfied,
+    quoted_dependency_values,
+)
 from pole_position.cli.services.integration_specs import (
     CHECKED_INTEGRATION_CONTRACTS,
     IntegrationContract,
 )
-from pole_position.cli.services.auth_creator import AUTH_DEPENDENCY
-from pole_position.cli.services.dependency_contract import dependency_contract_satisfied
-from pole_position.cli.services.dependency_contract import quoted_dependency_values
 from pole_position.cli.services.module_templates import (
     DEFAULT_MODULE_TEMPLATE,
-    ModuleTemplateContract,
     SUPPORTED_MODULE_TEMPLATES,
+    ModuleTemplateContract,
     get_module_template_contract,
     module_template_detection_contracts,
 )
-from pole_position.cli.services.project_manifest import ProjectManifest
-from pole_position.cli.services.project_manifest import parse_manifest_module_template
-from pole_position.cli.services.project_manifest import read_project_manifest
-from pole_position.cli.services.project_wiring import has_router_import
-from pole_position.cli.services.project_wiring import has_router_include
-from pole_position.cli.services.project_wiring import is_api_router_include_call
-from pole_position.cli.services.project_wiring import is_name
-from pole_position.cli.services.project_wiring import literal_keyword_value
-from pole_position.cli.services.project_wiring import module_name_from_model_reference
-from pole_position.cli.services.project_wiring import module_name_from_router_import
-from pole_position.cli.services.project_wiring import module_name_from_router_include
-from pole_position.cli.services.project_wiring import router_aliases_by_module_name
-
+from pole_position.cli.services.project_manifest import (
+    ProjectManifest,
+    parse_manifest_module_template,
+    read_project_manifest,
+)
+from pole_position.cli.services.project_wiring import (
+    has_router_import,
+    has_router_include,
+    is_api_router_include_call,
+    is_name,
+    literal_keyword_value,
+    module_name_from_model_reference,
+    module_name_from_router_import,
+    module_name_from_router_include,
+    router_aliases_by_module_name,
+)
 
 MANAGED_MARKERS = {
     "api/router.py": [
@@ -185,6 +190,7 @@ ALEMBIC_PATHS = [
     "migrations/versions",
 ]
 
+
 @dataclass(frozen=True)
 class ProjectCheckIssue:
     code: str
@@ -208,7 +214,9 @@ class ProjectCheckResult:
 
     @property
     def issues(self) -> tuple[ProjectCheckIssue, ...]:
-        return tuple(describe_project_check_issue(problem) for problem in self.problems)
+        return tuple(
+            describe_project_check_issue(problem) for problem in self.problems
+        )
 
 
 def describe_project_check_issue(problem: str) -> ProjectCheckIssue:
@@ -224,9 +232,13 @@ def _project_check_issue_code(problem: str) -> str:
         return "PPCHK001"
     if problem.startswith("Project src directory is missing"):
         return "PPCHK002"
-    if problem.startswith("Application package is not under project src directory"):
+    if problem.startswith(
+        "Application package is not under project src directory"
+    ):
         return "PPCHK003"
-    if problem.startswith("Application package name is not a valid Python identifier"):
+    if problem.startswith(
+        "Application package name is not a valid Python identifier"
+    ):
         return "PPCHK004"
     if problem.startswith("Project manifest package does not match"):
         return "PPCHK005"
@@ -234,7 +246,9 @@ def _project_check_issue_code(problem: str) -> str:
         return "PPCHK010"
     if problem.startswith("Required Alembic path is missing"):
         return "PPCHK011"
-    if problem.startswith("Database-free project contains database-specific content"):
+    if problem.startswith(
+        "Database-free project contains database-specific content"
+    ):
         return "PPCHK012"
     if problem.startswith("Project manifest has unsupported database mode"):
         return "PPCHK013"
@@ -290,13 +304,22 @@ def _project_check_issue_code(problem: str) -> str:
         return "PPCHK038"
     if problem.startswith("Orphan module"):
         return "PPCHK039"
-    if problem.startswith("Integration ") and " is missing generated file:" in problem:
+    if (
+        problem.startswith("Integration ")
+        and " is missing generated file:" in problem
+    ):
         return "PPCHK040"
-    if problem.startswith("Integration ") and " is missing dependency " in problem:
+    if (
+        problem.startswith("Integration ")
+        and " is missing dependency " in problem
+    ):
         return "PPCHK041"
     if problem.startswith("Integration ") and " is missing setting " in problem:
         return "PPCHK042"
-    if problem.startswith("Integration ") and " is missing env value " in problem:
+    if (
+        problem.startswith("Integration ")
+        and " is missing env value " in problem
+    ):
         return "PPCHK043"
     return "PPCHK000"
 
@@ -315,15 +338,23 @@ def _project_check_remediation(problem: str) -> str:
             "Restore the generated src/ directory or run the command from the "
             "project root."
         )
-    if problem.startswith("Application package is not under project src directory"):
+    if problem.startswith(
+        "Application package is not under project src directory"
+    ):
         return (
-            "Move the application package back under src/ or document the project "
+            "Move the application package back under src/ or document the "
+            "project "
             "as manually managed."
         )
-    if problem.startswith("Application package name is not a valid Python identifier"):
+    if problem.startswith(
+        "Application package name is not a valid Python identifier"
+    ):
         return "Rename the package directory to a valid Python identifier."
     if problem.startswith("Project manifest package does not match"):
-        return "Update .poleposition.toml or move the package back to the recorded name."
+        return (
+            "Update .poleposition.toml or move the package back to the "
+            "recorded name."
+        )
     if problem.startswith("Required generated path is missing"):
         return (
             "Restore the generated path, or intentionally opt out and document "
@@ -331,37 +362,52 @@ def _project_check_remediation(problem: str) -> str:
         )
     if problem.startswith("Required Alembic path is missing"):
         return (
-            "Restore Alembic files or regenerate the migration setup before using "
+            "Restore Alembic files or regenerate the migration setup "
+            "before using "
             "polepos db commands."
         )
-    if problem.startswith("Database-free project contains database-specific content"):
+    if problem.startswith(
+        "Database-free project contains database-specific content"
+    ):
         return (
             "Remove database-specific remnants or add a database layer "
             "intentionally."
         )
     if problem.startswith("Project manifest has unsupported database mode"):
-        return "Use db = \"sqlite\", \"postgres\", \"none\", or \"custom\"."
+        return 'Use db = "sqlite", "postgres", "none", or "custom".'
     if problem.startswith("Project manifest has unsupported module template"):
         supported = ", ".join((*SUPPORTED_MODULE_TEMPLATES, "starter"))
         return (
-            f"Use one of these module template values: {supported}; CRUD options "
+            f"Use one of these module template values: {supported}; CRUD "
+            f"options "
             "may be recorded as crud[pagination,timestamps,...]."
         )
     if problem.startswith("Project manifest has unsupported integration value"):
         return "Use unquoted true or false for generated integration values."
     if problem.startswith("Could not read project manifest as UTF-8"):
-        return "Restore .poleposition.toml as UTF-8 TOML or remove the corrupt file."
+        return (
+            "Restore .poleposition.toml as UTF-8 TOML or remove the corrupt "
+            "file."
+        )
     if problem.startswith("Managed file is missing"):
         return (
             "Restore the managed file before running PolePosition lifecycle "
             "commands."
         )
     if problem.startswith("Managed marker"):
-        return "Restore the listed # polepos marker or manage that file manually."
+        return (
+            "Restore the listed # polepos marker or manage that file manually."
+        )
     if problem.startswith("Starter module 'status' is missing"):
-        return "Restore the generated status router import/include in api/router.py."
+        return (
+            "Restore the generated status router import/include in "
+            "api/router.py."
+        )
     if problem.startswith("Could not read generated text file as UTF-8"):
-        return "Restore the file as UTF-8 text or replace it with generated content."
+        return (
+            "Restore the file as UTF-8 text or replace it with generated "
+            "content."
+        )
     if problem.startswith(
         "Lifecycle module directory is not a valid Python identifier"
     ):
@@ -380,7 +426,8 @@ def _project_check_remediation(problem: str) -> str:
     if " is missing generated path:" in problem:
         return _module_fix(
             module_name,
-            "Restore the missing generated module file, or detach/remove the module.",
+            "Restore the missing generated module file, or detach/remove "
+            "the module.",
         )
     if " is missing module export " in problem:
         return _module_fix(
@@ -408,7 +455,8 @@ def _project_check_remediation(problem: str) -> str:
     if " is missing integration test:" in problem:
         return _module_fix(
             module_name,
-            "Restore the generated integration test or clean detached test remnants.",
+            "Restore the generated integration test or clean detached "
+            "test remnants.",
         )
     if " is missing unit test:" in problem:
         return _module_fix(
@@ -424,17 +472,26 @@ def _project_check_remediation(problem: str) -> str:
                 f"Run `polepos remove module {orphan_name}` to clean generated "
                 "remnants, or restore the missing module directory."
             )
-        return "Clean generated remnants or restore the missing module directory."
-    if problem.startswith("Integration ") and " is missing generated file:" in problem:
+        return (
+            "Clean generated remnants or restore the missing module directory."
+        )
+    if (
+        problem.startswith("Integration ")
+        and " is missing generated file:" in problem
+    ):
         return _integration_fix(
             integration_name,
             "Restore the generated integration file or remove the integration "
             "completely.",
         )
-    if problem.startswith("Integration ") and " is missing dependency " in problem:
+    if (
+        problem.startswith("Integration ")
+        and " is missing dependency " in problem
+    ):
         return _integration_fix(
             integration_name,
-            "Restore the dependency in pyproject.toml or remove the integration "
+            "Restore the dependency in pyproject.toml or remove the "
+            "integration "
             "scaffold.",
         )
     if problem.startswith("Integration ") and " is missing setting " in problem:
@@ -443,13 +500,20 @@ def _project_check_remediation(problem: str) -> str:
             "Restore the generated settings.py value or remove the integration "
             "scaffold.",
         )
-    if problem.startswith("Integration ") and " is missing env value " in problem:
+    if (
+        problem.startswith("Integration ")
+        and " is missing env value " in problem
+    ):
         return _integration_fix(
             integration_name,
-            "Restore the .env.example value or remove the integration scaffold.",
+            "Restore the .env.example value or remove the integration "
+            "scaffold.",
         )
 
-    return "Review the reported drift and restore the PolePosition-managed contract."
+    return (
+        "Review the reported drift and restore the PolePosition-managed "
+        "contract."
+    )
 
 
 def _extract_lifecycle_module_name(problem: str) -> str | None:
@@ -472,7 +536,8 @@ def _module_fix(module_name: str | None, message: str) -> str:
         return message
     return (
         f"{message} If '{module_name}' was intentionally detached, run "
-        f"`polepos remove module {module_name} --wiring-only`; if it was already "
+        f"`polepos remove module {module_name} --wiring-only`; if it was "
+        f"already "
         "detached, move, delete, or rewire the module directory."
     )
 
@@ -487,11 +552,15 @@ def _integration_fix(integration_name: str | None, message: str) -> str:
 
 
 def check_project(cwd: Path | None = None) -> ProjectCheckResult:
-    return _run_project_checks(cwd, include_lifecycle=True, include_integrations=True)
+    return _run_project_checks(
+        cwd, include_lifecycle=True, include_integrations=True
+    )
 
 
 def check_core_project(cwd: Path | None = None) -> ProjectCheckResult:
-    return _run_project_checks(cwd, include_lifecycle=False, include_integrations=False)
+    return _run_project_checks(
+        cwd, include_lifecycle=False, include_integrations=False
+    )
 
 
 def _run_project_checks(
@@ -522,7 +591,9 @@ def _run_project_checks(
     if include_lifecycle:
         _check_lifecycle_wiring(problems, project_root, package_root, manifest)
     if include_integrations:
-        _check_integration_wiring(problems, project_root, package_root, manifest)
+        _check_integration_wiring(
+            problems, project_root, package_root, manifest
+        )
         _check_auth_workflow(
             problems=problems,
             project_root=project_root,
@@ -546,7 +617,9 @@ def _discover_core_project(cwd: Path | None = None) -> tuple[Path, Path]:
         if package_root is not None:
             return candidate, package_root
 
-    raise RuntimeError("Current directory does not look like a PolePosition project.")
+    raise RuntimeError(
+        "Current directory does not look like a PolePosition project."
+    )
 
 
 def _find_core_package_root_in(project_root: Path) -> Path | None:
@@ -635,7 +708,11 @@ def _project_database_mode(
             return database_mode
         return "unsupported"
 
-    return "managed" if _project_uses_database(project_root, package_root) else "none"
+    return (
+        "managed"
+        if _project_uses_database(project_root, package_root)
+        else "none"
+    )
 
 
 def _check_project_identity(
@@ -647,7 +724,8 @@ def _check_project_identity(
 
     if not (project_root / "pyproject.toml").is_file():
         problems.append(
-            f"Project identity file is missing: {project_root / 'pyproject.toml'}"
+            f"Project identity file is missing: "
+            f"{project_root / 'pyproject.toml'}"
         )
 
     if not src_root.is_dir():
@@ -655,12 +733,14 @@ def _check_project_identity(
 
     if package_root.parent != src_root:
         problems.append(
-            f"Application package is not under project src directory: {package_root}"
+            f"Application package is not under project src directory: "
+            f"{package_root}"
         )
 
     if not package_root.name.isidentifier():
         problems.append(
-            f"Application package name is not a valid Python identifier: {package_root.name}"
+            f"Application package name is not a valid Python identifier: "
+            f"{package_root.name}"
         )
 
 
@@ -745,7 +825,9 @@ def _check_generated_structure(
 
 
 def _check_alembic_config(problems: list[str], project_root: Path) -> None:
-    required_paths = [project_root / relative_path for relative_path in ALEMBIC_PATHS]
+    required_paths = [
+        project_root / relative_path for relative_path in ALEMBIC_PATHS
+    ]
 
     for path in required_paths:
         if not path.exists():
@@ -757,14 +839,20 @@ def _check_database_free_remnants(
     project_root: Path,
     package_root: Path,
 ) -> None:
-    for relative_path, snippets in DATABASE_FREE_FORBIDDEN_PROJECT_CONTENT.items():
+    for (
+        relative_path,
+        snippets,
+    ) in DATABASE_FREE_FORBIDDEN_PROJECT_CONTENT.items():
         _collect_forbidden_database_free_content(
             problems,
             project_root / relative_path,
             snippets,
         )
 
-    for relative_path, snippets in DATABASE_FREE_FORBIDDEN_PACKAGE_CONTENT.items():
+    for (
+        relative_path,
+        snippets,
+    ) in DATABASE_FREE_FORBIDDEN_PACKAGE_CONTENT.items():
         _collect_forbidden_database_free_content(
             problems,
             package_root / relative_path,
@@ -813,7 +901,9 @@ def _check_managed_markers(
 
         for marker in markers:
             if marker not in lines:
-                problems.append(f"Managed marker '{marker}' is missing in {path}")
+                problems.append(
+                    f"Managed marker '{marker}' is missing in {path}"
+                )
 
 
 def _check_lifecycle_wiring(
@@ -856,7 +946,9 @@ def _check_lifecycle_wiring(
     )
 
 
-def _should_skip_lifecycle_module(project_root: Path, module_root: Path) -> bool:
+def _should_skip_lifecycle_module(
+    project_root: Path, module_root: Path
+) -> bool:
     if module_root.name in IGNORED_MODULE_DIRECTORIES:
         return True
 
@@ -882,7 +974,8 @@ def _check_status_router_wiring(
     package_name = package_root.name
     router_module = f"{package_name}.modules.status.router"
     import_line = (
-        f"from {package_name}.modules.status.router import router as status_router"
+        f"from {package_name}.modules.status.router import router as "
+        f"status_router"
     )
     include_line = 'api_router.include_router(status_router, tags=["status"])'
 
@@ -943,7 +1036,8 @@ def _check_added_module_wiring(
 
     if not module_name.isidentifier():
         problems.append(
-            f"Lifecycle module directory is not a valid Python identifier: {module_root}"
+            f"Lifecycle module directory is not a valid Python "
+            f"identifier: {module_root}"
         )
         return
 
@@ -954,7 +1048,8 @@ def _check_added_module_wiring(
         path = module_root / relative_path
         if not path.exists():
             problems.append(
-                f"Lifecycle module '{module_name}' is missing generated path: {path}"
+                f"Lifecycle module '{module_name}' is missing generated "
+                f"path: {path}"
             )
 
     _check_module_export(problems, package_root, module_name)
@@ -983,7 +1078,12 @@ def _detect_module_kind(
             return module_kind
 
     for contract in module_template_detection_contracts():
-        unit_test = project_root / "tests" / "unit" / contract.unit_test_name(module_name)
+        unit_test = (
+            project_root
+            / "tests"
+            / "unit"
+            / contract.unit_test_name(module_name)
+        )
         if unit_test.exists():
             return contract.name
 
@@ -1059,7 +1159,8 @@ def _check_module_router_wiring(
 
     if not has_router_include(tree, router_alias, module_name):
         problems.append(
-            f"Lifecycle module '{module_name}' is missing API router include in "
+            f"Lifecycle module '{module_name}' is missing API router "
+            f"include in "
             f"{router_path}: {include_line}"
         )
 
@@ -1072,7 +1173,9 @@ def _parse_python_source(
     try:
         return ast.parse(content, filename=str(path))
     except SyntaxError as exc:
-        problems.append(f"Could not parse Python file for lifecycle checks: {path}: {exc}")
+        problems.append(
+            f"Could not parse Python file for lifecycle checks: {path}: {exc}"
+        )
         return None
 
 
@@ -1097,7 +1200,8 @@ def _check_module_model_wiring(
 
     package_name = package_root.name
     import_line = (
-        f"    from {package_name}.modules.{module_name} import model  # noqa: F401"
+        f"    from {package_name}.modules.{module_name} import model  # noqa: "
+        f"F401"
     )
     if import_line not in lines:
         problems.append(
@@ -1124,7 +1228,10 @@ def _check_module_tests(
         / template_contract.integration_test_name(module_name)
     )
     unit_test = (
-        project_root / "tests" / "unit" / template_contract.unit_test_name(module_name)
+        project_root
+        / "tests"
+        / "unit"
+        / template_contract.unit_test_name(module_name)
     )
 
     if not integration_test.exists():
@@ -1135,7 +1242,8 @@ def _check_module_tests(
 
     if not unit_test.exists():
         problems.append(
-            f"Lifecycle module '{module_name}' is missing unit test: {unit_test}"
+            f"Lifecycle module '{module_name}' is missing unit test: "
+            f"{unit_test}"
         )
 
 
@@ -1171,7 +1279,9 @@ def _collect_orphan_module_references(
     module_names: set[str],
 ) -> list[tuple[str, Path, str]]:
     references: list[tuple[str, Path, str]] = []
-    ignored_modules = module_names | STARTER_MODULES | IGNORED_ORPHAN_MODULE_REFERENCES
+    ignored_modules = (
+        module_names | STARTER_MODULES | IGNORED_ORPHAN_MODULE_REFERENCES
+    )
 
     references.extend(
         _collect_orphan_module_exports(package_root, ignored_modules)
@@ -1183,7 +1293,9 @@ def _collect_orphan_module_references(
         _collect_orphan_model_references(package_root, ignored_modules)
     )
     references.extend(
-        _collect_orphan_generated_tests(project_root, package_root, ignored_modules)
+        _collect_orphan_generated_tests(
+            project_root, package_root, ignored_modules
+        )
     )
 
     return references
@@ -1200,7 +1312,9 @@ def _collect_orphan_module_exports(
 
     references: list[tuple[str, Path, str]] = []
     for line in lines:
-        match = re.match(r"^\s*['\"]([A-Za-z_][A-Za-z0-9_]*)['\"]\s*,?\s*$", line)
+        match = re.match(
+            r"^\s*['\"]([A-Za-z_][A-Za-z0-9_]*)['\"]\s*,?\s*$", line
+        )
         if match is None:
             continue
         module_name = match.group(1)
@@ -1306,8 +1420,8 @@ def _module_name_from_generated_test_path(path: Path) -> str | None:
 
     stem = name[len("test_") : -len(".py")]
     for suffix in unit_suffixes:
-        if stem.endswith(suffix[:-len(".py")]):
-            stem = stem[: -len(suffix[:-len(".py")])]
+        if stem.endswith(suffix[: -len(".py")]):
+            stem = stem[: -len(suffix[: -len(".py")])]
             break
     if stem.endswith("_crud"):
         stem = stem[: -len("_crud")]
@@ -1315,7 +1429,9 @@ def _module_name_from_generated_test_path(path: Path) -> str | None:
     return stem if stem.isidentifier() else None
 
 
-def _test_file_references_module(path: Path, package_name: str, module_name: str) -> bool:
+def _test_file_references_module(
+    path: Path, package_name: str, module_name: str
+) -> bool:
     content = _read_file_text(path)
     if content is None:
         return False
@@ -1342,7 +1458,9 @@ def _check_auth_workflow(
     manifest: ProjectManifest,
     uses_database: bool,
 ) -> None:
-    pyproject_content = _read_file_text(project_root / "pyproject.toml", problems)
+    pyproject_content = _read_file_text(
+        project_root / "pyproject.toml", problems
+    )
     if not _should_check_auth_workflow(
         project_root=project_root,
         package_root=package_root,
@@ -1353,7 +1471,8 @@ def _check_auth_workflow(
 
     if not uses_database:
         problems.append(
-            "Auth workflow requires generated database wiring but the project is "
+            "Auth workflow requires generated database wiring but the "
+            "project is "
             "configured without a database."
         )
         return
@@ -1385,20 +1504,25 @@ def _should_check_auth_workflow(
     ):
         return True
 
-    if any((project_root / relative_path).exists() for relative_path in AUTH_WORKFLOW_TEST_PATHS):
+    if any(
+        (project_root / relative_path).exists()
+        for relative_path in AUTH_WORKFLOW_TEST_PATHS
+    ):
         return True
 
     router_content = _read_file_text(package_root / "api" / "router.py") or ""
-    if f"{package_root.name}.auth.router" in router_content or "/auth" in router_content:
+    if (
+        f"{package_root.name}.auth.router" in router_content
+        or "/auth" in router_content
+    ):
         return True
 
     models_content = _read_file_text(package_root / "db" / "models.py") or ""
     if f"{package_root.name}.auth import model" in models_content:
         return True
 
-    return (
-        pyproject_content is not None
-        and _pyproject_has_dependency(pyproject_content, AUTH_DEPENDENCY)
+    return pyproject_content is not None and _pyproject_has_dependency(
+        pyproject_content, AUTH_DEPENDENCY
     )
 
 
@@ -1414,7 +1538,9 @@ def _check_auth_tests(problems: list[str], project_root: Path) -> None:
     unit_test = project_root / "tests" / "unit" / "test_auth_service.py"
 
     if not integration_test.exists():
-        problems.append(f"Auth workflow is missing integration test: {integration_test}")
+        problems.append(
+            f"Auth workflow is missing integration test: {integration_test}"
+        )
 
     if not unit_test.exists():
         problems.append(f"Auth workflow is missing unit test: {unit_test}")
@@ -1448,12 +1574,17 @@ def _check_auth_router_wiring(problems: list[str], package_root: Path) -> None:
 
     package_name = package_root.name
     router_module = f"{package_name}.auth.router"
-    import_line = f"from {package_name}.auth.router import router as auth_router"
-    include_line = 'api_router.include_router(auth_router, prefix="/auth", tags=["auth"])'
+    import_line = (
+        f"from {package_name}.auth.router import router as auth_router"
+    )
+    include_line = (
+        'api_router.include_router(auth_router, prefix="/auth", tags=["auth"])'
+    )
 
     if not has_router_import(tree, router_module, "auth_router"):
         problems.append(
-            f"Auth workflow is missing router import in {router_path}: {import_line}"
+            f"Auth workflow is missing router import in {router_path}: "
+            f"{import_line}"
         )
 
     if not has_router_include(tree, "auth_router", "auth"):
@@ -1477,11 +1608,13 @@ def _check_auth_model_wiring(problems: list[str], package_root: Path) -> None:
         return
 
     import_line = (
-        f"    from {package_root.name}.auth import model as auth_model  # noqa: F401"
+        f"    from {package_root.name}.auth import model as auth_model  # "
+        f"noqa: F401"
     )
     if import_line not in content.splitlines():
         problems.append(
-            f"Auth workflow is missing model import in {models_path}: {import_line}"
+            f"Auth workflow is missing model import in {models_path}: "
+            f"{import_line}"
         )
 
 
@@ -1494,7 +1627,9 @@ def _check_integration_wiring(
     manifest = manifest or read_project_manifest(project_root)
     settings_content = _read_file_text(package_root / "settings.py", problems)
     env_content = _read_file_text(project_root / ".env.example", problems)
-    pyproject_content = _read_file_text(project_root / "pyproject.toml", problems)
+    pyproject_content = _read_file_text(
+        project_root / "pyproject.toml", problems
+    )
 
     for contract in CHECKED_INTEGRATION_CONTRACTS:
         if not _should_check_integration(
@@ -1634,7 +1769,8 @@ def _check_integration_files(
         path = package_root / relative_path
         if not path.exists():
             problems.append(
-                f"Integration '{contract.name}' is missing generated file: {path}"
+                f"Integration '{contract.name}' is missing generated "
+                f"file: {path}"
             )
 
 
@@ -1659,7 +1795,9 @@ def _check_integration_dependency(
         )
 
 
-def _pyproject_has_dependency(pyproject_content: str, required_dependency: str) -> bool:
+def _pyproject_has_dependency(
+    pyproject_content: str, required_dependency: str
+) -> bool:
     return dependency_contract_satisfied(
         _project_dependency_specs(pyproject_content),
         required_dependency,
@@ -1690,7 +1828,9 @@ def _project_dependency_specs(pyproject_content: str) -> tuple[str, ...]:
     return _fallback_project_dependency_specs(pyproject_content)
 
 
-def _fallback_project_dependency_specs(pyproject_content: str) -> tuple[str, ...]:
+def _fallback_project_dependency_specs(
+    pyproject_content: str,
+) -> tuple[str, ...]:
     project_match = re.search(
         r"(?ms)^\s*\[project\]\s*$"
         r"(?P<section>.*?)"

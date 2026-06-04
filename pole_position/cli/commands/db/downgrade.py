@@ -2,7 +2,6 @@ from pole_position.cli.command import Command
 from pole_position.cli.services.db_runner import run_alembic_command
 from pole_position.cli.usage import print_command_help
 
-
 USAGE = "Usage: polepos db downgrade <target>"
 
 
@@ -28,7 +27,7 @@ def run(args: list[str]) -> None:
         run_alembic_command("downgrade", [args[0]])
     except RuntimeError as exc:
         print(str(exc))
-        raise SystemExit(1)
+        raise SystemExit(1) from exc
 
 
 command = Command(

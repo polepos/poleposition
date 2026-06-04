@@ -10,7 +10,9 @@ def find_project_root(start_path: Path | None = None) -> Path:
         if _find_package_root_in(candidate) is not None:
             return candidate
 
-    raise RuntimeError("Current directory does not look like a PolePosition project.")
+    raise RuntimeError(
+        "Current directory does not look like a PolePosition project."
+    )
 
 
 def find_package_root(start_path: Path | None = None) -> Path:
@@ -18,7 +20,9 @@ def find_package_root(start_path: Path | None = None) -> Path:
     package_root = _find_package_root_in(project_root)
 
     if package_root is None:
-        raise RuntimeError("Could not determine the application package under src/.")
+        raise RuntimeError(
+            "Could not determine the application package under src/."
+        )
 
     return package_root
 
@@ -34,11 +38,7 @@ def _find_package_root_in(project_root: Path) -> Path | None:
         if _is_package_root(package_root):
             return package_root
 
-    candidates = [
-        path
-        for path in src_root.iterdir()
-        if _is_package_root(path)
-    ]
+    candidates = [path for path in src_root.iterdir() if _is_package_root(path)]
 
     if len(candidates) != 1:
         return None

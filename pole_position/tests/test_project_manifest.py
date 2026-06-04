@@ -1,12 +1,14 @@
 from pathlib import Path
 
-from pole_position.cli.services.project_manifest import ProjectManifest
-from pole_position.cli.services.project_manifest import format_manifest_module_template
-from pole_position.cli.services.project_manifest import parse_manifest_module_template
-from pole_position.cli.services.project_manifest import read_project_manifest
-from pole_position.cli.services.project_manifest import record_manifest_integration
-from pole_position.cli.services.project_manifest import record_manifest_module
-from pole_position.cli.services.project_manifest import write_project_manifest
+from pole_position.cli.services.project_manifest import (
+    ProjectManifest,
+    format_manifest_module_template,
+    parse_manifest_module_template,
+    read_project_manifest,
+    record_manifest_integration,
+    record_manifest_module,
+    write_project_manifest,
+)
 
 
 def test_manifest_keeps_quoted_false_integration_invalid_not_enabled(
@@ -15,17 +17,17 @@ def test_manifest_keeps_quoted_false_integration_invalid_not_enabled(
     manifest_path = tmp_path / ".poleposition.toml"
     manifest_path.write_text(
         (
-            '[poleposition]\n'
+            "[poleposition]\n"
             'package = "myapp"\n'
             'db = "sqlite"\n'
-            '\n'
-            '[modules]\n'
+            "\n"
+            "[modules]\n"
             'status = "starter"\n'
-            '\n'
-            '[integrations]\n'
+            "\n"
+            "[integrations]\n"
             'kafka = "false"\n'
-            'rabbitmq = false\n'
-            'llm = true\n'
+            "rabbitmq = false\n"
+            "llm = true\n"
         ),
         encoding="utf-8",
     )
@@ -59,7 +61,9 @@ def test_manifest_preserves_invalid_integration_values_when_recording_module(
         template="standard",
     )
 
-    manifest_content = (tmp_path / ".poleposition.toml").read_text(encoding="utf-8")
+    manifest_content = (tmp_path / ".poleposition.toml").read_text(
+        encoding="utf-8"
+    )
     assert 'garage = "standard"' in manifest_content
     assert 'kafka = "false"' in manifest_content
 
@@ -111,7 +115,9 @@ def test_record_manifest_module_preserves_crud_feature_options(
     }
 
 
-def test_unreadable_manifest_is_reported_and_left_untouched(tmp_path: Path) -> None:
+def test_unreadable_manifest_is_reported_and_left_untouched(
+    tmp_path: Path,
+) -> None:
     manifest_path = tmp_path / ".poleposition.toml"
     manifest_path.write_bytes(b"\xff\xfe\x00")
 
