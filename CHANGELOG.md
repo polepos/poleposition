@@ -5,6 +5,21 @@ Notable PolePosition changes are tracked here.
 PolePosition follows Conventional Commits in repository history. This changelog
 summarizes user-facing behavior, release readiness work, and known beta scope.
 
+## 0.0.40 - 2026-06-06
+
+### Changed
+
+- Adopted the Google Python Style Guide across the codebase, enforced with Ruff
+  (lint and format) and a dedicated CI lint gate. No CLI behavior changed.
+
+### Documentation
+
+- Added a contributor guide, a maintainer guide, and a code-style reference to
+  the documentation site, and documented the lifecycle manifest and dependency
+  patching in the architecture reference.
+- Refreshed the published README so PyPI matches the GitHub repository
+  (resolves #39).
+
 ## 0.0.39 - 2026-06-04
 
 ### Fixed

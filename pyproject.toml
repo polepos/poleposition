@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "poleposition"
-version = "0.0.39"
+version = "0.0.40"
 description = "Project lifecycle CLI for starting and growing enterprise FastAPI projects"
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.10"
