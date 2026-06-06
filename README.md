@@ -933,6 +933,10 @@ Feel free to open an
 [issue](https://github.com/erenertemden/poleposition/issues) or submit a
 [pull request](https://github.com/erenertemden/poleposition/pulls).
 
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) and the
+[Contributing guide](docs/contributing.md) for development setup, running the
+tests (including opt-in end-to-end tests), project layout, and common tasks.
+
 ### Code style
 
 Python code follows the

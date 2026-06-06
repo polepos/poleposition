@@ -21,6 +21,8 @@ const sidebars = {
     {type: "doc", id: "upgrade-command", label: "Upgrade Reports"},
     {type: "doc", id: "feature-status", label: "Feature Status"},
     {type: "doc", id: "code-style", label: "Code Style"},
+    {type: "doc", id: "contributing", label: "Contributing"},
+    {type: "doc", id: "maintainer-guide", label: "Maintainer Guide"},
     {
       type: "category",
       label: "Integrations",

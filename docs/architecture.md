@@ -445,6 +445,52 @@ the fixer treats `api_router.include_router(...)` as Python syntax and places
 `# polepos:router-includes` after the complete statement, including multi-line
 router include calls.
 
+## Lifecycle Manifest and Dependency Patching
+
+Beyond managed markers, two services give the lifecycle commands a reliable view
+of project state without re-deriving everything from files on each run.
+
+### Lifecycle manifest (`.poleposition.toml`)
+
+`pole_position/cli/services/project_manifest.py` owns the per-project manifest
+written as `.poleposition.toml` at the project root. It records what the
+generated project *is*, so `add`, `remove`, and `check` do not rely only on
+inference:
+
+- `package_name` — the application package recorded at `start`
+- `database` — `sqlite`, `postgres`, or `none`
+- `[modules]` — each added module's template, e.g.
+  `customers = "crud[pagination,timestamps]"`
+- `[integrations]` — generated integrations as `kafka = true`
+
+The `ProjectManifest` dataclass also carries `invalid_integrations` and
+`read_error`, so `check` can report a malformed manifest instead of crashing.
+Module template values are encoded and decoded with
+`format_manifest_module_template` / `parse_manifest_module_template` (the
+`crud[...]` suffix carries the opt-in CRUD feature set). Mutations go through
+`record_manifest_module` / `remove_manifest_module` and
+`record_manifest_integration` / `remove_manifest_integration`, which keep the
+file stable and comment-tolerant.
+
+### Dependency patching
+
+Adding auth or an integration may require a dependency in the generated
+project's `pyproject.toml`. This is split into a pure contract layer and a
+file-editing layer:
+
+- `dependency_contract.py` — parsing and comparison only. `DependencyEntry`
+  preserves a line's indent, quote style, value, and trailing text, and
+  `dependency_contract_satisfied(dependencies, required)` returns whether an
+  existing dependency already covers the required name, extras, and minimum
+  version. No file I/O.
+- `pyproject_editor.py` — the editor. `ensure_project_dependency(path, dependency)`
+  finds the `[project]` `dependencies` array (inline or multi-line) and replaces
+  or appends the entry while preserving the file's existing formatting.
+
+Because patching is contract-driven it is idempotent: a dependency that already
+satisfies the contract is left untouched, so re-running `add` does not create
+duplicates.
+
 ## Database Lifecycle
 
 PolePosition is migration-first.
