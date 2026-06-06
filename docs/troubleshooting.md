@@ -73,6 +73,15 @@ exports, integration settings, or integration env examples into a different
 shape. If you need custom behavior, add code around the managed block instead
 of replacing the managed block itself.
 
+The generated lines directly above the import and export markers
+(`router-imports`, `model-imports`, `module-exports`) are kept alphabetically
+sorted so repeated `polepos add module` runs stay diff-friendly. A line you add
+by hand in that region that matches the generated pattern — for example another
+`from <package>.modules.<name> import router` import above
+`# polepos:router-imports` — is treated as part of the managed block and may be
+re-sorted on the next `add module` run. This is expected; keep custom imports in
+a clearly separate region so they are not swept into the sorted block.
+
 Also avoid deleting generated module directories by hand. Prefer:
 
 ```bash

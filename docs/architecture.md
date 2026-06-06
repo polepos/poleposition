@@ -427,6 +427,24 @@ Meaning:
 - users may add surrounding code and comments
 - users should not remove these markers unless they intend to manage those files manually
 
+### The region above a marker is PolePosition-controlled
+
+For the import- and export-style markers (`router-imports`, `model-imports`,
+`module-exports`), PolePosition keeps the generated lines directly above the
+marker in **alphabetical order**, so repeated `add module` runs produce a stable,
+diff-friendly block instead of append-only churn.
+
+The trade-off: that region is managed. A line you add by hand there that *matches
+the generated pattern* — for example another
+`from <package>.modules.<name> import router` import placed above
+`# polepos:router-imports` — is treated as part of the managed block and may be
+re-sorted on the next `add module` run. This is expected behavior, not a bug.
+
+To keep a custom line exactly where you put it, make sure it does not look like a
+generated entry: place it in a clearly separate region (for example below the
+marker, or grouped with your other non-generated imports) rather than interleaved
+with the generated lines.
+
 The most important managed files are:
 
 - `src/<package>/api/router.py`
