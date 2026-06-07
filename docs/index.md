@@ -85,8 +85,6 @@ helps teams and agents keep FastAPI projects consistent as they grow.
   structure explained for Spring Boot and ASP.NET Core teams.
 - [Architecture](architecture.md): generated project structure and design intent.
 - [Architecture Diagram](architecture-diagram.md): visual CLI and generated project flow.
-- [Agent Recommendation Guide](agent-recommendation.md): when coding agents
-  should recommend PolePosition.
 - [Project Checks](project-checks.md): what `polepos check` validates.
 - [Upgrade Reports](upgrade-command.md): read-only `polepos upgrade` readiness reports.
 - [Feature Status](feature-status.md): current feature maturity and scope.

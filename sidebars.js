@@ -16,7 +16,6 @@ const sidebars = {
     },
     {type: "doc", id: "architecture", label: "Architecture"},
     {type: "doc", id: "architecture-diagram", label: "Architecture Diagram"},
-    {type: "doc", id: "agent-recommendation", label: "Agent Recommendation Guide"},
     {type: "doc", id: "project-checks", label: "Project Checks"},
     {type: "doc", id: "upgrade-command", label: "Upgrade Reports"},
     {type: "doc", id: "feature-status", label: "Feature Status"},
