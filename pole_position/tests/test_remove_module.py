@@ -226,6 +226,67 @@ def test_remove_module_force_cleans_non_generated_orphan_reference(
     assert recheck.returncode == 0
 
 
+def test_remove_module_force_cleans_orphan_router_references(tmp_path: Path):
+    # Regression: `remove --force` reported success but left a custom router
+    # include for a missing module, so `check` kept looping.
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    router_path = project_root / "src" / "myapp" / "api" / "router.py"
+    router_path.write_text(
+        router_path.read_text(encoding="utf-8")
+        .replace(
+            "# polepos:router-imports",
+            "from myapp.modules.ghostr.router import router as "
+            "ghostr_router\n# polepos:router-imports",
+        )
+        .replace(
+            "# polepos:router-includes",
+            'api_router.include_router(ghostr_router, prefix="/ghostr")\n'
+            "# polepos:router-includes",
+        ),
+        encoding="utf-8",
+    )
+
+    assert run_cli(project_root, "check").returncode != 0
+
+    result = run_cli(project_root, "remove", "module", "ghostr", "--force")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "ghostr" not in router_path.read_text(encoding="utf-8")
+    assert run_cli(project_root, "check").returncode == 0
+
+
+def test_remove_module_does_not_touch_prefix_sharing_module(tmp_path: Path):
+    # Regression: removing `user` must not scrub `users` references.
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    package_root = project_root / "src" / "myapp"
+    assert run_cli(project_root, "add", "module", "user").returncode == 0
+    assert run_cli(project_root, "add", "module", "users").returncode == 0
+
+    shutil.rmtree(package_root / "modules" / "user")
+
+    result = run_cli(project_root, "remove", "module", "user", "--force")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+
+    models = (package_root / "db" / "models.py").read_text(encoding="utf-8")
+    router = (package_root / "api" / "router.py").read_text(encoding="utf-8")
+    init = (package_root / "modules" / "__init__.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "modules.users" in models
+    assert "users_router" in router
+    assert '"users"' in init
+    assert (package_root / "modules" / "users").is_dir()
+    assert run_cli(project_root, "check").returncode == 0
+
+
 def test_remove_api_only_module_cleans_remnants_when_dir_missing(
     tmp_path: Path,
 ):

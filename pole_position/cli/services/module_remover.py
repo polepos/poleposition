@@ -1,4 +1,5 @@
 import ast
+import re
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
@@ -192,17 +193,18 @@ def remove_module(
         updated_files.append(modules_init_path)
 
     router_path = package_root / "api" / "router.py"
-    if _remove_router_wiring(router_path, package_name, module_name):
-        updated_files.append(router_path)
-
-    module_missing = not module_root.exists()
     models_path = package_root / "db" / "models.py"
+    module_missing = not module_root.exists()
 
     if module_missing:
         # Orphan cleanup: scrub every reference `polepos check` would flag,
         # regardless of the (possibly mis-detected) template or hand-edited
         # shape, so the recommended `remove module` command never dead-ends.
-        if _remove_module_model_references(
+        if _remove_module_reference_lines(
+            router_path, package_name, module_name
+        ):
+            updated_files.append(router_path)
+        if _remove_module_reference_lines(
             models_path, package_name, module_name
         ):
             updated_files.append(models_path)
@@ -210,6 +212,8 @@ def remove_module(
             _remove_module_test_files(project_root, module_name)
         )
     else:
+        if _remove_router_wiring(router_path, package_name, module_name):
+            updated_files.append(router_path)
         if template_contract.update_db_models and _remove_line(
             models_path, _model_import_line(package_name, module_name)
         ):
@@ -767,8 +771,24 @@ def _has_removable_module_remnants(
     )
 
 
-def _module_reference_token(package_root: Path, module_name: str) -> str:
-    return f"{package_root.name}.modules.{module_name}"
+def _module_reference_matchers(
+    package_name: str, module_name: str
+) -> tuple[re.Pattern[str], ...]:
+    name = re.escape(module_name)
+    pkg = re.escape(package_name)
+    return (
+        # `<pkg>.modules.<name>` not followed by another identifier char, so
+        # removing `user` never touches `users`.
+        re.compile(rf"\b{pkg}\.modules\.{name}(?!\w)"),
+        re.compile(rf"\b{name}_router\b"),
+        re.compile(rf"""prefix=(['"])/{name}\1"""),
+    )
+
+
+def _line_references_module(
+    line: str, matchers: tuple[re.Pattern[str], ...]
+) -> bool:
+    return any(matcher.search(line) for matcher in matchers)
 
 
 def _module_test_files(project_root: Path, module_name: str) -> list[Path]:
@@ -788,31 +808,35 @@ def _has_generic_module_reference(
     package_root: Path,
     module_name: str,
 ) -> bool:
-    reference = _module_reference_token(package_root, module_name)
+    matchers = _module_reference_matchers(package_root.name, module_name)
     managed_files = (
         package_root / "modules" / "__init__.py",
         package_root / "api" / "router.py",
         package_root / "db" / "models.py",
     )
-    if any(reference in _read_optional_text(path) for path in managed_files):
-        return True
+    for path in managed_files:
+        text = _read_optional_text(path)
+        if any(matcher.search(text) for matcher in matchers):
+            return True
 
     return bool(_module_test_files(project_root, module_name))
 
 
-def _remove_module_model_references(
+def _remove_module_reference_lines(
     path: Path, package_name: str, module_name: str
 ) -> bool:
     if not path.is_file():
         return False
 
-    reference = f"{package_name}.modules.{module_name}"
+    matchers = _module_reference_matchers(package_name, module_name)
     try:
         lines = path.read_text(encoding="utf-8").splitlines()
     except UnicodeDecodeError:
         return False
 
-    kept = [line for line in lines if reference not in line]
+    kept = [
+        line for line in lines if not _line_references_module(line, matchers)
+    ]
     if len(kept) == len(lines):
         return False
 
