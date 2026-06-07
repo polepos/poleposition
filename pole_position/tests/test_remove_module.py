@@ -188,6 +188,44 @@ def test_remove_standard_module_cleans_remnants_when_dir_missing(
     assert check_result.returncode == 0
 
 
+def test_remove_module_force_cleans_non_generated_orphan_reference(
+    tmp_path: Path,
+):
+    # Regression for #37: `polepos check` recommends `remove module X` for an
+    # orphan reference, but `remove` used to dead-end with "Module does not
+    # exist" when the reference was not in the exact generated shape (for
+    # example hand-edited, or left by a mis-detected template).
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    package_root = project_root / "src" / "myapp"
+    models_path = package_root / "db" / "models.py"
+
+    models_path.write_text(
+        models_path.read_text(encoding="utf-8").replace(
+            "# polepos:model-imports",
+            "from myapp.modules.ghost import GhostModel  # custom\n"
+            "    # polepos:model-imports",
+        ),
+        encoding="utf-8",
+    )
+
+    check_result = run_cli(project_root, "check")
+    assert check_result.returncode != 0
+    assert "missing module 'ghost'" in check_result.stdout
+    assert "remove module ghost" in check_result.stdout
+
+    result = run_cli(project_root, "remove", "module", "ghost", "--force")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "Module does not exist" not in result.stdout
+    assert "modules.ghost" not in models_path.read_text(encoding="utf-8")
+
+    recheck = run_cli(project_root, "check")
+    assert recheck.returncode == 0
+
+
 def test_remove_api_only_module_cleans_remnants_when_dir_missing(
     tmp_path: Path,
 ):

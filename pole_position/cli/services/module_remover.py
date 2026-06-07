@@ -195,16 +195,30 @@ def remove_module(
     if _remove_router_wiring(router_path, package_name, module_name):
         updated_files.append(router_path)
 
-    if template_contract.update_db_models:
-        models_path = package_root / "db" / "models.py"
-        if _remove_line(
+    module_missing = not module_root.exists()
+    models_path = package_root / "db" / "models.py"
+
+    if module_missing:
+        # Orphan cleanup: scrub every reference `polepos check` would flag,
+        # regardless of the (possibly mis-detected) template or hand-edited
+        # shape, so the recommended `remove module` command never dead-ends.
+        if _remove_module_model_references(
+            models_path, package_name, module_name
+        ):
+            updated_files.append(models_path)
+        removed_paths.extend(
+            _remove_module_test_files(project_root, module_name)
+        )
+    else:
+        if template_contract.update_db_models and _remove_line(
             models_path, _model_import_line(package_name, module_name)
         ):
             updated_files.append(models_path)
-
-    removed_paths.extend(
-        _remove_generated_tests(project_root, module_name, template_contract)
-    )
+        removed_paths.extend(
+            _remove_generated_tests(
+                project_root, module_name, template_contract
+            )
+        )
 
     if module_root.exists() and not wiring_only:
         shutil.rmtree(module_root)
@@ -659,40 +673,46 @@ def _validate_remove_module_preflight(
     if not module_exists and not has_remnants:
         problems.append(f"Module does not exist: {module_name}")
 
-    modules_init_path = package_root / "modules" / "__init__.py"
-    router_path = package_root / "api" / "router.py"
-    models_path = package_root / "db" / "models.py"
+    # The marker and managed-layout checks protect in-place edits of a module
+    # that still exists. When the module directory is already gone we are
+    # cleaning orphan references that `polepos check` reported, so we scrub them
+    # generically instead of blocking on a missing marker or a hand-edited
+    # reference shape.
+    if module_exists:
+        modules_init_path = package_root / "modules" / "__init__.py"
+        router_path = package_root / "api" / "router.py"
+        models_path = package_root / "db" / "models.py"
 
-    _collect_missing_marker(problems, modules_init_path, MODULE_EXPORTS_MARKER)
-    _collect_missing_marker(problems, router_path, ROUTER_IMPORTS_MARKER)
-    _collect_missing_marker(problems, router_path, ROUTER_INCLUDES_MARKER)
+        _collect_missing_marker(
+            problems, modules_init_path, MODULE_EXPORTS_MARKER
+        )
+        _collect_missing_marker(problems, router_path, ROUTER_IMPORTS_MARKER)
+        _collect_missing_marker(problems, router_path, ROUTER_INCLUDES_MARKER)
 
-    package_name = package_root.name
-    _collect_unsupported_reference(
-        problems=problems,
-        path=modules_init_path,
-        exact_lines=[_module_export_line(module_name)],
-        reference_tokens=[f'"{module_name}"', f"'{module_name}'"],
-        description="module export",
-    )
-    _collect_unsupported_router_wiring(
-        problems=problems,
-        path=router_path,
-        package_name=package_name,
-        module_name=module_name,
-    )
-
-    if template_contract.update_db_models and (
-        module_exists or models_path.is_file()
-    ):
-        _collect_missing_marker(problems, models_path, MODEL_IMPORTS_MARKER)
+        package_name = package_root.name
         _collect_unsupported_reference(
             problems=problems,
-            path=models_path,
-            exact_lines=[_model_import_line(package_name, module_name)],
-            reference_tokens=[f"{package_name}.modules.{module_name}"],
-            description="model import",
+            path=modules_init_path,
+            exact_lines=[_module_export_line(module_name)],
+            reference_tokens=[f'"{module_name}"', f"'{module_name}'"],
+            description="module export",
         )
+        _collect_unsupported_router_wiring(
+            problems=problems,
+            path=router_path,
+            package_name=package_name,
+            module_name=module_name,
+        )
+
+        if template_contract.update_db_models:
+            _collect_missing_marker(problems, models_path, MODEL_IMPORTS_MARKER)
+            _collect_unsupported_reference(
+                problems=problems,
+                path=models_path,
+                exact_lines=[_model_import_line(package_name, module_name)],
+                reference_tokens=[f"{package_name}.modules.{module_name}"],
+                description="model import",
+            )
 
     if problems:
         formatted_problems = "\n".join(f"- {problem}" for problem in problems)
@@ -732,9 +752,83 @@ def _has_removable_module_remnants(
     ):
         return True
 
-    return template_contract.update_db_models and _line_exists(
+    if template_contract.update_db_models and _line_exists(
         models_path, _model_import_line(package_name, module_name)
+    ):
+        return True
+
+    # Catch-all: mirror `polepos check` so any reference it flags as an orphan
+    # is also seen here, even when the template was mis-detected or a reference
+    # was hand-edited into a non-generated shape.
+    return _has_generic_module_reference(
+        project_root=project_root,
+        package_root=package_root,
+        module_name=module_name,
     )
+
+
+def _module_reference_token(package_root: Path, module_name: str) -> str:
+    return f"{package_root.name}.modules.{module_name}"
+
+
+def _module_test_files(project_root: Path, module_name: str) -> list[Path]:
+    tests_root = project_root / "tests"
+    if not tests_root.is_dir():
+        return []
+
+    found: list[Path] = []
+    for pattern in (f"test_{module_name}.py", f"test_{module_name}_*.py"):
+        found.extend(tests_root.rglob(pattern))
+    return list(dict.fromkeys(sorted(found)))
+
+
+def _has_generic_module_reference(
+    *,
+    project_root: Path,
+    package_root: Path,
+    module_name: str,
+) -> bool:
+    reference = _module_reference_token(package_root, module_name)
+    managed_files = (
+        package_root / "modules" / "__init__.py",
+        package_root / "api" / "router.py",
+        package_root / "db" / "models.py",
+    )
+    if any(reference in _read_optional_text(path) for path in managed_files):
+        return True
+
+    return bool(_module_test_files(project_root, module_name))
+
+
+def _remove_module_model_references(
+    path: Path, package_name: str, module_name: str
+) -> bool:
+    if not path.is_file():
+        return False
+
+    reference = f"{package_name}.modules.{module_name}"
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except UnicodeDecodeError:
+        return False
+
+    kept = [line for line in lines if reference not in line]
+    if len(kept) == len(lines):
+        return False
+
+    path.write_text("\n".join(kept) + "\n", encoding="utf-8")
+    return True
+
+
+def _remove_module_test_files(
+    project_root: Path, module_name: str
+) -> list[Path]:
+    removed: list[Path] = []
+    for path in _module_test_files(project_root, module_name):
+        if path.is_file():
+            path.unlink()
+            removed.append(path)
+    return removed
 
 
 def _manifest_would_change(
