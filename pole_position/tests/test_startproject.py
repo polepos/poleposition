@@ -653,11 +653,21 @@ def test_generated_project_renders_database_and_module_placeholders(
     assert "cors_max_age: int = 600" in settings_module
     assert "uvicorn_limit_max_requests: int | None = None" in settings_module
     assert "uvicorn_limit_max_requests_jitter: int = 0" in settings_module
-    assert 'auth_secret_key: str = "change-me-in-production"' in settings_module
+    assert (
+        'DEFAULT_AUTH_SECRET_KEY = "change-me-in-production"' in settings_module
+    )
+    assert "auth_secret_key: str = DEFAULT_AUTH_SECRET_KEY" in settings_module
     assert 'auth_algorithm: str = "HS256"' in settings_module
     assert "auth_access_token_expire_minutes: int = 60" in settings_module
     assert 'auth_issuer: str = "demo-app"' in settings_module
     assert "@field_validator(" in settings_module
+    assert '@model_validator(mode="after")' in settings_module
+    assert (
+        'def require_production_auth_secret(self) -> "Settings":'
+        in settings_module
+    )
+    assert 'self.app_env.strip().lower() == "production"' in settings_module
+    assert "self.auth_secret_key == DEFAULT_AUTH_SECRET_KEY" in settings_module
     assert (
         "def empty_string_to_none(cls, value: object) -> object:"
         in settings_module

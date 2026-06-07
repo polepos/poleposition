@@ -1,8 +1,11 @@
 from functools import lru_cache
 import json
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+DEFAULT_AUTH_SECRET_KEY = "change-me-in-production"
 
 
 class Settings(BaseSettings):
@@ -45,7 +48,7 @@ class Settings(BaseSettings):
     uvicorn_limit_max_requests: int | None = None
     uvicorn_limit_max_requests_jitter: int = 0
     uvicorn_backlog: int = 2048
-    auth_secret_key: str = "change-me-in-production"
+    auth_secret_key: str = DEFAULT_AUTH_SECRET_KEY
     auth_algorithm: str = "HS256"
     auth_access_token_expire_minutes: int = 60
     auth_issuer: str = "{{project_name}}"
@@ -103,6 +106,18 @@ class Settings(BaseSettings):
             return json.loads(stripped)
 
         return [item.strip() for item in stripped.split(",") if item.strip()]
+
+    @model_validator(mode="after")
+    def require_production_auth_secret(self) -> "Settings":
+        if (
+            self.app_env.strip().lower() == "production"
+            and self.auth_secret_key == DEFAULT_AUTH_SECRET_KEY
+        ):
+            raise ValueError(
+                "AUTH_SECRET_KEY must be changed from its default value "
+                "when APP_ENV=production."
+            )
+        return self
 
 
 @lru_cache

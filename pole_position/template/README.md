@@ -202,6 +202,10 @@ Relevant settings in `.env`:
 * `AUTH_ACCESS_TOKEN_EXPIRE_MINUTES`
 * `AUTH_ISSUER`
 
+When `APP_ENV=production`, settings validation fails if `AUTH_SECRET_KEY` is
+still the default `change-me-in-production` value, so set a real secret before
+deploying.
+
 Use `get_current_user` for authenticated routes and `require_roles(...)` for
 simple role-gated routes.
 
