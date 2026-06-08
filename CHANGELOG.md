@@ -5,6 +5,35 @@ Notable PolePosition changes are tracked here.
 PolePosition follows Conventional Commits in repository history. This changelog
 summarizes user-facing behavior, release readiness work, and known beta scope.
 
+## 0.0.41 - 2026-06-08
+
+### Fixed
+
+- `polepos remove module` no longer dead-ends with "Module does not exist"
+  when the module directory was already deleted. It now cleans the orphan
+  references `polepos check` reports — module exports, router wiring, model
+  imports, and generated tests — even for a mis-detected template or a
+  hand-edited reference shape.
+- Removing a module no longer scrubs references belonging to a different
+  module whose name shares a prefix (removing `user` leaves `users` intact).
+
+### Added
+
+- Generated projects now fail settings validation when `APP_ENV=production`
+  and `AUTH_SECRET_KEY` is still the default `change-me-in-production` value,
+  so the app cannot boot with an insecure secret.
+
+### Changed
+
+- Pinned the `qs` documentation dev dependency to a patched version.
+
+### Documentation
+
+- Added contributor and maintainer guides and a code-style reference, removed
+  the agent recommendation guide, and documented the lifecycle manifest,
+  dependency patching, and managed-import sorting. The published README now
+  matches the GitHub repository.
+
 ## 0.0.40 - 2026-06-06
 
 ### Changed
