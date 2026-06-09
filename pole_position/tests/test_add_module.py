@@ -1507,11 +1507,11 @@ def test_add_module_with_ai_prompt_template_creates_llm_module_files(
         'tags=["assistant"])' in router_content
     )
     assert "from myapp.modules.assistant import model" not in db_models_content
-    assert 'llm_provider: str = "openai"' in settings_content
-    assert 'llm_model: str = "gpt-5.4-mini"' in settings_content
+    assert 'llm_provider: str = ""' in settings_content
+    assert 'llm_model: str = ""' in settings_content
     assert "llm_timeout_seconds: float = 30.0" in settings_content
-    assert "LLM_PROVIDER=openai" in env_content
-    assert "LLM_MODEL=gpt-5.4-mini" in env_content
+    assert "LLM_PROVIDER=" in env_content
+    assert "LLM_MODEL=" in env_content
     assert "LLM_API_KEY=" in env_content
     assert "from myapp.bootstrap.logging import get_logger" in service_content
     assert "logger = get_logger(__name__)" in service_content
@@ -1564,10 +1564,10 @@ def test_add_module_ai_prompt_completes_partial_llm_settings_and_env(
     env_content = env_path.read_text(encoding="utf-8")
 
     assert settings_content.count("llm_provider:") == 1
-    assert 'llm_model: str = "gpt-5.4-mini"' in settings_content
+    assert 'llm_model: str = ""' in settings_content
     assert "llm_timeout_seconds: float = 30.0" in settings_content
     assert env_content.count("LLM_PROVIDER=") == 1
-    assert "LLM_MODEL=gpt-5.4-mini" in env_content
+    assert "LLM_MODEL=" in env_content
     assert "LLM_TIMEOUT_SECONDS=30" in env_content
 
 
@@ -1593,7 +1593,7 @@ def test_add_ai_prompt_module_ignores_commented_required_llm_env(
 
     assert result.returncode == 0
     env_lines = env_path.read_text(encoding="utf-8").splitlines()
-    assert env_lines.count("LLM_PROVIDER=openai") == 1
+    assert env_lines.count("LLM_PROVIDER=") == 1
     assert env_lines.count("# LLM_PROVIDER=openai") == 1
     assert env_lines.count("# LLM_MAX_TOKENS=") == 1
 
@@ -1719,8 +1719,8 @@ def test_add_module_ai_prompt_does_not_duplicate_llm_settings_or_integrations(
         package_root / "integrations" / "llm" / "provider.py"
     ).read_text(encoding="utf-8")
 
-    assert settings_content.count('llm_provider: str = "openai"') == 1
-    assert env_content.count("LLM_PROVIDER=openai") == 1
+    assert settings_content.count('llm_provider: str = ""') == 1
+    assert env_content.count("LLM_PROVIDER=") == 1
     assert provider_content.count("class LLMProvider(Protocol):") == 1
 
 

@@ -815,7 +815,7 @@ def test_remove_ai_prompt_module_does_not_crash_when_llm_settings_are_missing(
     settings_path = package_root / "settings.py"
     settings_path.write_text(
         settings_path.read_text(encoding="utf-8").replace(
-            '    llm_provider: str = "openai"\n',
+            '    llm_provider: str = ""\n',
             "",
         ),
         encoding="utf-8",

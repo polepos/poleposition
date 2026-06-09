@@ -1302,7 +1302,7 @@ def test_check_reports_missing_llm_integration_file_and_env(
 
     env_path = project_root / ".env.example"
     env_content = env_path.read_text(encoding="utf-8").replace(
-        "LLM_PROVIDER=openai\n",
+        "LLM_PROVIDER=\n",
         "",
     )
     env_path.write_text(env_content, encoding="utf-8")

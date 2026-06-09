@@ -260,7 +260,7 @@ def test_llm_settings_and_env_blocks() -> None:
     settings_block = llm_settings_block()
     env_block = llm_env_block()
 
-    assert '    llm_provider: str = "openai"' in settings_block
+    assert '    llm_provider: str = ""' in settings_block
     assert "    llm_max_tokens: int | None = None" in settings_block
-    assert "LLM_PROVIDER=openai" in env_block
+    assert "LLM_PROVIDER=" in env_block
     assert "# LLM_MAX_TOKENS=" in env_block

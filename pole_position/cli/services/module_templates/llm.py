@@ -45,8 +45,8 @@ def llm_integration_files(package_name: str) -> dict[str, str]:
 
 def llm_settings_block() -> list[str]:
     return [
-        '    llm_provider: str = "openai"',
-        '    llm_model: str = "gpt-5.4-mini"',
+        '    llm_provider: str = ""',
+        '    llm_model: str = ""',
         '    llm_api_key: str = ""',
         '    llm_base_url: str = ""',
         "    llm_timeout_seconds: float = 30.0",
@@ -57,8 +57,8 @@ def llm_settings_block() -> list[str]:
 
 def llm_env_block() -> list[str]:
     return [
-        "LLM_PROVIDER=openai",
-        "LLM_MODEL=gpt-5.4-mini",
+        "LLM_PROVIDER=",
+        "LLM_MODEL=",
         "LLM_API_KEY=",
         "LLM_BASE_URL=",
         "LLM_TIMEOUT_SECONDS=30.0",

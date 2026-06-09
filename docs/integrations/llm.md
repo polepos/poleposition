@@ -37,8 +37,8 @@ src/<package>/integrations/llm/
 Review the LLM values in `.env`:
 
 ```env
-LLM_PROVIDER=openai
-LLM_MODEL=gpt-5.4-mini
+LLM_PROVIDER=
+LLM_MODEL=
 LLM_API_KEY=
 LLM_BASE_URL=
 LLM_TIMEOUT_SECONDS=30.0
@@ -46,6 +46,9 @@ LLM_TEMPERATURE=0.2
 # LLM_MAX_TOKENS=
 ```
 
+The scaffold ships provider-agnostic, so `LLM_PROVIDER` and `LLM_MODEL` are empty
+by default. Set `LLM_PROVIDER` to a supported adapter (`openai` or `anthropic`)
+and `LLM_MODEL` to a model id from that provider before calling the factory.
 Set `LLM_API_KEY` before calling generated endpoints against a real provider.
 The key should remain active in `.env.example`, even when its value is empty.
 `LLM_MAX_TOKENS` is optional and may remain commented until needed.
