@@ -28,6 +28,11 @@ jobs:
           cache: pip
           cache-dependency-path: pyproject.toml
 
+      - name: Verify release tag matches package version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: python .github/scripts/check_release_version.py "$RELEASE_TAG"
+
       - name: Install build tools
         run: |
           python -m pip install --upgrade pip
