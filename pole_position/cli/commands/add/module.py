@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from pole_position.cli import console
 from pole_position.cli.command import Command
 from pole_position.cli.services.module_creator import (
     AddedModuleResult,
@@ -43,7 +44,7 @@ def run(args: list[str]) -> None:
 
         if argument == "--template":
             if index + 1 >= len(args) or args[index + 1].startswith("-"):
-                print("Missing value for --template.")
+                console.error("Missing value for --template.")
                 _print_usage()
                 raise SystemExit(1)
             template = args[index + 1].strip()
@@ -54,7 +55,7 @@ def run(args: list[str]) -> None:
         if argument.startswith("--template="):
             template = argument.split("=", 1)[1].strip()
             if not template:
-                print("Missing value for --template.")
+                console.error("Missing value for --template.")
                 _print_usage()
                 raise SystemExit(1)
             template_was_set = True
@@ -72,7 +73,7 @@ def run(args: list[str]) -> None:
             continue
 
         if argument.startswith("--"):
-            print(f"Unexpected option: {argument}")
+            console.error(f"Unexpected option: {argument}")
             _print_usage()
             raise SystemExit(1)
 
@@ -81,7 +82,7 @@ def run(args: list[str]) -> None:
             index += 1
             continue
 
-        print(f"Unexpected argument: {argument}")
+        console.error(f"Unexpected argument: {argument}")
         _print_usage()
         raise SystemExit(1)
 
@@ -91,14 +92,16 @@ def run(args: list[str]) -> None:
 
     if api_only:
         if template_was_set and template != "api-only":
-            print("--api-only cannot be combined with another module template.")
+            console.error(
+                "--api-only cannot be combined with another module template."
+            )
             _print_usage()
             raise SystemExit(1)
         template = "api-only"
 
     if crud_feature_names and template != "crud":
         flags = ", ".join(sorted(CRUD_FEATURE_FLAGS))
-        print(
+        console.error(
             "CRUD feature options require `--template crud`. "
             f"Available options: {flags}."
         )
@@ -114,10 +117,10 @@ def run(args: list[str]) -> None:
             crud_features=CrudFeatureSet.from_names(crud_feature_names),
         )
     except RuntimeError as exc:
-        print(str(exc))
+        console.error(str(exc))
         raise SystemExit(1) from exc
     except ValueError as exc:
-        print(str(exc))
+        console.error(str(exc))
         _print_usage()
         raise SystemExit(1) from exc
 
@@ -125,22 +128,22 @@ def run(args: list[str]) -> None:
 
 
 def _print_success(result: AddedModuleResult) -> None:
-    print(f"Added module: {result.module_name}")
-    print(f"Template: {result.template}")
+    console.success(f"Added module: {result.module_name}")
+    console.field("Template", result.template)
     if result.features:
-        print(f"Features: {', '.join(result.features)}")
+        console.field("Features", ", ".join(result.features))
 
-    print("Created:")
+    console.heading("Created:")
     for path in (*result.module_files, *result.test_files):
-        print(f"  {_relative_path(result, path)}")
+        console.item(_relative_path(result, path))
 
-    print("Updated:")
+    console.heading("Updated:")
     for path in result.updated_files:
-        print(f"  {_relative_path(result, path)}")
+        console.item(_relative_path(result, path))
 
-    print("Next steps:")
+    console.heading("Next steps:")
     for step in result.next_steps:
-        print(f"  {step}")
+        console.step(step)
 
 
 def _relative_path(result: AddedModuleResult, path: Path) -> str:

@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from pole_position.cli import console
 from pole_position.cli.command import Command
 from pole_position.cli.services.module_remover import (
     RemovedModuleResult,
@@ -44,7 +45,7 @@ def run(args: list[str]) -> None:
             continue
 
         if argument.startswith("--"):
-            print(f"Unexpected option: {argument}")
+            console.error(f"Unexpected option: {argument}")
             _print_usage()
             raise SystemExit(1)
 
@@ -52,7 +53,7 @@ def run(args: list[str]) -> None:
             raw_name = argument.strip()
             continue
 
-        print(f"Unexpected argument: {argument}")
+        console.error(f"Unexpected argument: {argument}")
         _print_usage()
         raise SystemExit(1)
 
@@ -70,10 +71,10 @@ def run(args: list[str]) -> None:
             wiring_only=wiring_only,
         )
     except RuntimeError as exc:
-        print(str(exc))
+        console.error(str(exc))
         raise SystemExit(1) from exc
     except ValueError as exc:
-        print(str(exc))
+        console.error(str(exc))
         _print_usage()
         raise SystemExit(1) from exc
 
@@ -86,24 +87,24 @@ def _print_success(result: RemovedModuleResult) -> None:
         return
 
     if result.wiring_only:
-        print(f"Cleaned module wiring: {result.module_name}")
+        console.success(f"Cleaned module wiring: {result.module_name}")
     else:
-        print(f"Removed module: {result.module_name}")
-    print(f"Template: {result.template}")
+        console.success(f"Removed module: {result.module_name}")
+    console.field("Template", result.template)
 
     if result.removed_paths:
-        print("Removed:")
+        console.heading("Removed:")
         for path in result.removed_paths:
-            print(f"  {_relative_path(result, path)}")
+            console.item(_relative_path(result, path))
 
     if result.updated_files:
-        print("Updated:")
+        console.heading("Updated:")
         for path in result.updated_files:
-            print(f"  {_relative_path(result, path)}")
+            console.item(_relative_path(result, path))
 
-    print("Next steps:")
+    console.heading("Next steps:")
     for step in result.next_steps:
-        print(f"  {step}")
+        console.step(step)
 
 
 def _relative_path(result: RemovedModuleResult, path: Path) -> str:
@@ -112,33 +113,35 @@ def _relative_path(result: RemovedModuleResult, path: Path) -> str:
 
 def _print_trace(result: RemovedModuleResult) -> None:
     if result.wiring_only:
-        print(f"Wiring-only removal trace: {result.module_name}")
+        console.heading(f"Wiring-only removal trace: {result.module_name}")
     else:
-        print(f"Removal trace: {result.module_name}")
-    print(f"Template: {result.template}")
+        console.heading(f"Removal trace: {result.module_name}")
+    console.field("Template", result.template)
 
     if result.blocked_by_custom_changes:
-        print(
+        console.warn(
             "Blocked unless --force is used because custom changes were "
             "detected:"
         )
     elif result.custom_changes:
-        print("Custom changes that would be removed because --force is set:")
+        console.warn(
+            "Custom changes that would be removed because --force is set:"
+        )
 
     for change in result.custom_changes:
-        print(f"  {change}")
+        console.item(change)
 
     if result.removed_paths:
-        print("Would remove:")
+        console.heading("Would remove:")
         for path in result.removed_paths:
-            print(f"  {_relative_path(result, path)}")
+            console.item(_relative_path(result, path))
 
     if result.updated_files:
-        print("Would update:")
+        console.heading("Would update:")
         for path in result.updated_files:
-            print(f"  {_relative_path(result, path)}")
+            console.item(_relative_path(result, path))
 
-    print("Trace only: no files changed.")
+    console.info("Trace only: no files changed.")
 
 
 command = Command(

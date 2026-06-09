@@ -1,4 +1,5 @@
 from pole_position import __version__
+from pole_position.cli import console
 from pole_position.cli.command import Command
 from pole_position.cli.services.project_checker import check_project
 from pole_position.cli.services.project_manifest import read_project_manifest
@@ -11,21 +12,21 @@ HELP_OPTIONS = {"-h", "--help"}
 def run(args: list[str]) -> None:
     if args and args[0] in HELP_OPTIONS:
         if len(args) > 1:
-            print(f"Unexpected argument: {args[1]}")
+            console.error(f"Unexpected argument: {args[1]}")
             print(USAGE)
             raise SystemExit(1)
         print_command_help("upgrade")
         return
 
     if args:
-        print(f"Unexpected argument: {args[0]}")
+        console.error(f"Unexpected argument: {args[0]}")
         print(USAGE)
         raise SystemExit(1)
 
     try:
         result = check_project()
     except RuntimeError as exc:
-        print(str(exc))
+        console.error(str(exc))
         raise SystemExit(1) from exc
 
     manifest = read_project_manifest(result.project_root)
@@ -36,35 +37,37 @@ def run(args: list[str]) -> None:
         if enabled
     }
 
-    print("PolePosition upgrade report")
-    print(f"CLI version: {__version__}")
-    print(f"Project root: {result.project_root}")
-    print(f"Package: {result.package_name}")
-    print(f"Database mode: {manifest.database or 'managed'}")
-    print(f"Project check: {'passed' if result.passed else 'failed'}")
+    console.heading("PolePosition upgrade report")
+    console.field("CLI version", __version__)
+    console.field("Project root", str(result.project_root))
+    console.field("Package", result.package_name)
+    console.field("Database mode", manifest.database or "managed")
+    console.field("Project check", "passed" if result.passed else "failed")
 
-    print("Modules:")
+    console.heading("Modules:")
     if modules:
         for module_name in sorted(modules):
-            print(f"  {module_name}: {modules[module_name]}")
+            console.item(f"{module_name}: {modules[module_name]}")
     else:
-        print("  none recorded")
+        console.item("none recorded")
 
-    print("Integrations:")
+    console.heading("Integrations:")
     if integrations:
         for integration_name in sorted(integrations):
-            print(f"  {integration_name}")
+            console.item(integration_name)
     else:
-        print("  none recorded")
+        console.item("none recorded")
 
     if not result.passed:
-        print("Issues:")
+        console.heading("Issues:")
         for issue in result.issues:
-            print(f"  - [{issue.code}] {issue.message}")
+            console.info(f"  - [{issue.code}] {issue.message}")
 
-    print("Next steps:")
-    print("  Run `polepos check --fix` to restore safe managed markers.")
-    print("  Run `polepos check` and project tests after upgrading the CLI.")
+    console.heading("Next steps:")
+    console.step("Run `polepos check --fix` to restore safe managed markers.")
+    console.step(
+        "Run `polepos check` and project tests after upgrading the CLI."
+    )
 
 
 command = Command(

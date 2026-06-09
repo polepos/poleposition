@@ -1,4 +1,5 @@
 from pole_position import __version__
+from pole_position.cli import console
 from pole_position.cli.command import Command
 from pole_position.cli.usage import print_command_help
 
@@ -12,7 +13,7 @@ def run(args: list[str]) -> None:
         return
 
     if args:
-        print(f"Unexpected argument: {args[0]}")
+        console.error(f"Unexpected argument: {args[0]}")
         print(USAGE)
         raise SystemExit(1)
 

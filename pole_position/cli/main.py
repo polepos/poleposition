@@ -1,5 +1,6 @@
 import sys
 
+from pole_position.cli import console
 from pole_position.cli.command import Command
 from pole_position.cli.commands import register_commands
 from pole_position.cli.registry import CommandRegistry, registry
@@ -27,7 +28,7 @@ def dispatch_command(
     command = command_registry.get(command_name)
 
     if command is None:
-        print(f"Unknown command: {command_name}")
+        console.error(f"Unknown command: {command_name}")
         print("Run `polepos help` for available commands.")
         raise SystemExit(1)
 
@@ -50,7 +51,7 @@ def dispatch_command(
         raise SystemExit(1)
 
     if command.handler is None:
-        print(f"Command '{command.name}' is not executable.")
+        console.error(f"Command '{command.name}' is not executable.")
         raise SystemExit(1)
 
     command.handler(command_args)
@@ -61,7 +62,7 @@ def print_command_usage(command: Command) -> None:
         return
 
     print(f"Usage: polepos {command.name} <subcommand>\n")
-    print("Subcommands:")
+    console.heading("Subcommands:")
 
     if command.subcommands is None:
         return

@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from pole_position.cli import console
 from pole_position.cli.command import Command
 from pole_position.cli.services.database_options import (
     DEFAULT_DATABASE,
@@ -41,7 +42,7 @@ def run(args: list[str]) -> None:
             no_bytecode = True
         elif arg == "--db":
             if index + 1 >= len(args) or args[index + 1].startswith("-"):
-                print("Missing value for --db")
+                console.error("Missing value for --db")
                 print(USAGE)
                 raise SystemExit(1)
             database = args[index + 1]
@@ -49,7 +50,7 @@ def run(args: list[str]) -> None:
         elif arg.startswith("--db="):
             database = arg.split("=", 1)[1]
         elif arg.startswith("-"):
-            print(f"Unexpected option: {arg}")
+            console.error(f"Unexpected option: {arg}")
             print(USAGE)
             raise SystemExit(1)
         else:
@@ -61,7 +62,7 @@ def run(args: list[str]) -> None:
         raise SystemExit(1)
 
     if len(filtered_args) > 1:
-        print(f"Unexpected argument: {filtered_args[1]}")
+        console.error(f"Unexpected argument: {filtered_args[1]}")
         print(USAGE)
         raise SystemExit(1)
 
@@ -70,7 +71,7 @@ def run(args: list[str]) -> None:
     try:
         validate_project_name(project_name)
     except ValueError as exc:
-        print(str(exc))
+        console.error(str(exc))
         print(USAGE)
         raise SystemExit(1) from exc
 
@@ -80,13 +81,13 @@ def run(args: list[str]) -> None:
             database, package_name=package_name
         )
     except ValueError as exc:
-        print(str(exc))
+        console.error(str(exc))
         print(USAGE)
         raise SystemExit(1) from exc
     project_path = Path(project_name)
 
     if project_path.exists():
-        print(f"Directory already exists: {project_name}")
+        console.error(f"Directory already exists: {project_name}")
         raise SystemExit(1)
 
     create_project(
@@ -96,44 +97,46 @@ def run(args: list[str]) -> None:
         database=database_option.name,
         no_bytecode=no_bytecode,
     )
-    print(f"Created project: {project_name}")
-    print(f"Database: {database_option.name}")
+    console.success(f"Created project: {project_name}")
+    console.field("Database", database_option.name)
 
     command_prefix = "PYTHONDONTWRITEBYTECODE=1 " if no_bytecode else ""
 
     if no_bytecode:
-        print(
+        console.info(
             "Configured generated local Python commands to start without "
             "bytecode writes."
         )
 
     if install:
         try:
-            print("Installing project dependencies...")
+            console.info("Installing project dependencies...")
             installer = install_project_dependencies(project_path=project_path)
-            print(f"Dependencies installed successfully with {installer}.")
+            console.success(
+                f"Dependencies installed successfully with {installer}."
+            )
         except RuntimeError as exc:
-            print(str(exc))
+            console.error(str(exc))
             raise SystemExit(1) from exc
 
     print("")
-    print("Next steps:")
-    print(f"  cd {project_name}")
-    print("  cp .env.example .env")
+    console.heading("Next steps:")
+    console.step(f"cd {project_name}")
+    console.step("cp .env.example .env")
 
     if installer == "pip":
-        print("  source .venv/bin/activate")
+        console.step("source .venv/bin/activate")
         if database_option.uses_database:
-            print(f"  {command_prefix}polepos db upgrade")
-        print(f"  {command_prefix}python -m {package_name}.run")
+            console.step(f"{command_prefix}polepos db upgrade")
+        console.step(f"{command_prefix}python -m {package_name}.run")
         return
 
     if not install:
-        print("  uv sync --extra dev")
+        console.step("uv sync --extra dev")
 
     if database_option.uses_database:
-        print(f"  {command_prefix}polepos db upgrade")
-    print(f"  {command_prefix}uv run python -m {package_name}.run")
+        console.step(f"{command_prefix}polepos db upgrade")
+    console.step(f"{command_prefix}uv run python -m {package_name}.run")
 
 
 command = Command(

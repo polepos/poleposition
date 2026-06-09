@@ -1,5 +1,6 @@
 import json
 
+from pole_position.cli import console
 from pole_position.cli.command import Command
 from pole_position.cli.services.project_checker import (
     ProjectCheckResult,
@@ -31,7 +32,7 @@ def run(args: list[str]) -> None:
         if arg in FIX_OPTIONS:
             fix = True
             continue
-        print(f"Unexpected argument: {arg}")
+        console.error(f"Unexpected argument: {arg}")
         print(USAGE)
         raise SystemExit(1)
 
@@ -44,7 +45,7 @@ def run(args: list[str]) -> None:
         if json_output:
             _print_json_error(str(exc))
             raise SystemExit(1) from exc
-        print(str(exc))
+        console.error(str(exc))
         raise SystemExit(1) from exc
 
     if json_output:
@@ -57,28 +58,28 @@ def run(args: list[str]) -> None:
         _print_fix_result(fix_result)
 
     if not result.passed:
-        print("PolePosition project check failed.")
-        print(f"Project root: {result.project_root}")
-        print(f"Package: {result.package_name}")
-        print("Issues:")
+        console.error("PolePosition project check failed.")
+        console.field("Project root", str(result.project_root))
+        console.field("Package", result.package_name)
+        console.heading("Issues:")
         for issue in result.issues:
-            print(f"  - [{issue.code}] {issue.message}")
-            print(f"    Fix: {issue.remediation}")
+            console.info(f"  - [{issue.code}] {issue.message}")
+            console.info(f"    Fix: {issue.remediation}")
         raise SystemExit(1)
 
-    print("PolePosition project check passed.")
-    print(f"Project root: {result.project_root}")
-    print(f"Package: {result.package_name}")
+    console.success("PolePosition project check passed.")
+    console.field("Project root", str(result.project_root))
+    console.field("Package", result.package_name)
 
 
 def _print_fix_result(result: ProjectFixResult) -> None:
     if not result.fixed_files:
-        print("No automatic fixes were applied.")
+        console.info("No automatic fixes were applied.")
         return
 
-    print("Applied fixes:")
+    console.heading("Applied fixes:")
     for path in result.fixed_files:
-        print(f"  {_relative_path(result, path)}")
+        console.item(_relative_path(result, path))
 
 
 def _print_json_result(

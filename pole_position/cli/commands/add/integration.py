@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from pole_position.cli import console
 from pole_position.cli.command import Command
 from pole_position.cli.services.integration_creator import (
     AddedIntegrationResult,
@@ -28,12 +29,12 @@ def run(args: list[str]) -> None:
         return
 
     if len(args) > 1:
-        print(f"Unexpected argument: {args[1]}")
+        console.error(f"Unexpected argument: {args[1]}")
         _print_usage()
         raise SystemExit(1)
 
     if args[0].startswith("--"):
-        print(f"Unexpected option: {args[0]}")
+        console.error(f"Unexpected option: {args[0]}")
         _print_usage()
         raise SystemExit(1)
 
@@ -47,10 +48,10 @@ def run(args: list[str]) -> None:
         integration_name = normalize_package_name(raw_name)
         result = add_integration(integration_name)
     except RuntimeError as exc:
-        print(str(exc))
+        console.error(str(exc))
         raise SystemExit(1) from exc
     except ValueError as exc:
-        print(str(exc))
+        console.error(str(exc))
         _print_usage()
         raise SystemExit(1) from exc
 
@@ -58,19 +59,19 @@ def run(args: list[str]) -> None:
 
 
 def _print_success(result: AddedIntegrationResult) -> None:
-    print(f"Added integration: {result.integration_name}")
+    console.success(f"Added integration: {result.integration_name}")
 
-    print("Created:")
+    console.heading("Created:")
     for path in result.integration_files:
-        print(f"  {_relative_path(result, path)}")
+        console.item(_relative_path(result, path))
 
-    print("Updated:")
+    console.heading("Updated:")
     for path in result.updated_files:
-        print(f"  {_relative_path(result, path)}")
+        console.item(_relative_path(result, path))
 
-    print("Next steps:")
+    console.heading("Next steps:")
     for step in result.next_steps:
-        print(f"  {step}")
+        console.step(step)
 
 
 def _relative_path(result: AddedIntegrationResult, path: Path) -> str:

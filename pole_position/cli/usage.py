@@ -1,6 +1,7 @@
 import textwrap
 from dataclasses import dataclass
 
+from pole_position.cli import console
 from pole_position.cli.services.database_options import SUPPORTED_DATABASES
 from pole_position.cli.services.integration_specs import (
     SUPPORTED_INTEGRATIONS,
@@ -475,7 +476,7 @@ COMMAND_TOPIC_ORDER: tuple[tuple[str, ...], ...] = (
 
 
 def print_top_level_help() -> None:
-    print("PolePosition project lifecycle CLI for FastAPI projects.")
+    console.heading("PolePosition project lifecycle CLI for FastAPI projects.")
     print()
     print("Usage: polepos <command> [options]")
     print("       polepos help <command> [subcommand]")
@@ -484,11 +485,11 @@ def print_top_level_help() -> None:
     print()
 
     for title, entries in TOP_LEVEL_SECTIONS:
-        print(f"{title}:")
+        console.heading(f"{title}:")
         _print_entries(entries)
         print()
 
-    print("Common Workflows:")
+    console.heading("Common Workflows:")
     for example in (
         "polepos start shop-api",
         "polepos add module customers",
@@ -499,7 +500,7 @@ def print_top_level_help() -> None:
         print(f"  {example}")
     print()
 
-    print("Usage and Commands:")
+    console.heading("Usage and Commands:")
     for path in COMMAND_TOPIC_ORDER:
         print()
         print_command_help(*path, heading=True)
@@ -511,26 +512,26 @@ def print_command_help(*path: str, heading: bool = False) -> bool:
         return False
 
     if heading:
-        print(_title_for_path(topic.path))
+        console.heading(_title_for_path(topic.path))
 
     print(topic.usage)
     _print_paragraphs(topic.summary)
 
     if topic.subcommands:
-        print("Subcommands:")
+        console.heading("Subcommands:")
         _print_entries(topic.subcommands)
 
     if topic.options:
-        print("Options:")
+        console.heading("Options:")
         _print_entries(topic.options)
 
     if topic.examples:
-        print("Examples:")
+        console.heading("Examples:")
         for example in topic.examples:
             print(f"  {example}")
 
     if topic.notes:
-        print("Notes:")
+        console.heading("Notes:")
         for note in topic.notes:
             _print_wrapped(note, initial="  - ", subsequent="    ")
 
@@ -546,7 +547,7 @@ def print_help_topic(args: list[str]) -> None:
     if print_command_help(*topic):
         return
 
-    print(f"Unknown help topic: {' '.join(args)}")
+    console.error(f"Unknown help topic: {' '.join(args)}")
     print("Run `polepos help` for available commands.")
     raise SystemExit(1)
 
