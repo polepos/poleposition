@@ -1,10 +1,12 @@
 import os
 import subprocess
 import sys
+from importlib.metadata import version as package_version
 from pathlib import Path
 
 import pytest
 
+from pole_position import __version__
 from pole_position.cli.command import Command
 from pole_position.cli.registry import CommandRegistry
 
@@ -60,6 +62,13 @@ def test_help_command_rejects_unknown_topic():
 def test_version_command():
     result = run_cli("version")
     assert result.returncode == 0
+    # The reported version must match the installed package metadata so it
+    # cannot drift from pyproject across releases.
+    assert result.stdout.strip() == package_version("poleposition")
+
+
+def test_dunder_version_matches_package_metadata():
+    assert __version__ == package_version("poleposition")
 
 
 def test_version_help_shows_usage():
