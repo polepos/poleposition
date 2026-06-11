@@ -685,14 +685,14 @@ def _line_key(line: str, *, entry_type: str) -> str | None:
             return None
         if ":" not in stripped:
             return None
-        key = stripped.split(":", 1)[0]
+        key = stripped.split(":", 1)[0].strip()
         return key if key.isidentifier() else None
 
     if not stripped or stripped.startswith("#"):
         return None
     if "=" not in stripped:
         return None
-    key = stripped.split("=", 1)[0]
+    key = stripped.split("=", 1)[0].strip()
     return key if key else None
 
 
@@ -703,7 +703,7 @@ def _commented_env_line_key(line: str) -> str | None:
     stripped = stripped[1:].strip()
     if "=" not in stripped:
         return None
-    key = stripped.split("=", 1)[0]
+    key = stripped.split("=", 1)[0].strip()
     return key if key else None
 
 

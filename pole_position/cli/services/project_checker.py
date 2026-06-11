@@ -1896,7 +1896,7 @@ def _settings_keys(settings_content: str) -> set[str]:
         stripped = line.strip()
         if not stripped or stripped.startswith("#") or ":" not in stripped:
             continue
-        key = stripped.split(":", 1)[0]
+        key = stripped.split(":", 1)[0].strip()
         if key.isidentifier():
             keys.add(key)
 
@@ -1909,7 +1909,7 @@ def _env_keys(env_content: str) -> set[str]:
         stripped = line.strip()
         if not stripped or stripped.startswith("#") or "=" not in stripped:
             continue
-        key = stripped.split("=", 1)[0]
+        key = stripped.split("=", 1)[0].strip()
         if key:
             keys.add(key)
 

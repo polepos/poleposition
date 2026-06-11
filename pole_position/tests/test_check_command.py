@@ -305,6 +305,31 @@ def test_check_passes_after_added_api_only_module(tmp_path: Path) -> None:
     assert "PolePosition project check passed." in result.stdout
 
 
+def test_check_passes_when_integration_env_uses_spaced_assignment(
+    tmp_path: Path,
+) -> None:
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    add_result = run_cli(project_root, "add", "integration", "kafka")
+    assert add_result.returncode == 0
+
+    env_path = project_root / ".env.example"
+    env_path.write_text(
+        env_path.read_text(encoding="utf-8").replace(
+            "KAFKA_BOOTSTRAP_SERVERS=",
+            "KAFKA_BOOTSTRAP_SERVERS = ",
+        ),
+        encoding="utf-8",
+    )
+
+    result = run_cli(project_root, "check")
+
+    assert result.returncode == 0, result.stdout
+    assert "PolePosition project check passed." in result.stdout
+
+
 def test_check_passes_after_added_auth_workflow(tmp_path: Path) -> None:
     create_result = run_cli(tmp_path, "start", "myapp")
     assert create_result.returncode == 0

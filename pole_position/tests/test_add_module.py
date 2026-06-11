@@ -1571,6 +1571,37 @@ def test_add_module_ai_prompt_completes_partial_llm_settings_and_env(
     assert "LLM_TIMEOUT_SECONDS=30" in env_content
 
 
+def test_add_ai_prompt_module_treats_spaced_env_assignment_as_present(
+    tmp_path: Path,
+):
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    env_path = project_root / ".env.example"
+    env_path.write_text(
+        env_path.read_text(encoding="utf-8").replace(
+            "# polepos:llm-env",
+            "LLM_PROVIDER = openai\n# polepos:llm-env",
+        ),
+        encoding="utf-8",
+    )
+
+    result = run_cli(
+        project_root, "add", "module", "assistant", "--template", "ai-prompt"
+    )
+
+    assert result.returncode == 0
+    env_lines = env_path.read_text(encoding="utf-8").splitlines()
+    active_provider_lines = [
+        line
+        for line in env_lines
+        if not line.lstrip().startswith("#")
+        and line.split("=", 1)[0].strip() == "LLM_PROVIDER"
+    ]
+    assert active_provider_lines == ["LLM_PROVIDER = openai"]
+
+
 def test_add_ai_prompt_module_ignores_commented_required_llm_env(
     tmp_path: Path,
 ):

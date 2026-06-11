@@ -8,6 +8,8 @@ from pole_position.cli.services.project_checker import (
     _check_lifecycle_wiring,
     _check_managed_markers,
     _check_project_identity,
+    _env_keys,
+    _settings_keys,
     describe_project_check_issue,
 )
 
@@ -29,6 +31,18 @@ def test_project_check_result_properties(tmp_path: Path) -> None:
     assert failed_result.passed is False
     assert failed_result.issues[0].code == "PPCHK000"
     assert failed_result.issues[0].message == "broken"
+
+
+def test_env_keys_ignore_whitespace_around_assignment() -> None:
+    content = "KAFKA_ENABLED = true\nREDIS_URL=redis://x\n  LLM_MODEL =gpt\n"
+
+    assert _env_keys(content) == {"KAFKA_ENABLED", "REDIS_URL", "LLM_MODEL"}
+
+
+def test_settings_keys_ignore_whitespace_before_colon() -> None:
+    content = "    kafka_enabled : bool = False\n    redis_url: str = ''\n"
+
+    assert _settings_keys(content) == {"kafka_enabled", "redis_url"}
 
 
 def test_project_check_issue_describes_managed_marker_remediation() -> None:
