@@ -5,6 +5,41 @@ Notable PolePosition changes are tracked here.
 PolePosition follows Conventional Commits in repository history. This changelog
 summarizes user-facing behavior, release readiness work, and known beta scope.
 
+## 0.0.42 - 2026-06-11
+
+### Added
+
+- Colorized, semantic terminal output for the CLI. A new stdlib-only console
+  layer routes success, error, warning, heading, field, item, and step messages
+  through consistent colors and glyphs. Styling is TTY-gated and honors
+  `NO_COLOR` and `FORCE_COLOR`, so piped output, CI logs, and `--json` results
+  stay byte-identical plain text. No new runtime dependencies were added.
+
+### Fixed
+
+- `polepos check` no longer reports a present integration or LLM value as
+  missing when the `.env.example` or `settings.py` entry is written with spaces
+  around the separator (for example `KAFKA_BOOTSTRAP_SERVERS = ...`). The same
+  parsing fix stops `polepos add module` and `polepos add integration` from
+  inserting a duplicate entry when an existing key uses surrounding whitespace.
+- The `ai-prompt` scaffold no longer hard-codes `llm_provider="openai"` and a
+  specific `llm_model`. Both default to empty strings, consistent with the
+  provider-agnostic contract, so the explicit provider choice surfaces at the
+  factory boundary instead of silently committing to one provider.
+- `polepos version` and `pole_position.__version__` are now derived from the
+  installed package metadata, fixing a drift where the reported version lagged
+  behind `pyproject.toml`. Releases keep bumping `pyproject.toml` only and the
+  CLI follows automatically.
+
+### Changed
+
+- Repointed all repository, raw-asset, and documentation URLs to the new
+  `polepos` GitHub organization. The documentation site is now served at
+  `https://polepos.github.io/poleposition/`.
+- The release workflow now guards the published tag against package version
+  drift, failing the release if the tag does not match the `pyproject.toml`
+  version.
+
 ## 0.0.41 - 2026-06-08
 
 ### Fixed
