@@ -36,7 +36,7 @@ Focus:
 Read the site guide: [Auth Foundation](auth-foundation.md)
 
 Source scenario:
-[examples/auth-foundation](https://github.com/erenertemden/poleposition/blob/main/examples/auth-foundation/README.md)
+[examples/auth-foundation](https://github.com/polepos/poleposition/blob/main/examples/auth-foundation/README.md)
 
 ### HTML Swap
 
@@ -53,7 +53,7 @@ Focus:
 Read the site guide: [HTML Swap](html-swap.md)
 
 Source scenario:
-[examples/html-swap](https://github.com/erenertemden/poleposition/blob/main/examples/html-swap/README.md)
+[examples/html-swap](https://github.com/polepos/poleposition/blob/main/examples/html-swap/README.md)
 
 ### Kafka Quick Start
 
@@ -73,7 +73,7 @@ Focus:
 Read the site guide: [Kafka Quick Start](kafka-quick-start.md)
 
 Source scenario:
-[examples/kafka-quick-start](https://github.com/erenertemden/poleposition/blob/main/examples/kafka-quick-start/README.md)
+[examples/kafka-quick-start](https://github.com/polepos/poleposition/blob/main/examples/kafka-quick-start/README.md)
 
 ### RabbitMQ Quick Start
 
@@ -92,7 +92,7 @@ Focus:
 Read the site guide: [RabbitMQ Quick Start](rabbitmq-quick-start.md)
 
 Source scenario:
-[examples/rabbitmq-quick-start](https://github.com/erenertemden/poleposition/blob/main/examples/rabbitmq-quick-start/README.md)
+[examples/rabbitmq-quick-start](https://github.com/polepos/poleposition/blob/main/examples/rabbitmq-quick-start/README.md)
 
 ### Redis Cache
 
@@ -111,7 +111,7 @@ Focus:
 Read the site guide: [Redis Cache](redis-cache.md)
 
 Source scenario:
-[examples/redis-cache](https://github.com/erenertemden/poleposition/blob/main/examples/redis-cache/README.md)
+[examples/redis-cache](https://github.com/polepos/poleposition/blob/main/examples/redis-cache/README.md)
 
 ### OpenAI Prompt
 
@@ -130,4 +130,4 @@ Focus:
 Read the site guide: [OpenAI Prompt](openai-prompt.md)
 
 Source scenario:
-[examples/openai-prompt](https://github.com/erenertemden/poleposition/blob/main/examples/openai-prompt/README.md)
+[examples/openai-prompt](https://github.com/polepos/poleposition/blob/main/examples/openai-prompt/README.md)

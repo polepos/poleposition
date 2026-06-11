@@ -6,10 +6,10 @@ const config = {
   tagline: "Project lifecycle CLI for starting and growing enterprise FastAPI projects",
   favicon: "assets/logo/poleposition-fav.png",
 
-  url: "https://erenertemden.github.io",
+  url: "https://polepos.github.io",
   baseUrl: "/poleposition/",
 
-  organizationName: "erenertemden",
+  organizationName: "polepos",
   projectName: "poleposition",
   trailingSlash: false,
 
@@ -34,7 +34,7 @@ const config = {
           path: "docs",
           routeBasePath: "/",
           sidebarPath: require.resolve("./sidebars.js"),
-          editUrl: "https://github.com/erenertemden/poleposition/edit/main/",
+          editUrl: "https://github.com/polepos/poleposition/edit/main/",
           showLastUpdateTime: true,
         },
         blog: false,
@@ -63,7 +63,7 @@ const config = {
         {to: "/database", label: "Database", position: "left"},
         {to: "/integrations/", label: "Integrations", position: "left"},
         {
-          href: "https://github.com/erenertemden/poleposition",
+          href: "https://github.com/polepos/poleposition",
           label: "GitHub",
           position: "right",
         },
@@ -85,7 +85,7 @@ const config = {
           items: [
             {
               label: "GitHub",
-              href: "https://github.com/erenertemden/poleposition",
+              href: "https://github.com/polepos/poleposition",
             },
             {
               label: "PyPI",

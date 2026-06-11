@@ -84,4 +84,4 @@ Return raw HTML when the consumer expects HTML directly. Return JSON only when
 the caller needs metadata such as updated link count or stored operation ID.
 
 Full source scenario:
-[examples/html-swap](https://github.com/erenertemden/poleposition/blob/main/examples/html-swap/README.md)
+[examples/html-swap](https://github.com/polepos/poleposition/blob/main/examples/html-swap/README.md)

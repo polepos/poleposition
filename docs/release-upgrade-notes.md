@@ -50,7 +50,7 @@ GitHub Actions Trusted Publisher:
 
 ```text
 PyPI project: poleposition
-Owner: erenertemden
+Owner: polepos
 Repository: poleposition
 Workflow name: release.yml
 Environment name: pypi
@@ -147,4 +147,4 @@ Review generated migrations before applying them to shared environments.
 ## Changelog
 
 Repository changes are summarized in the
-[Changelog](https://github.com/erenertemden/poleposition/blob/main/CHANGELOG.md).
+[Changelog](https://github.com/polepos/poleposition/blob/main/CHANGELOG.md).

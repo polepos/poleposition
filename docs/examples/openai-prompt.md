@@ -14,7 +14,7 @@ The implementation uses the OpenAI Responses API pattern shown in the official
 and [Responses API reference](https://platform.openai.com/docs/api-reference/responses).
 
 Complete runnable source:
-[examples/openai-prompt/app](https://github.com/erenertemden/poleposition/tree/main/examples/openai-prompt/app)
+[examples/openai-prompt/app](https://github.com/polepos/poleposition/tree/main/examples/openai-prompt/app)
 
 ## Create the Project
 
@@ -133,4 +133,4 @@ polepos check
 ```
 
 Full source scenario:
-[examples/openai-prompt](https://github.com/erenertemden/poleposition/blob/main/examples/openai-prompt/README.md)
+[examples/openai-prompt](https://github.com/polepos/poleposition/blob/main/examples/openai-prompt/README.md)

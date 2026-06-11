@@ -107,4 +107,4 @@ The important boundary is simple:
 - authorization answers whether that caller can access the route
 
 Full source scenario:
-[examples/auth-foundation](https://github.com/erenertemden/poleposition/blob/main/examples/auth-foundation/README.md)
+[examples/auth-foundation](https://github.com/polepos/poleposition/blob/main/examples/auth-foundation/README.md)

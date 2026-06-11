@@ -1,8 +1,8 @@
 # Contributing to PolePosition
 
 Contributions are welcome — open an
-[issue](https://github.com/erenertemden/poleposition/issues) or a
-[pull request](https://github.com/erenertemden/poleposition/pulls).
+[issue](https://github.com/polepos/poleposition/issues) or a
+[pull request](https://github.com/polepos/poleposition/pulls).
 
 ## Quick start
 
@@ -31,7 +31,7 @@ ruff format pole_position polepos    # format clean
 The complete contributor guide — dev setup, opt-in end-to-end tests, project
 layout, common tasks, and the pull-request checklist — lives in the docs:
 
-**https://erenertemden.github.io/poleposition/contributing**
+**https://polepos.github.io/poleposition/contributing**
 (source: [`docs/contributing.md`](docs/contributing.md))
 
 For maintainer-level conventions, see
