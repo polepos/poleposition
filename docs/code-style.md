@@ -7,7 +7,7 @@ handling — are the source of truth for how code in this repository is written.
 
 The style is **enforced automatically** with [Ruff](https://docs.astral.sh/ruff/)
 (linter and formatter), so contributors do not need to apply it by hand. The
-configuration lives in [`pyproject.toml`](https://github.com/erenertemden/poleposition/blob/main/pyproject.toml)
+configuration lives in [`pyproject.toml`](https://github.com/polepos/poleposition/blob/main/pyproject.toml)
 under `[tool.ruff]`.
 
 ## What is enforced

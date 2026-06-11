@@ -13,7 +13,7 @@ The endpoint publishes a greeting message. A separate worker consumes the queue
 and prints the message.
 
 Complete runnable source:
-[examples/rabbitmq-quick-start/app](https://github.com/erenertemden/poleposition/tree/main/examples/rabbitmq-quick-start/app)
+[examples/rabbitmq-quick-start/app](https://github.com/polepos/poleposition/tree/main/examples/rabbitmq-quick-start/app)
 
 ## Create the Project
 
@@ -113,4 +113,4 @@ polepos check
 ```
 
 Full source scenario:
-[examples/rabbitmq-quick-start](https://github.com/erenertemden/poleposition/blob/main/examples/rabbitmq-quick-start/README.md)
+[examples/rabbitmq-quick-start](https://github.com/polepos/poleposition/blob/main/examples/rabbitmq-quick-start/README.md)
