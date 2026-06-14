@@ -5,6 +5,22 @@ Notable PolePosition changes are tracked here.
 PolePosition follows Conventional Commits in repository history. This changelog
 summarizes user-facing behavior, release readiness work, and known beta scope.
 
+## 0.0.44 - 2026-06-14
+
+### Added
+
+- `polepos delete <name>` removes a whole generated project directory,
+  including its in-project virtual environment. It only deletes a directory
+  that contains a `.poleposition.toml` manifest, refuses to delete the current
+  directory or a parent of it, and asks for confirmation unless `--force` is
+  given. Use `--trace` (alias `--dry-run`) to preview the target without
+  deleting anything.
+
+### Documentation
+
+- Documented the colorized CLI terminal output and the `NO_COLOR` /
+  `FORCE_COLOR` overrides in the CLI reference.
+
 ## 0.0.43 - 2026-06-14
 
 ### Changed
