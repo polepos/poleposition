@@ -5,7 +5,7 @@ from pathlib import Path
 from pole_position.cli.services.module_templates import (
     SUPPORTED_MODULE_TEMPLATES,
 )
-from pole_position.cli.services.project_check_constants import (
+from pole_position.cli.services.project_checker.constants import (
     ALEMBIC_PATHS,
     CORE_PACKAGE_PATHS,
     CORE_PROJECT_PATHS,
@@ -15,7 +15,7 @@ from pole_position.cli.services.project_check_constants import (
     DATABASE_PACKAGE_PATHS,
     MANAGED_MARKERS,
 )
-from pole_position.cli.services.project_check_io import (
+from pole_position.cli.services.project_checker.io import (
     _read_file_lines,
     _read_file_text,
 )

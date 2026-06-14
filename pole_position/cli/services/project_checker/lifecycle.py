@@ -11,14 +11,14 @@ from pole_position.cli.services.module_templates import (
     get_module_template_contract,
     module_template_detection_contracts,
 )
-from pole_position.cli.services.project_check_constants import (
+from pole_position.cli.services.project_checker.constants import (
     IGNORED_MODULE_DIRECTORIES,
     IGNORED_ORPHAN_MODULE_REFERENCES,
     LEGACY_PROFILE_MODULE_FILES,
     LEGACY_RACES_UNIT_TEST,
     STARTER_MODULES,
 )
-from pole_position.cli.services.project_check_io import (
+from pole_position.cli.services.project_checker.io import (
     _parse_python_source,
     _read_file_lines,
     _read_file_text,

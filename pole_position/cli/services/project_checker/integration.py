@@ -6,15 +6,15 @@ from pole_position.cli.services.integration_specs import (
     CHECKED_INTEGRATION_CONTRACTS,
     IntegrationContract,
 )
-from pole_position.cli.services.project_check_deps import (
+from pole_position.cli.services.project_checker.deps import (
     _pyproject_has_dependency,
 )
-from pole_position.cli.services.project_check_io import (
+from pole_position.cli.services.project_checker.io import (
     _env_keys,
     _read_file_text,
     _settings_keys,
 )
-from pole_position.cli.services.project_check_lifecycle import (
+from pole_position.cli.services.project_checker.lifecycle import (
     _detect_module_kind,
     _should_skip_lifecycle_module,
 )

@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from pole_position.cli.services.project_check_constants import (
+from pole_position.cli.services.project_checker.constants import (
     PACKAGE_IDENTITY_PATHS,
     PROJECT_IDENTITY_PATHS,
 )

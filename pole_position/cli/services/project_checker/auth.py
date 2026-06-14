@@ -3,18 +3,18 @@
 from pathlib import Path
 
 from pole_position.cli.services.auth_creator import AUTH_DEPENDENCY
-from pole_position.cli.services.project_check_constants import (
+from pole_position.cli.services.project_checker.constants import (
     AUTH_WORKFLOW_PACKAGE_PATHS,
     AUTH_WORKFLOW_TEST_PATHS,
 )
-from pole_position.cli.services.project_check_deps import (
+from pole_position.cli.services.project_checker.deps import (
     _pyproject_has_dependency,
 )
-from pole_position.cli.services.project_check_io import (
+from pole_position.cli.services.project_checker.io import (
     _parse_python_source,
     _read_file_text,
 )
-from pole_position.cli.services.project_check_lifecycle import (
+from pole_position.cli.services.project_checker.lifecycle import (
     _has_reported_parse_error,
 )
 from pole_position.cli.services.project_manifest import ProjectManifest

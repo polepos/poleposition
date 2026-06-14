@@ -8,13 +8,13 @@ except ModuleNotFoundError:  # pragma: no cover - Python < 3.11 fallback
     except ModuleNotFoundError:
         tomllib = None  # type: ignore[assignment]
 
-from pole_position.cli.services.project_check_auth import (
+from pole_position.cli.services.project_checker.auth import (
     _check_auth_workflow,
 )
-from pole_position.cli.services.project_check_constants import (
+from pole_position.cli.services.project_checker.constants import (
     LEGACY_RACES_UNIT_TEST,
 )
-from pole_position.cli.services.project_check_core import (
+from pole_position.cli.services.project_checker.core import (
     _check_alembic_config,
     _check_database_free_remnants,
     _check_generated_structure,
@@ -22,17 +22,17 @@ from pole_position.cli.services.project_check_core import (
     _check_project_identity,
     _check_project_manifest,
 )
-from pole_position.cli.services.project_check_discovery import (
+from pole_position.cli.services.project_checker.discovery import (
     _discover_core_project,
     _project_database_mode,
 )
-from pole_position.cli.services.project_check_integration import (
+from pole_position.cli.services.project_checker.integration import (
     _check_integration_wiring,
 )
-from pole_position.cli.services.project_check_lifecycle import (
+from pole_position.cli.services.project_checker.lifecycle import (
     _check_lifecycle_wiring,
 )
-from pole_position.cli.services.project_check_report import (
+from pole_position.cli.services.project_checker.report import (
     ProjectCheckIssue,
     ProjectCheckResult,
     describe_project_check_issue,
