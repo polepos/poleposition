@@ -1,4 +1,3 @@
-import re
 from pathlib import Path
 
 try:
@@ -10,10 +9,6 @@ except ModuleNotFoundError:  # pragma: no cover - Python < 3.11 fallback
         tomllib = None  # type: ignore[assignment]
 
 from pole_position.cli.services.auth_creator import AUTH_DEPENDENCY
-from pole_position.cli.services.dependency_contract import (
-    dependency_contract_satisfied,
-    quoted_dependency_values,
-)
 from pole_position.cli.services.integration_specs import (
     CHECKED_INTEGRATION_CONTRACTS,
     IntegrationContract,
@@ -30,6 +25,9 @@ from pole_position.cli.services.project_check_core import (
     _check_managed_markers,
     _check_project_identity,
     _check_project_manifest,
+)
+from pole_position.cli.services.project_check_deps import (
+    _pyproject_has_dependency,
 )
 from pole_position.cli.services.project_check_discovery import (
     _discover_core_project,
@@ -479,61 +477,6 @@ def _check_integration_dependency(
             f"Integration '{contract.name}' is missing dependency in "
             f"{project_root / 'pyproject.toml'}: {dependency}"
         )
-
-
-def _pyproject_has_dependency(
-    pyproject_content: str, required_dependency: str
-) -> bool:
-    return dependency_contract_satisfied(
-        _project_dependency_specs(pyproject_content),
-        required_dependency,
-    )
-
-
-def _project_dependency_specs(pyproject_content: str) -> tuple[str, ...]:
-    if tomllib is not None:
-        try:
-            pyproject = tomllib.loads(pyproject_content)
-        except tomllib.TOMLDecodeError:
-            return ()
-
-        project = pyproject.get("project")
-        if not isinstance(project, dict):
-            return ()
-
-        dependencies = project.get("dependencies")
-        if not isinstance(dependencies, list):
-            return ()
-
-        return tuple(
-            dependency
-            for dependency in dependencies
-            if isinstance(dependency, str)
-        )
-
-    return _fallback_project_dependency_specs(pyproject_content)
-
-
-def _fallback_project_dependency_specs(
-    pyproject_content: str,
-) -> tuple[str, ...]:
-    project_match = re.search(
-        r"(?ms)^\s*\[project\]\s*$"
-        r"(?P<section>.*?)"
-        r"^\s*\[[^\]]+\]\s*$",
-        f"{pyproject_content}\n[__poleposition_end__]\n",
-    )
-    if project_match is None:
-        return ()
-
-    dependencies_match = re.search(
-        r"(?ms)^\s*dependencies\s*=\s*\[(?P<dependencies>.*?)\]\s*(?:#.*)?$",
-        project_match.group("section"),
-    )
-    if dependencies_match is None:
-        return ()
-
-    return quoted_dependency_values(dependencies_match.group("dependencies"))
 
 
 def _check_integration_settings(
