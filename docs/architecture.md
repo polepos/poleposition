@@ -435,9 +435,9 @@ marker in **alphabetical order**, so repeated `add module` runs produce a stable
 diff-friendly block instead of append-only churn.
 
 The trade-off: that region is managed. A line you add by hand there that *matches
-the generated pattern* — for example another
+the generated pattern* (for example another
 `from <package>.modules.<name> import router` import placed above
-`# polepos:router-imports` — is treated as part of the managed block and may be
+`# polepos:router-imports`) is treated as part of the managed block and may be
 re-sorted on the next `add module` run. This is expected behavior, not a bug.
 
 To keep a custom line exactly where you put it, make sure it does not look like a
@@ -475,11 +475,11 @@ written as `.poleposition.toml` at the project root. It records what the
 generated project *is*, so `add`, `remove`, and `check` do not rely only on
 inference:
 
-- `package_name` — the application package recorded at `start`
-- `database` — `sqlite`, `postgres`, or `none`
-- `[modules]` — each added module's template, e.g.
+- `package_name`: the application package recorded at `start`
+- `database`: `sqlite`, `postgres`, or `none`
+- `[modules]`: each added module's template, e.g.
   `customers = "crud[pagination,timestamps]"`
-- `[integrations]` — generated integrations as `kafka = true`
+- `[integrations]`: generated integrations as `kafka = true`
 
 The `ProjectManifest` dataclass also carries `invalid_integrations` and
 `read_error`, so `check` can report a malformed manifest instead of crashing.
@@ -496,12 +496,12 @@ Adding auth or an integration may require a dependency in the generated
 project's `pyproject.toml`. This is split into a pure contract layer and a
 file-editing layer:
 
-- `dependency_contract.py` — parsing and comparison only. `DependencyEntry`
+- `dependency_contract.py`: parsing and comparison only. `DependencyEntry`
   preserves a line's indent, quote style, value, and trailing text, and
   `dependency_contract_satisfied(dependencies, required)` returns whether an
   existing dependency already covers the required name, extras, and minimum
   version. No file I/O.
-- `pyproject_editor.py` — the editor. `ensure_project_dependency(path, dependency)`
+- `pyproject_editor.py`: the editor. `ensure_project_dependency(path, dependency)`
   finds the `[project]` `dependencies` array (inline or multi-line) and replaces
   or appends the entry while preserving the file's existing formatting.
 

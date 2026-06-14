@@ -47,8 +47,8 @@ summarizes user-facing behavior, release readiness work, and known beta scope.
 
 - `polepos remove module` no longer dead-ends with "Module does not exist"
   when the module directory was already deleted. It now cleans the orphan
-  references `polepos check` reports — module exports, router wiring, model
-  imports, and generated tests — even for a mis-detected template or a
+  references `polepos check` reports (module exports, router wiring, model
+  imports, and generated tests) even for a mis-detected template or a
   hand-edited reference shape.
 - Removing a module no longer scrubs references belonging to a different
   module whose name shares a prefix (removing `user` leaves `users` intact).

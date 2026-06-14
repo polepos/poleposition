@@ -366,6 +366,26 @@ See [Upgrade Reports](upgrade-command.md) and
 - `polepos check` is the lifecycle validator; there is no separate
   `polepos validate` command.
 
+## Terminal Output
+
+The CLI styles its own output with simple ANSI colors and status glyphs: green
+`✓` for success, red `✗` for errors, yellow `!` for warnings, cyan `→` for
+next-step hints, bold section headings, and dim field labels and list items.
+The styling uses only the standard library, so the CLI stays dependency-free.
+
+Color is applied only when standard output is an interactive terminal, so piped
+output, CI logs, the test suite, and `polepos check --json` receive the same
+plain, byte-identical text as before. Two environment variables override the
+detection:
+
+- `NO_COLOR` (set to any value) disables all color and glyphs. It takes
+  precedence over `FORCE_COLOR`.
+- `FORCE_COLOR` (set to any value) forces colored output even when standard
+  output is not an interactive terminal.
+
+This styling affects only the CLI. It is independent of the generated
+application's logging format, which is configured separately with `LOG_FORMAT`.
+
 ## Safe Customization Boundary
 
 PolePosition generates normal FastAPI application code. Customize module

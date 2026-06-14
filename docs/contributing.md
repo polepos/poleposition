@@ -1,7 +1,7 @@
 # Contributing
 
 This guide is for contributing to **PolePosition itself** (the CLI and its
-generated templates) — not for the FastAPI projects PolePosition generates.
+generated templates), not for the FastAPI projects PolePosition generates.
 
 Contributions are welcome: open an
 [issue](https://github.com/polepos/poleposition/issues) or a
@@ -94,20 +94,20 @@ Avoid vague subjects like `updates`, `fix stuff`, or `wip`.
 
 ## Common tasks
 
-**Add a CLI command** — add a command file under the right namespace, register
+**Add a CLI command**: add a command file under the right namespace, register
 it in the root or subcommand registry, add tests, and update the README if it is
 user-facing.
 
-**Change module generation/removal** — update
+**Change module generation/removal**: update
 `cli/services/module_creator.py` (and `module_remover.py` for removal); verify
 router wiring, model wiring, test generation, and cleanup symmetry; update
 `test_add_module.py` / `test_remove_module.py`.
 
-**Change project checks** — update `cli/services/project_checker.py`, keep
+**Change project checks**: update `cli/services/project_checker.py`, keep
 checks read-only and file-based, update `test_check_command.py` /
 `test_project_checker.py`, and keep [Project Checks](project-checks.md) aligned.
 
-**Improve a generated template** — edit files under `pole_position/template/`,
+**Improve a generated template**: edit files under `pole_position/template/`,
 confirm placeholders still render, and update `test_startproject.py`.
 
 ## Pull request checklist

@@ -2,8 +2,8 @@
 
 PolePosition's Python code follows the
 [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html).
-The conventions in that guide — naming, imports, layout, and exception
-handling — are the source of truth for how code in this repository is written.
+The conventions in that guide (naming, imports, layout, and exception
+handling) are the source of truth for how code in this repository is written.
 
 The style is **enforced automatically** with [Ruff](https://docs.astral.sh/ruff/)
 (linter and formatter), so contributors do not need to apply it by hand. The
@@ -19,8 +19,8 @@ under `[tool.ruff]`.
 | Imports | sorted, grouped stdlib / third-party / first-party (`I`) | [§3.1 Imports formatting](https://google.github.io/styleguide/pyguide.html#313-imports-formatting) |
 | Naming | `pep8-naming` (`N`) | [§3.16 Naming](https://google.github.io/styleguide/pyguide.html#316-naming) |
 | Exception chaining | `raise ... from err` / `from None` (`B904`) | [§2.4 Exceptions](https://google.github.io/styleguide/pyguide.html#24-exceptions) |
-| Modern idioms | `pyupgrade` (`UP`), comprehensions (`C4`) | — |
-| Correctness | `pyflakes` (`F`), `pycodestyle` (`E`, `W`) | — |
+| Modern idioms | `pyupgrade` (`UP`), comprehensions (`C4`) | n/a |
+| Correctness | `pyflakes` (`F`), `pycodestyle` (`E`, `W`) | n/a |
 
 The selected Ruff lint rule sets are `E`, `W`, `F`, `I`, `N`, `UP`, `B`, and
 `C4`. Type annotations are used throughout the codebase (every function carries

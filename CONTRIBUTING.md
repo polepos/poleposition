@@ -1,6 +1,6 @@
 # Contributing to PolePosition
 
-Contributions are welcome — open an
+Contributions are welcome. Open an
 [issue](https://github.com/polepos/poleposition/issues) or a
 [pull request](https://github.com/polepos/poleposition/pulls).
 
@@ -28,8 +28,8 @@ ruff format pole_position polepos    # format clean
 
 ## Full guide
 
-The complete contributor guide — dev setup, opt-in end-to-end tests, project
-layout, common tasks, and the pull-request checklist — lives in the docs:
+The complete contributor guide (dev setup, opt-in end-to-end tests, project
+layout, common tasks, and the pull-request checklist) lives in the docs:
 
 **https://polepos.github.io/poleposition/contributing**
 (source: [`docs/contributing.md`](docs/contributing.md))

@@ -15,7 +15,8 @@ page and `AGENTS.md` disagree, `AGENTS.md` wins.
 
 - **`polepos check` stays read-only.** It must report drift without a running
   database, broker, LLM provider, network access, or optional integration
-  dependency — no installs, migrations, or mutations of the generated project.
+  dependency, with no installs, migrations, or mutations of the generated
+  project.
 - **`remove module` is a file operation, not a database operation.** It never
   opens a connection, drops tables, deletes data, or rewrites Alembic history.
 - **Managed markers are a contract.** PolePosition only inserts before the
@@ -27,23 +28,23 @@ page and `AGENTS.md` disagree, `AGENTS.md` wins.
 
 ## Conventions
 
-- **Commit messages** — [Conventional Commits](https://www.conventionalcommits.org/)
+- **Commit messages**: [Conventional Commits](https://www.conventionalcommits.org/)
   with the project's preferred types and scopes (see
   [Contributing](contributing.md#commit-messages)).
-- **CLI shape** — keep commands consistent; prefer changes that improve the
+- **CLI shape**: keep commands consistent; prefer changes that improve the
   end-to-end developer workflow and keep the generated app understandable to a
   FastAPI developer.
-- **Documentation expectations** — update the README and the relevant `docs/`
+- **Documentation expectations**: update the README and the relevant `docs/`
   page whenever user-facing behavior changes (CLI commands, setup steps,
   database workflow, generated structure, example workflows).
-- **Testing expectations** — the repo test suite is the main validation layer;
+- **Testing expectations**: the repo test suite is the main validation layer;
   add or update tests next to the area you change. See
   [Contributing → Running the tests](contributing.md#running-the-tests).
 
 ## When changing a subsystem
 
 `AGENTS.md` includes step-by-step checklists ("Common Agent Tasks") for the
-recurring changes — adding a CLI command, changing module generation or removal,
+recurring changes: adding a CLI command, changing module generation or removal,
 changing database command behavior, changing project-check behavior, and
 improving a generated template. Each lists the files and tests to touch. Use
 those checklists as the source of truth for which files a change must keep in
