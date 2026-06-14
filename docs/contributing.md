@@ -4,8 +4,8 @@ This guide is for contributing to **PolePosition itself** (the CLI and its
 generated templates) — not for the FastAPI projects PolePosition generates.
 
 Contributions are welcome: open an
-[issue](https://github.com/erenertemden/poleposition/issues) or a
-[pull request](https://github.com/erenertemden/poleposition/pulls).
+[issue](https://github.com/polepos/poleposition/issues) or a
+[pull request](https://github.com/polepos/poleposition/pulls).
 
 ## Development setup
 
@@ -13,7 +13,7 @@ PolePosition targets Python 3.10+ and has no runtime dependencies. Install it in
 editable mode together with the test and lint tools:
 
 ```bash
-git clone https://github.com/erenertemden/poleposition.git
+git clone https://github.com/polepos/poleposition.git
 cd poleposition
 
 python -m venv .venv
@@ -119,4 +119,4 @@ confirm placeholders still render, and update `test_startproject.py`.
 
 For deeper internals and the maintainer-level rule set, see
 [Architecture](architecture.md) and
-[`AGENTS.md`](https://github.com/erenertemden/poleposition/blob/main/AGENTS.md).
+[`AGENTS.md`](https://github.com/polepos/poleposition/blob/main/AGENTS.md).

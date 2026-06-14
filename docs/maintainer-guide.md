@@ -6,7 +6,7 @@ works) and [Contributing](contributing.md) (how to set up and submit changes)
 pages by explaining the *rules and invariants* a change should respect.
 
 The canonical, exhaustive version lives in
-[`AGENTS.md`](https://github.com/erenertemden/poleposition/blob/main/AGENTS.md)
+[`AGENTS.md`](https://github.com/polepos/poleposition/blob/main/AGENTS.md)
 at the repository root. It is also bundled into generated projects so coding
 agents working inside a scaffolded app follow the same conventions. When this
 page and `AGENTS.md` disagree, `AGENTS.md` wins.
@@ -57,4 +57,4 @@ Do not assume these are implemented unless you add them (with docs and tests):
 - production presets
 
 For the full ruleset, read
-[`AGENTS.md`](https://github.com/erenertemden/poleposition/blob/main/AGENTS.md).
+[`AGENTS.md`](https://github.com/polepos/poleposition/blob/main/AGENTS.md).

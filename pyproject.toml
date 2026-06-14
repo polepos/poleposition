@@ -37,9 +37,9 @@ poleposition = "pole_position.cli.main:main"
 polepos = "pole_position.cli.main:main"
 
 [project.urls]
-Homepage = "https://erenertemden.github.io/poleposition/"
-Repository = "https://github.com/erenertemden/poleposition"
-Issues = "https://github.com/erenertemden/poleposition/issues"
+Homepage = "https://polepos.github.io/poleposition/"
+Repository = "https://github.com/polepos/poleposition"
+Issues = "https://github.com/polepos/poleposition/issues"
 
 [tool.setuptools.packages.find]
 include = ["pole_position*", "polepos*"]

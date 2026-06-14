@@ -13,7 +13,7 @@ The first request computes a quote and stores it in Redis. Repeated requests for
 the same topic return the cached value.
 
 Complete runnable source:
-[examples/redis-cache/app](https://github.com/erenertemden/poleposition/tree/main/examples/redis-cache/app)
+[examples/redis-cache/app](https://github.com/polepos/poleposition/tree/main/examples/redis-cache/app)
 
 ## Create the Project
 
@@ -95,4 +95,4 @@ polepos check
 ```
 
 Full source scenario:
-[examples/redis-cache](https://github.com/erenertemden/poleposition/blob/main/examples/redis-cache/README.md)
+[examples/redis-cache](https://github.com/polepos/poleposition/blob/main/examples/redis-cache/README.md)
