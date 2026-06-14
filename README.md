@@ -354,6 +354,27 @@ polepos db upgrade
 If you want to keep the table or data, stop after `polepos remove module` and
 do not generate a drop-table migration.
 
+### Delete a project
+
+```bash
+polepos delete myapp
+polepos delete myapp --trace
+polepos delete myapp --force
+```
+
+`delete` removes a whole generated project directory, including the in-project
+`.venv`. Use it to discard a project created with the wrong name or
+configuration and start over.
+
+It only deletes a directory that contains a `.poleposition.toml` manifest, so it
+will not remove an unrelated folder, and it refuses to delete the current
+directory or a parent of it. Run it from outside the project, for example from
+the directory where you ran `polepos start`. Without `--force` it asks for
+confirmation and aborts on any answer other than `y`. Use `--trace` (alias
+`--dry-run`) to preview, and `--force` (alias `-y`) to skip the prompt.
+
+`delete` removes local files only; it never changes a database.
+
 ### Add integrations
 
 ```bash
@@ -621,6 +642,7 @@ PolePosition is a lifecycle CLI, so the commands are meant to be used over time,
 * `polepos add module` when you want to add a new REST/domain module, CRUD module, API-only module, or AI prompt module to an existing project
 * `polepos add auth` when you want to add the optional database-backed registration and token workflow
 * `polepos remove module` when you want to remove a generated module and its managed wiring
+* `polepos delete` when you want to delete a whole generated project directory and start over
 * `polepos add integration kafka` when you want Kafka producer and consumer wiring in an existing project
 * `polepos add integration rabbitmq` when you want RabbitMQ publisher and consumer wiring in an existing project
 * `polepos add integration redis` when you want shared Redis cache helpers in an existing project
@@ -676,6 +698,7 @@ polepos add module <name> --template ai-prompt
 polepos add module <name> --api-only
 polepos add auth
 polepos remove module <name> [--force] [--trace] [--wiring-only]
+polepos delete <name> [--force] [--trace]
 polepos add integration kafka
 polepos add integration rabbitmq
 polepos add integration redis

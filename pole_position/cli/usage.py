@@ -425,6 +425,33 @@ COMMAND_HELP: dict[tuple[str, ...], CommandHelp] = {
             "polepos --version",
         ),
     ),
+    ("delete",): CommandHelp(
+        path=("delete",),
+        usage="Usage: polepos delete <project_name> [--force] [--trace]",
+        summary=(
+            "Delete a generated PolePosition project directory, including its "
+            "in-project virtual environment.",
+            "Asks for confirmation and only deletes a directory that contains "
+            "a .poleposition.toml manifest.",
+        ),
+        options=(
+            OptionHelp("--force, -y", "Skip the confirmation prompt."),
+            OptionHelp(
+                "--trace, --dry-run",
+                "Show what would be removed without deleting anything.",
+            ),
+        ),
+        examples=(
+            "polepos delete shop-api",
+            "polepos delete shop-api --trace",
+            "polepos delete shop-api --force",
+        ),
+        notes=(
+            "Run it from outside the project directory; it refuses to delete "
+            "the current directory or a parent of it.",
+            "It removes local files only and never changes a database.",
+        ),
+    ),
 }
 
 
@@ -440,6 +467,7 @@ TOP_LEVEL_SECTIONS: tuple[tuple[str, tuple[OptionHelp, ...]], ...] = (
             OptionHelp(
                 "remove", "Remove generated resources from the current project."
             ),
+            OptionHelp("delete", "Delete a generated project directory."),
             OptionHelp("check", "Validate the current PolePosition project."),
             OptionHelp("db", "Run database and migration commands."),
         ),
@@ -463,6 +491,7 @@ COMMAND_TOPIC_ORDER: tuple[tuple[str, ...], ...] = (
     ("add", "integration"),
     ("remove",),
     ("remove", "module"),
+    ("delete",),
     ("check",),
     ("db",),
     ("db", "status"),

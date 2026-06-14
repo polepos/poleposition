@@ -267,6 +267,37 @@ polepos db revision -m "remove customers table"
 polepos db upgrade
 ```
 
+## Delete Command
+
+```bash
+polepos delete <project_name>
+polepos delete <project_name> --trace
+polepos delete <project_name> --force
+```
+
+`delete` removes a whole generated project directory, including its in-project
+`.venv` (both `uv` and pip create the virtual environment inside the project,
+so deleting the directory removes the environment too). Use it to discard a
+project created with the wrong name or configuration and start fresh.
+
+It is intentionally cautious:
+
+- It only deletes a directory that contains a `.poleposition.toml` manifest, so
+  it will not remove an arbitrary, unrelated folder. If the manifest is missing,
+  it refuses and asks you to delete the directory manually.
+- It refuses to delete the current directory or a parent of it, so run it from
+  outside the project (for example from the directory where you ran
+  `polepos start`).
+- Without `--force`, it asks for confirmation (`[y/N]`, default no) and aborts
+  on any answer other than `y`.
+
+Use `--trace` (alias `--dry-run`) to preview the directory that would be removed
+without deleting anything. Use `--force` (alias `-y`) to skip the confirmation
+prompt in scripts.
+
+`delete` only removes local files; it never changes a database. Removing a
+project does not drop any external database it pointed at.
+
 ## Project Checks
 
 ```bash
