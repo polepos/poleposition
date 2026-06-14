@@ -5,6 +5,15 @@ Notable PolePosition changes are tracked here.
 PolePosition follows Conventional Commits in repository history. This changelog
 summarizes user-facing behavior, release readiness work, and known beta scope.
 
+## 0.0.43 - 2026-06-14
+
+### Changed
+
+- Repointed all repository, raw-asset, documentation-site, and PyPI Trusted
+  Publisher references to the `polepos` GitHub organization across
+  `pyproject.toml`, the README, the docs site config, and the documentation.
+  The CODEOWNERS personal maintainer handle is unchanged.
+
 ## 0.0.42 - 2026-06-14
 
 ### Added
