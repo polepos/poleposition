@@ -1,5 +1,4 @@
 import ast
-from dataclasses import dataclass
 from pathlib import Path
 
 from pole_position.cli.services.module_creator.constants import (
@@ -9,6 +8,9 @@ from pole_position.cli.services.module_creator.constants import (
     ROUTER_IMPORTS_MARKER,
     ROUTER_INCLUDES_MARKER,
     SETTINGS_LLM_MARKER,
+)
+from pole_position.cli.services.module_creator.result import (
+    AddedModuleResult,
 )
 from pole_position.cli.services.module_templates import (
     DEFAULT_CRUD_FEATURES,
@@ -30,23 +32,6 @@ from pole_position.cli.services.project_manifest import (
     record_manifest_integration,
     record_manifest_module,
 )
-
-
-@dataclass(frozen=True)
-class AddedModuleResult:
-    module_name: str
-    template: str
-    project_root: Path
-    package_root: Path
-    module_files: tuple[Path, ...]
-    test_files: tuple[Path, ...]
-    updated_files: tuple[Path, ...]
-    next_steps: tuple[str, ...]
-    features: tuple[str, ...] = ()
-
-    @property
-    def package_name(self) -> str:
-        return self.package_root.name
 
 
 def add_module(
