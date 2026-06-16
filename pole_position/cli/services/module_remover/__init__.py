@@ -15,6 +15,9 @@ from pole_position.cli.services.module_remover.constants import (
     PYTHON_CACHE_DIRECTORIES,
     STARTER_MODULES,
 )
+from pole_position.cli.services.module_remover.result import (
+    RemovedModuleResult,
+)
 from pole_position.cli.services.module_templates import (
     DEFAULT_CRUD_FEATURES,
     DEFAULT_MODULE_TEMPLATE,
@@ -41,26 +44,6 @@ from pole_position.cli.services.project_manifest import (
     remove_manifest_integration,
     remove_manifest_module,
 )
-
-
-@dataclass(frozen=True)
-class RemovedModuleResult:
-    module_name: str
-    template: str
-    project_root: Path
-    package_root: Path
-    removed_paths: tuple[Path, ...]
-    updated_files: tuple[Path, ...]
-    next_steps: tuple[str, ...]
-    trace: bool = False
-    force: bool = False
-    wiring_only: bool = False
-    custom_changes: tuple[str, ...] = ()
-    blocked_by_custom_changes: bool = False
-
-    @property
-    def package_name(self) -> str:
-        return self.package_root.name
 
 
 @dataclass(frozen=True)
