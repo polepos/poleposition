@@ -1,6 +1,12 @@
 from dataclasses import dataclass
 from pathlib import Path
 
+from pole_position.cli.services.integration_creator.constants import (
+    ENV_INTEGRATION_MARKER,
+    ENV_LLM_MARKER,
+    SETTINGS_INTEGRATION_MARKER,
+    SETTINGS_LLM_MARKER,
+)
 from pole_position.cli.services.integration_specs import (
     KAFKA_INTEGRATION_CONTRACT,
     RABBITMQ_INTEGRATION_CONTRACT,
@@ -23,11 +29,6 @@ from pole_position.cli.services.pyproject_editor import (
     ensure_project_dependency,
     ensure_project_dependency_text,
 )
-
-SETTINGS_INTEGRATION_MARKER = "    # polepos:integration-settings"
-SETTINGS_LLM_MARKER = "    # polepos:llm-settings"
-ENV_INTEGRATION_MARKER = "# polepos:integration-env"
-ENV_LLM_MARKER = "# polepos:llm-env"
 
 
 @dataclass(frozen=True)
