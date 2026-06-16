@@ -2,6 +2,14 @@ import ast
 from dataclasses import dataclass
 from pathlib import Path
 
+from pole_position.cli.services.module_creator.constants import (
+    ENV_LLM_MARKER,
+    MODEL_IMPORTS_MARKER,
+    MODULE_EXPORTS_MARKER,
+    ROUTER_IMPORTS_MARKER,
+    ROUTER_INCLUDES_MARKER,
+    SETTINGS_LLM_MARKER,
+)
 from pole_position.cli.services.module_templates import (
     DEFAULT_CRUD_FEATURES,
     SUPPORTED_MODULE_TEMPLATES,
@@ -22,13 +30,6 @@ from pole_position.cli.services.project_manifest import (
     record_manifest_integration,
     record_manifest_module,
 )
-
-ROUTER_IMPORTS_MARKER = "# polepos:router-imports"
-ROUTER_INCLUDES_MARKER = "# polepos:router-includes"
-MODEL_IMPORTS_MARKER = "    # polepos:model-imports"
-MODULE_EXPORTS_MARKER = "    # polepos:module-exports"
-SETTINGS_LLM_MARKER = "    # polepos:llm-settings"
-ENV_LLM_MARKER = "# polepos:llm-env"
 
 
 @dataclass(frozen=True)

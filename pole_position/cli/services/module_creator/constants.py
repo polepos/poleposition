@@ -1,0 +1,6 @@
+ROUTER_IMPORTS_MARKER = "# polepos:router-imports"
+ROUTER_INCLUDES_MARKER = "# polepos:router-includes"
+MODEL_IMPORTS_MARKER = "    # polepos:model-imports"
+MODULE_EXPORTS_MARKER = "    # polepos:module-exports"
+SETTINGS_LLM_MARKER = "    # polepos:llm-settings"
+ENV_LLM_MARKER = "# polepos:llm-env"
