@@ -10,6 +10,11 @@ from pole_position.cli.services.module_creator import (
     ROUTER_IMPORTS_MARKER,
     ROUTER_INCLUDES_MARKER,
 )
+from pole_position.cli.services.module_remover.constants import (
+    PYTHON_BYTECODE_SUFFIXES,
+    PYTHON_CACHE_DIRECTORIES,
+    STARTER_MODULES,
+)
 from pole_position.cli.services.module_templates import (
     DEFAULT_CRUD_FEATURES,
     DEFAULT_MODULE_TEMPLATE,
@@ -36,10 +41,6 @@ from pole_position.cli.services.project_manifest import (
     remove_manifest_integration,
     remove_manifest_module,
 )
-
-STARTER_MODULES = {"status"}
-PYTHON_CACHE_DIRECTORIES = {"__pycache__"}
-PYTHON_BYTECODE_SUFFIXES = {".pyc", ".pyo"}
 
 
 @dataclass(frozen=True)
