@@ -12,6 +12,9 @@ from pole_position.cli.services.integration_creator.constants import (
     SETTINGS_INTEGRATION_MARKER,
     SETTINGS_LLM_MARKER,
 )
+from pole_position.cli.services.integration_creator.dependencies import (
+    _ensure_project_dependency,
+)
 from pole_position.cli.services.integration_creator.files import (
     _ensure_integration_files,
     _kafka_integration_files,
@@ -39,7 +42,6 @@ from pole_position.cli.services.project_manifest import (
     record_manifest_integration,
 )
 from pole_position.cli.services.pyproject_editor import (
-    ensure_project_dependency,
     ensure_project_dependency_text,
 )
 
@@ -272,15 +274,6 @@ def _entry_exists(content: str, entry: str, *, entry_type: str) -> bool:
     return any(
         _active_env_line_key(line) == entry for line in content.splitlines()
     )
-
-
-def _ensure_project_dependency(path: Path, dependency: str | None) -> bool:
-    if dependency is None:
-        return False
-
-    original = path.read_text(encoding="utf-8")
-    ensure_project_dependency(path, dependency)
-    return path.read_text(encoding="utf-8") != original
 
 
 def _ensure_kafka_settings(path: Path, package_name: str) -> bool:
