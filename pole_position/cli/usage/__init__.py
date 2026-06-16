@@ -8,6 +8,12 @@ from pole_position.cli.usage.catalog import (
 )
 from pole_position.cli.usage.model import OptionHelp
 
+__all__ = [
+    "print_command_help",
+    "print_help_topic",
+    "print_top_level_help",
+]
+
 
 def print_top_level_help() -> None:
     console.heading("PolePosition project lifecycle CLI for FastAPI projects.")
