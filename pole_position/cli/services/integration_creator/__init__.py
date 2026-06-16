@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from pathlib import Path
 
 from pole_position.cli.services.integration_creator.constants import (
@@ -6,6 +5,9 @@ from pole_position.cli.services.integration_creator.constants import (
     ENV_LLM_MARKER,
     SETTINGS_INTEGRATION_MARKER,
     SETTINGS_LLM_MARKER,
+)
+from pole_position.cli.services.integration_creator.result import (
+    AddedIntegrationResult,
 )
 from pole_position.cli.services.integration_specs import (
     KAFKA_INTEGRATION_CONTRACT,
@@ -30,19 +32,14 @@ from pole_position.cli.services.pyproject_editor import (
     ensure_project_dependency_text,
 )
 
-
-@dataclass(frozen=True)
-class AddedIntegrationResult:
-    integration_name: str
-    project_root: Path
-    package_root: Path
-    integration_files: tuple[Path, ...]
-    updated_files: tuple[Path, ...]
-    next_steps: tuple[str, ...]
-
-    @property
-    def package_name(self) -> str:
-        return self.package_root.name
+__all__ = [
+    "add_integration",
+    "AddedIntegrationResult",
+    "_kafka_integration_files",
+    "_rabbitmq_integration_files",
+    "_redis_integration_files",
+    "_rq_integration_files",
+]
 
 
 def add_integration(
