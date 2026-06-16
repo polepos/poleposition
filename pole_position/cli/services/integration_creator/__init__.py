@@ -22,6 +22,9 @@ from pole_position.cli.services.integration_creator.files import (
 from pole_position.cli.services.integration_creator.result import (
     AddedIntegrationResult,
 )
+from pole_position.cli.services.integration_creator.steps import (
+    _integration_next_steps,
+)
 from pole_position.cli.services.integration_specs import (
     IntegrationContract,
     get_creatable_integration_contract,
@@ -450,19 +453,3 @@ def _rq_env_block(package_name: str) -> list[str]:
         "RQ_JOB_TIMEOUT_SECONDS=300",
         "RQ_RESULT_TTL_SECONDS=500",
     ]
-
-
-def _integration_next_steps(
-    *,
-    package_name: str,
-    integration_name: str,
-) -> tuple[str, ...]:
-    return (
-        "Run `uv sync --extra dev`",
-        (
-            "Copy new integration env values from `.env.example` into `.env` "
-            "if `.env` already exists"
-        ),
-        f"Review src/{package_name}/integrations/{integration_name}/",
-        "Run `polepos check`",
-    )
