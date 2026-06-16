@@ -52,6 +52,11 @@ from pole_position.cli.services.project_manifest import (
     remove_manifest_module,
 )
 
+__all__ = [
+    "remove_module",
+    "RemovedModuleResult",
+]
+
 
 def remove_module(
     module_name: str,
