@@ -254,7 +254,7 @@ Current layers:
 When changing generated structure, module generation, integration generation,
 managed markers, or Alembic behavior:
 
-- update `pole_position/cli/services/project_checker.py`
+- update `pole_position/cli/services/project_checker/`
 - update `pole_position/tests/test_check_command.py`
 - update `pole_position/tests/test_project_checker.py` when helper behavior changes
 - update `docs/project-checks.md`
@@ -451,8 +451,8 @@ If you cannot run a heavier integration flow because a dependency is missing in 
 
 ### Change module generation or removal
 
-1. Update `pole_position/cli/services/module_creator.py`
-2. Update `pole_position/cli/services/module_remover.py` when removal behavior changes
+1. Update `pole_position/cli/services/module_creator/`
+2. Update `pole_position/cli/services/module_remover/` when removal behavior changes
 3. Verify router wiring, model wiring, test generation, and cleanup symmetry
 4. Add or update tests under `test_add_module.py` and `test_remove_module.py`
 
@@ -465,7 +465,7 @@ If you cannot run a heavier integration flow because a dependency is missing in 
 
 ### Change project check behavior
 
-1. Update `pole_position/cli/services/project_checker.py`
+1. Update `pole_position/cli/services/project_checker/`
 2. Keep checks read-only and file-based
 3. Add or update tests under `test_check_command.py`
 4. Add or update helper tests under `test_project_checker.py` when needed

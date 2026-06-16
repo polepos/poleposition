@@ -540,7 +540,7 @@ style checker.
 When changing generated structure, module generation, integration generation,
 managed markers, or Alembic behavior:
 
-- update `pole_position/cli/services/project_checker.py`
+- update `pole_position/cli/services/project_checker/`
 - update `pole_position/tests/test_check_command.py`
 - update `pole_position/tests/test_project_checker.py` when helper behavior changes
 - update this document

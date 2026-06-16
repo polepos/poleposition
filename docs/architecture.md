@@ -68,23 +68,23 @@ polepos start myapp
 
 polepos add module users
   -> commands/add/module.py
-  -> module_creator.py
+  -> module_creator/
   -> module_templates/
   -> generated module files + managed updates
 
 polepos remove module users
   -> commands/remove/module.py
-  -> module_remover.py
+  -> module_remover/
   -> removes generated module files + managed updates
 
 polepos add integration kafka
   -> commands/add/integration.py
-  -> integration_creator.py
+  -> integration_creator/
   -> generated integration files + managed settings/dependency updates
 
 polepos add integration rabbitmq
   -> commands/add/integration.py
-  -> integration_creator.py
+  -> integration_creator/
   -> generated integration files + managed settings/dependency updates
 
 polepos db upgrade
@@ -94,7 +94,7 @@ polepos db upgrade
 
 polepos check
   -> commands/check.py
-  -> project_checker.py
+  -> project_checker/
   -> core project diagnostics + added module lifecycle wiring + opt-in integration diagnostics
 ```
 
@@ -235,10 +235,11 @@ Current templates:
 Project patching lives in:
 
 ```text
-pole_position/cli/services/module_creator.py
+pole_position/cli/services/module_creator/
 ```
 
-This file:
+This package (a thin `__init__.py` facade over responsibility-focused
+submodules such as `preflight.py`, `files.py`, `wiring.py`, and `llm.py`):
 
 - writes module files
 - writes generated tests
@@ -249,7 +250,7 @@ This file:
 
 Module routers use local paths. A generated standard module can define
 `@router.get("/")` and `@router.post("/")` inside
-`src/<package>/modules/<name>/router.py`; `module_creator.py` then registers the
+`src/<package>/modules/<name>/router.py`; `module_creator` then registers the
 router once in `src/<package>/api/router.py` with `prefix="/<name>"`. The
 FastAPI app applies the app-level API prefix in `app.py`, so a `customers`
 module root route is served as `/api/v1/customers/`, not as a shared global `/`.
@@ -268,7 +269,7 @@ detail, update, and delete routes plus CRUD-specific service and test names.
 Implementation lives in:
 
 ```text
-pole_position/cli/services/module_remover.py
+pole_position/cli/services/module_remover/
 ```
 
 The remover detects the generated module template, then removes:
@@ -354,7 +355,7 @@ start external services.
 Implementation lives in:
 
 ```text
-pole_position/cli/services/project_checker.py
+pole_position/cli/services/project_checker/
 ```
 
 The command handler lives in:

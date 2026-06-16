@@ -99,11 +99,11 @@ it in the root or subcommand registry, add tests, and update the README if it is
 user-facing.
 
 **Change module generation/removal**: update
-`cli/services/module_creator.py` (and `module_remover.py` for removal); verify
+`cli/services/module_creator/` (and `module_remover/` for removal); verify
 router wiring, model wiring, test generation, and cleanup symmetry; update
 `test_add_module.py` / `test_remove_module.py`.
 
-**Change project checks**: update `cli/services/project_checker.py`, keep
+**Change project checks**: update `cli/services/project_checker/`, keep
 checks read-only and file-based, update `test_check_command.py` /
 `test_project_checker.py`, and keep [Project Checks](project-checks.md) aligned.
 
