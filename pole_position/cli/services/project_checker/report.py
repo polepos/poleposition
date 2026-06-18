@@ -139,6 +139,8 @@ def _project_check_issue_code(problem: str) -> str:
         and " is missing env value " in problem
     ):
         return "PPCHK043"
+    if problem.startswith("Circular module dependency detected"):
+        return "PPCHK060"
     return "PPCHK000"
 
 
@@ -326,6 +328,13 @@ def _project_check_remediation(problem: str) -> str:
             integration_name,
             "Restore the .env.example value or remove the integration "
             "scaffold.",
+        )
+
+    if problem.startswith("Circular module dependency detected"):
+        return (
+            "Break the import cycle so module dependencies form a DAG: extract "
+            "the shared code into a separate module or invert one dependency "
+            "with an interface or event."
         )
 
     return (

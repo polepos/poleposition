@@ -22,6 +22,9 @@ from pole_position.cli.services.project_checker.core import (
     _check_project_identity,
     _check_project_manifest,
 )
+from pole_position.cli.services.project_checker.dependencies import (
+    _check_module_dependencies,
+)
 from pole_position.cli.services.project_checker.discovery import (
     _discover_core_project,
     _project_database_mode,
@@ -53,6 +56,7 @@ __all__ = [
     "_check_generated_structure",
     "_check_lifecycle_wiring",
     "_check_managed_markers",
+    "_check_module_dependencies",
     "_check_project_identity",
     "_discover_core_project",
 ]
@@ -97,6 +101,7 @@ def _run_project_checks(
     _check_managed_markers(problems, package_root, uses_database=uses_database)
     if include_lifecycle:
         _check_lifecycle_wiring(problems, project_root, package_root, manifest)
+        _check_module_dependencies(problems, package_root)
     if include_integrations:
         _check_integration_wiring(
             problems, project_root, package_root, manifest

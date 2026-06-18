@@ -379,6 +379,24 @@ For an `api-only` module, `check` expects:
 `api-only` modules are intentionally not required to have model, repository, or
 `db/models.py` wiring.
 
+### Module Dependency Check
+
+Lifecycle check also validates the dependency graph between added modules and
+reports circular dependencies. It scans each `src/<package>/modules/<name>`
+package for imports of `<package>.modules.<other>`, builds the directed module
+graph (using the `polepos.data.Graph` that ships with the package), and reports
+any cycle with the offending path:
+
+- [PPCHK060] Circular module dependency detected: customers -> billing ->
+  notifications -> customers
+
+A cycle means those modules can no longer be reasoned about, tested, or removed
+in isolation. Break it so module dependencies form a DAG: extract the shared
+code into a separate module, or invert one dependency with an interface or an
+event. Imports of shared infrastructure such as `<package>.db` or
+`<package>.settings`, and third-party packages, are not module edges and never
+trigger this check.
+
 ### Auth Workflow Check
 
 Auth workflow check validates projects that ran `polepos add auth` or otherwise

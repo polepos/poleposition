@@ -1632,3 +1632,32 @@ def test_check_manifest_reports_manual_kafka_dependency_without_integration(
     assert "Integration 'kafka' is missing generated file" in result.stdout
     assert "Integration 'kafka' is missing setting" in result.stdout
     assert "Integration 'kafka' is missing env value" in result.stdout
+
+
+def _append_cross_module_import(path: Path, other_module: str) -> None:
+    path.write_text(
+        path.read_text(encoding="utf-8")
+        + f"\nfrom myapp.modules.{other_module} import schemas  # noqa: F401\n",
+        encoding="utf-8",
+    )
+
+
+def test_check_reports_circular_module_dependency(tmp_path: Path) -> None:
+    assert run_cli(tmp_path, "start", "myapp").returncode == 0
+    project_root = tmp_path / "myapp"
+    assert run_cli(project_root, "add", "module", "customers").returncode == 0
+    assert run_cli(project_root, "add", "module", "billing").returncode == 0
+
+    modules = project_root / "src" / "myapp" / "modules"
+    _append_cross_module_import(modules / "customers" / "router.py", "billing")
+    _append_cross_module_import(modules / "billing" / "router.py", "customers")
+
+    result = run_cli(project_root, "check", "--json")
+
+    assert result.returncode != 0
+    payload = json.loads(result.stdout)
+    issues = {issue["code"]: issue["message"] for issue in payload["issues"]}
+    assert "PPCHK060" in issues
+    assert issues["PPCHK060"] == (
+        "Circular module dependency detected: billing -> customers -> billing"
+    )
