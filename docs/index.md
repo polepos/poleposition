@@ -20,7 +20,7 @@ uv run python -m shop_api.run
 
 <figure>
   <img
-    src="assets/gif/demo.gif"
+    src="https://raw.githubusercontent.com/polepos/poleposition/main/assets/gif/demo.gif"
     alt="PolePosition terminal demo: project creation"
     width="760"
   />
