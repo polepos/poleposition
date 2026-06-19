@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/polepos/poleposition/security/advisories/new
+    about: Report security issues privately. Please do not open a public issue.
+  - name: Documentation
+    url: https://polepos.github.io/poleposition/
+    about: Getting started, CLI reference, project checks, and guides.
