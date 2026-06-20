@@ -5,6 +5,40 @@ Notable PolePosition changes are tracked here.
 PolePosition follows Conventional Commits in repository history. This changelog
 summarizes user-facing behavior, release readiness work, and known beta scope.
 
+## 0.0.45 - 2026-06-20
+
+### Added
+
+- `polepos check` now detects circular dependencies between generated modules
+  and reports the offending path, for example
+  `customers -> billing -> notifications -> customers` (PPCHK060). The check
+  builds the directed import graph between `src/<package>/modules/<name>`
+  packages and stays read-only like the rest of `check`. The remediation is to
+  break the cycle so module dependencies form a DAG.
+
+### Changed
+
+- Refactored the largest CLI service modules (project checker, module creator,
+  module remover, integration creator) and the usage/help layer into
+  responsibility-focused packages behind thin facades. The public import
+  surface and CLI behavior are unchanged.
+
+### Documentation
+
+- Consolidated the demo GIF to a single canonical source referenced by the
+  README, the documentation site, and the PyPI project page.
+- Updated the architecture and contributor docs to reflect the service package
+  split.
+
+### Repository
+
+- Completed the GitHub community standards: added a security policy, a code of
+  conduct, issue templates, and a pull request template.
+- Updated the example application lockfiles under `examples/` to patched
+  versions of starlette (1.3.1), python-multipart (0.0.32), certifi, idna, and
+  pyjwt (2.13.0). These are example apps; the published `poleposition` package
+  declares no runtime dependencies.
+
 ## 0.0.44 - 2026-06-14
 
 ### Added
