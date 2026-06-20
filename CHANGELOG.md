@@ -27,6 +27,10 @@ summarizes user-facing behavior, release readiness work, and known beta scope.
 
 - Consolidated the demo GIF to a single canonical source referenced by the
   README, the documentation site, and the PyPI project page.
+- Pointed the README documentation links at the published documentation site.
+  Both the absolute GitHub `docs/*.md` links and the relative links (which
+  resolved to a 404 such as `pypi.org/project/poleposition/docs/contributing.md`
+  on the PyPI project page) now go to the rendered docs.
 - Updated the architecture and contributor docs to reflect the service package
   split.
 

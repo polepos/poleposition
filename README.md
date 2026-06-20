@@ -69,7 +69,7 @@ http://127.0.0.1:8000/docs
 ```
 
 For manual setup, Docker, and detailed command usage, see the sections below or
-the [Getting Started](https://github.com/polepos/poleposition/blob/main/docs/getting-started.md) guide.
+the [Getting Started](https://polepos.github.io/poleposition/getting-started) guide.
 
 ---
 
@@ -146,22 +146,22 @@ Use these files to understand the repo quickly:
 
 * [Published Docs](https://polepos.github.io/poleposition/)
 * [Source Repository](https://github.com/polepos/poleposition)
-* [Getting Started](https://github.com/polepos/poleposition/blob/main/docs/getting-started.md)
-* [CLI Reference](https://github.com/polepos/poleposition/blob/main/docs/cli.md)
-* [Module Templates](https://github.com/polepos/poleposition/blob/main/docs/module-templates.md)
-* [Auth Workflow](https://github.com/polepos/poleposition/blob/main/docs/auth-workflow.md)
-* [Configuration Reference](https://github.com/polepos/poleposition/blob/main/docs/configuration.md)
-* [Data Structures](https://github.com/polepos/poleposition/blob/main/docs/data-structures.md)
-* [Database and Migrations](https://github.com/polepos/poleposition/blob/main/docs/database.md)
-* [Spring and .NET Module Guide](https://github.com/polepos/poleposition/blob/main/docs/spring-dotnet-module-structure.md)
-* [Architecture](https://github.com/polepos/poleposition/blob/main/docs/architecture.md)
-* [Feature Status](https://github.com/polepos/poleposition/blob/main/docs/feature-status.md)
-* [Project Checks](https://github.com/polepos/poleposition/blob/main/docs/project-checks.md)
-* [Upgrade Reports](https://github.com/polepos/poleposition/blob/main/docs/upgrade-command.md)
-* [Integration Guides](https://github.com/polepos/poleposition/blob/main/docs/integrations/index.md)
-* [Troubleshooting and FAQ](https://github.com/polepos/poleposition/blob/main/docs/troubleshooting.md)
-* [Release and Upgrade Notes](https://github.com/polepos/poleposition/blob/main/docs/release-upgrade-notes.md)
-* [Examples](https://github.com/polepos/poleposition/blob/main/docs/examples/index.md)
+* [Getting Started](https://polepos.github.io/poleposition/getting-started)
+* [CLI Reference](https://polepos.github.io/poleposition/cli)
+* [Module Templates](https://polepos.github.io/poleposition/module-templates)
+* [Auth Workflow](https://polepos.github.io/poleposition/auth-workflow)
+* [Configuration Reference](https://polepos.github.io/poleposition/configuration)
+* [Data Structures](https://polepos.github.io/poleposition/data-structures)
+* [Database and Migrations](https://polepos.github.io/poleposition/database)
+* [Spring and .NET Module Guide](https://polepos.github.io/poleposition/spring-dotnet-module-structure)
+* [Architecture](https://polepos.github.io/poleposition/architecture)
+* [Feature Status](https://polepos.github.io/poleposition/feature-status)
+* [Project Checks](https://polepos.github.io/poleposition/project-checks)
+* [Upgrade Reports](https://polepos.github.io/poleposition/upgrade-command)
+* [Integration Guides](https://polepos.github.io/poleposition/integrations)
+* [Troubleshooting and FAQ](https://polepos.github.io/poleposition/troubleshooting)
+* [Release and Upgrade Notes](https://polepos.github.io/poleposition/release-upgrade-notes)
+* [Examples](https://polepos.github.io/poleposition/examples)
 * [Changelog](https://github.com/polepos/poleposition/blob/main/CHANGELOG.md)
 * [Agent Guide](https://github.com/polepos/poleposition/blob/main/AGENTS.md)
 
@@ -284,11 +284,11 @@ those schemas after generation, but update the module router, service,
 repository, generated tests, and migrations together. `polepos check` validates
 generated lifecycle wiring, while `pytest` validates schema imports, request
 fields, service behavior, and response shapes. See
-[Module Templates](docs/module-templates.md#generated-schema-contracts) for the
+[Module Templates](https://polepos.github.io/poleposition/module-templates#generated-schema-contracts) for the
 full schema contract guidance.
 
 CRUD feature options are documented in
-[Module Templates](docs/module-templates.md#crud-feature-options). They require
+[Module Templates](https://polepos.github.io/poleposition/module-templates#crud-feature-options). They require
 `--template crud` and can be combined:
 
 ```bash
@@ -449,7 +449,7 @@ The checks are organized into three layers:
 * Lifecycle checks for starter routing, added module router/model/test wiring, and orphan remnants
 * Integration checks for Kafka, RabbitMQ, Redis, RQ, LLM, and auth workflow files, active settings/env values, and dependencies
 
-See [Project Checks](https://github.com/polepos/poleposition/blob/main/docs/project-checks.md) for detailed user guidance and the
+See [Project Checks](https://polepos.github.io/poleposition/project-checks) for detailed user guidance and the
 agent-facing check contract.
 
 ### Safe customization boundaries
@@ -504,7 +504,7 @@ and Oracle. Stores with external SQLAlchemy dialects, such as ClickHouse, should
 usually be treated as explicit integrations unless the project owns and reviews
 their custom DDL workflow.
 
-See [Database and Migrations](https://github.com/polepos/poleposition/blob/main/docs/database.md) for the full migration workflow.
+See [Database and Migrations](https://polepos.github.io/poleposition/database) for the full migration workflow.
 
 ### Docker workflow
 
@@ -657,7 +657,7 @@ PolePosition is a lifecycle CLI, so the commands are meant to be used over time,
 
 ### Examples
 
-Concrete scenario guides live in [Examples](https://github.com/polepos/poleposition/blob/main/docs/examples/index.md):
+Concrete scenario guides live in [Examples](https://polepos.github.io/poleposition/examples):
 
 * auth foundation workflow
 * PostgreSQL-backed HTML swap workflow
@@ -715,7 +715,7 @@ polepos version
 ```
 
 For option-by-option behavior, examples, and lifecycle notes, see the
-[CLI Reference](https://github.com/polepos/poleposition/blob/main/docs/cli.md).
+[CLI Reference](https://polepos.github.io/poleposition/cli).
 
 ---
 
@@ -931,8 +931,8 @@ Feel free to open an
 [issue](https://github.com/polepos/poleposition/issues) or submit a
 [pull request](https://github.com/polepos/poleposition/pulls).
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) and the
-[Contributing guide](docs/contributing.md) for development setup, running the
+See [`CONTRIBUTING.md`](https://github.com/polepos/poleposition/blob/main/CONTRIBUTING.md) and the
+[Contributing guide](https://polepos.github.io/poleposition/contributing) for development setup, running the
 tests (including opt-in end-to-end tests), project layout, and common tasks.
 
 ### Code style
@@ -948,7 +948,7 @@ ruff check pole_position polepos
 ruff format pole_position polepos
 ```
 
-See [Code Style](docs/code-style.md) for the full rule set and rationale.
+See [Code Style](https://polepos.github.io/poleposition/code-style) for the full rule set and rationale.
 
 ---
 
