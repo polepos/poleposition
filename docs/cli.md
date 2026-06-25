@@ -66,6 +66,7 @@ polepos check
 | `polepos db` | Run Alembic migration commands through the generated project. |
 | `polepos upgrade` | Print a read-only project upgrade readiness report. |
 | `polepos version` | Print the installed CLI version. |
+| `polepos completion` | Print a bash, zsh, or fish completion script. |
 | `polepos help` | Print detailed CLI usage. |
 
 ## Project Creation
@@ -384,6 +385,42 @@ and next-step commands.
 
 See [Upgrade Reports](upgrade-command.md) and
 [Release and Upgrade Notes](release-upgrade-notes.md) for upgrade guidance.
+
+## Shell Completion
+
+```bash
+polepos completion <bash|zsh|fish>
+```
+
+`completion` prints a tab-completion script for the chosen shell. The script is
+thin: it calls back into PolePosition for every completion, so the candidates
+are always derived from the live command tree. Adding a command, subcommand, or
+flag updates completion automatically, with no separate list to maintain.
+
+Completion covers command names, subcommands, flags, `--template` and `--db`
+values, integration names, the supported shells, and the current project's
+module names for `polepos remove module`.
+
+Install it for your shell:
+
+```bash
+# bash (requires bash-completion)
+polepos completion bash >> ~/.bashrc
+
+# zsh (save onto a directory in your $fpath, then restart the shell)
+polepos completion zsh > ~/.zfunc/_polepos
+
+# fish
+polepos completion fish > ~/.config/fish/completions/polepos.fish
+```
+
+To try it in the current shell without installing, source it directly:
+
+```bash
+source <(polepos completion bash)
+```
+
+Completion works for both the `polepos` and `poleposition` entry points.
 
 ## Option Conventions
 

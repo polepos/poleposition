@@ -5,6 +5,17 @@ Notable PolePosition changes are tracked here.
 PolePosition follows Conventional Commits in repository history. This changelog
 summarizes user-facing behavior, release readiness work, and known beta scope.
 
+## Unreleased
+
+### Added
+
+- `polepos completion <bash|zsh|fish>` prints a shell completion script. The
+  generated script calls back into the CLI for every completion, so candidates
+  are derived from the live command tree and stay in sync as commands and flags
+  change. Completion covers commands, subcommands, flags, `--template` and
+  `--db` values, integration names, and the current project's module names for
+  `polepos remove module`. No runtime dependencies were added.
+
 ## 0.0.45 - 2026-06-20
 
 ### Added
