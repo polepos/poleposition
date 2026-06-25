@@ -36,6 +36,7 @@ def run(args: list[str]) -> None:
     template = "standard"
     template_was_set = False
     api_only = False
+    service_only = False
     crud_feature_names: set[str] = set()
     index = 0
 
@@ -67,6 +68,11 @@ def run(args: list[str]) -> None:
             index += 1
             continue
 
+        if argument == "--service-only":
+            service_only = True
+            index += 1
+            continue
+
         if argument in CRUD_FEATURE_FLAGS:
             crud_feature_names.add(CRUD_FEATURE_FLAGS[argument])
             index += 1
@@ -90,6 +96,11 @@ def run(args: list[str]) -> None:
         _print_usage()
         raise SystemExit(1)
 
+    if api_only and service_only:
+        console.error("Choose either --api-only or --service-only, not both.")
+        _print_usage()
+        raise SystemExit(1)
+
     if api_only:
         if template_was_set and template != "api-only":
             console.error(
@@ -98,6 +109,16 @@ def run(args: list[str]) -> None:
             _print_usage()
             raise SystemExit(1)
         template = "api-only"
+
+    if service_only:
+        if template_was_set and template != "service-only":
+            console.error(
+                "--service-only cannot be combined with another module "
+                "template."
+            )
+            _print_usage()
+            raise SystemExit(1)
+        template = "service-only"
 
     if crud_feature_names and template != "crud":
         flags = ", ".join(sorted(CRUD_FEATURE_FLAGS))

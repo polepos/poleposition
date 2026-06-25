@@ -188,7 +188,8 @@ def _check_added_module_wiring(
             )
 
     _check_module_export(problems, package_root, module_name)
-    _check_module_router_wiring(problems, package_root, module_name)
+    if template_contract.update_api_router:
+        _check_module_router_wiring(problems, package_root, module_name)
     if template_contract.update_db_models:
         _check_module_model_wiring(problems, package_root, module_name)
     _check_module_tests(problems, project_root, module_name, template_contract)
@@ -222,13 +223,25 @@ def _detect_module_kind(
         if unit_test.exists():
             return contract.name
 
-        if any(
-            (module_root / file_name).exists()
-            for file_name in contract.detection_file_names_for(module_name)
-        ):
+        if _contract_detection_files_match(contract, module_root, module_name):
             return contract.name
 
     return DEFAULT_MODULE_TEMPLATE
+
+
+def _contract_detection_files_match(
+    contract: ModuleTemplateContract,
+    module_root: Path,
+    module_name: str,
+) -> bool:
+    blocking = contract.requires_absent_file_names_for(module_name)
+    if any((module_root / file_name).exists() for file_name in blocking):
+        return False
+
+    return any(
+        (module_root / file_name).exists()
+        for file_name in contract.detection_file_names_for(module_name)
+    )
 
 
 def _supported_manifest_module_template_name(value: str | None) -> str | None:

@@ -12,13 +12,17 @@ domain.
 | `crud` | `polepos add module customers --template crud` | You want a fuller CRUD starting point with list, create, get, update, and delete routes. |
 | `api-only` | `polepos add module webhooks --api-only` | You need routes and service code but no database model or repository. |
 | `ai-prompt` | `polepos add module assistant --template ai-prompt` | You need an LLM-oriented module boundary and provider-agnostic adapter stubs. |
+| `service-only` | `polepos add module notifications --service-only` | You need an internal, database-backed module (domain service, event handler, background job, integration) with no HTTP routes. |
 
 All templates update:
 
 - `src/<package>/modules/__init__.py`
-- `src/<package>/api/router.py`
 - generated integration and unit tests
 - `.poleposition.toml`
+
+API-facing templates also update `src/<package>/api/router.py` to wire the
+generated router. The `service-only` template is the exception: it exposes no
+routes, so it never touches `api/router.py`.
 
 Database-backed templates also update `src/<package>/db/models.py` so Alembic
 can discover generated SQLAlchemy models.
@@ -42,6 +46,7 @@ does not singularize or pluralize module names.
 | `crud` | `<ClassName>Create`, `<ClassName>Update`, `<ClassName>Read` | Full CRUD needs separate create and patch payloads plus a read response. |
 | `api-only` | `<ClassName>Request`, `<ClassName>Response` | There is no database entity, so generic request and response names fit the lightweight route/service boundary. |
 | `ai-prompt` | `<ClassName>PromptRequest`, `<ClassName>PromptResponse` | The module is prompt-oriented, so the schema names describe the LLM use case instead of a persisted resource. |
+| `service-only` | None | The module exposes no HTTP routes, so it generates no request/response schemas. Its service methods take plain arguments and return SQLAlchemy models. |
 
 The generated fields are intentionally small examples, not domain assumptions.
 Database-backed templates start with `id` and `name` because that produces a
@@ -305,6 +310,45 @@ API-only modules do not create:
 Use this template for webhooks, health-adjacent routes, proxies, callbacks, or
 other API surfaces whose state lives elsewhere.
 
+## Service-Only Template
+
+```bash
+polepos add module notifications --service-only
+polepos add module notifications --template service-only
+```
+
+Generated module files:
+
+```text
+src/<package>/modules/notifications/
+  __init__.py
+  model.py
+  repository.py
+  services/
+    __init__.py
+    notifications_service.py
+```
+
+Service-only modules are internal: they own database state through a model and
+repository, but they expose no HTTP routes. The template does not create:
+
+- `router.py`
+- `schemas.py`
+- `api/router.py` wiring
+
+Like the `standard` template, it does update `db/models.py` so Alembic can
+discover the model, and the migration note applies after model changes. The
+generated service exposes plain methods (for example `create_notifications`)
+that take ordinary arguments instead of request schemas, so other modules,
+lifecycle hooks, or background tasks can call it directly. The generated
+integration test exercises the service against the database rather than an HTTP
+client.
+
+Use this template for domain services, event handlers, background processing,
+or third-party integrations that should follow PolePosition module conventions
+without becoming an API surface. `polepos check` understands that a service-only
+module has no router and does not flag the missing route wiring.
+
 ## AI Prompt Template
 
 ```bash
@@ -344,8 +388,9 @@ after deciding which provider and deployment model the application should use.
 Choose `standard` when persistence matters but the API shape is still small.
 Choose `crud` when the first useful version needs full item lifecycle routes.
 Choose `api-only` when the route should not own database state. Choose
-`ai-prompt` when orchestration and prompt boundaries are more important than a
-database model.
+`service-only` when the module owns database state but should never expose HTTP
+routes. Choose `ai-prompt` when orchestration and prompt boundaries are more
+important than a database model.
 
 Do not use generated module templates as final domain design. Treat them as a
 consistent first commit, then refine names, validation, relationships,

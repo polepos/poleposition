@@ -1735,4 +1735,131 @@ def test_add_module_rejects_unknown_template(tmp_path: Path):
 
     assert result.returncode != 0
     assert "Unsupported module template 'unknown'" in result.stdout
-    assert "Templates: standard, crud, ai-prompt, api-only" in result.stdout
+    assert (
+        "Templates: standard, crud, ai-prompt, api-only, service-only"
+        in result.stdout
+    )
+
+
+def test_add_module_with_service_only_option_creates_internal_module(
+    tmp_path: Path,
+):
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    result = run_cli(
+        project_root, "add", "module", "notifications", "--service-only"
+    )
+
+    assert result.returncode == 0
+    assert "Added module: notifications" in result.stdout
+    assert "Template: service-only" in result.stdout
+    # Service-only modules are database-backed, so the migration hint shows.
+    assert "polepos db revision" in result.stdout
+
+    package_root = project_root / "src" / "myapp"
+    module_root = package_root / "modules" / "notifications"
+
+    expected_files = [
+        module_root / "__init__.py",
+        module_root / "model.py",
+        module_root / "repository.py",
+        module_root / "services" / "__init__.py",
+        module_root / "services" / "notifications_service.py",
+        project_root / "tests" / "integration" / "test_notifications.py",
+        project_root / "tests" / "unit" / "test_notifications_service_only.py",
+    ]
+    for path in expected_files:
+        assert path.exists(), (
+            f"Expected generated service-only file is missing: {path}"
+        )
+
+    # No HTTP layer is generated for an internal module.
+    assert not (module_root / "router.py").exists()
+    assert not (module_root / "schemas.py").exists()
+
+    router_content = (package_root / "api" / "router.py").read_text(
+        encoding="utf-8"
+    )
+    db_models_content = (package_root / "db" / "models.py").read_text(
+        encoding="utf-8"
+    )
+
+    # The router is left untouched; the model is wired for db discovery.
+    assert "notifications" not in router_content
+    assert "from myapp.modules.notifications import model" in db_models_content
+
+    _assert_python_files_compile(project_root)
+
+    check_result = run_cli(project_root, "check")
+    assert check_result.returncode == 0
+    assert "passed" in check_result.stdout
+
+
+def test_add_module_with_service_only_template_alias(tmp_path: Path):
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    result = run_cli(
+        project_root,
+        "add",
+        "module",
+        "events",
+        "--template",
+        "service-only",
+    )
+
+    assert result.returncode == 0
+    assert "Template: service-only" in result.stdout
+    module_root = project_root / "src" / "myapp" / "modules" / "events"
+    assert (module_root / "services" / "events_service.py").exists()
+    assert not (module_root / "router.py").exists()
+    assert (
+        project_root / "tests" / "unit" / "test_events_service_only.py"
+    ).exists()
+
+
+def test_add_module_rejects_service_only_with_other_template(tmp_path: Path):
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    result = run_cli(
+        project_root,
+        "add",
+        "module",
+        "events",
+        "--template",
+        "crud",
+        "--service-only",
+    )
+
+    assert result.returncode != 0
+    assert (
+        "--service-only cannot be combined with another module template."
+        in result.stdout
+    )
+
+
+def test_add_module_rejects_api_only_and_service_only_together(
+    tmp_path: Path,
+):
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    result = run_cli(
+        project_root,
+        "add",
+        "module",
+        "events",
+        "--api-only",
+        "--service-only",
+    )
+
+    assert result.returncode != 0
+    assert (
+        "Choose either --api-only or --service-only, not both." in result.stdout
+    )

@@ -133,6 +133,15 @@ def test_e2e_start_project_and_run_generated_tests(tmp_path: Path) -> None:
 
     assert add_result.returncode == 0, add_result.stderr
 
+    # Exercise a service-only module too, so its generated database-backed
+    # service test runs against the real environment alongside the standard
+    # module's HTTP tests.
+    service_only_result = run_cli(
+        project_root, "add", "module", "notifications", "--service-only"
+    )
+
+    assert service_only_result.returncode == 0, service_only_result.stderr
+
     env_example = project_root / ".env.example"
     env_file = project_root / ".env"
     env_file.write_text(

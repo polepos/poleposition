@@ -119,7 +119,7 @@ Subcommands:
 ### `polepos add module`
 
 ```bash
-polepos add module <module_name> [--template <template_name>] [--api-only]
+polepos add module <module_name> [--template <template_name>] [--api-only] [--service-only]
 polepos add module <module_name> --template crud [--pagination] [--timestamps]
 polepos add module <module_name> --template crud [--soft-delete] [--tenant-scoped]
 polepos add module <module_name> --template crud [--auth-required]
@@ -127,7 +127,8 @@ polepos add module <module_name> --template crud [--auth-required]
 
 The command creates module files, generated tests, module exports, API router
 wiring, and database model discovery wiring when the selected template has a
-model.
+model. The `service-only` template is internal and skips the API router wiring
+while still updating database model discovery.
 
 | Option | Behavior |
 | --- | --- |
@@ -135,7 +136,9 @@ model.
 | `--template crud` | Fuller CRUD module with collection, detail, create, update, delete, repository, service, and tests. |
 | `--template api-only` | Router, schemas, service, and tests without model, repository, or database wiring. |
 | `--template ai-prompt` | LLM-oriented module skeleton plus shared provider-agnostic `integrations/llm` files when missing. |
+| `--template service-only` | Internal database-backed module with model, repository, service, and tests but no router, schemas, or API wiring. |
 | `--api-only` | Shortcut for `--template api-only`. |
+| `--service-only` | Shortcut for `--template service-only`. |
 | `--pagination` | CRUD-only. Adds `limit`/`offset` query params and a `<ClassName>Page` response envelope. |
 | `--timestamps` | CRUD-only. Adds `created_at` and `updated_at` columns and response fields. |
 | `--soft-delete` | CRUD-only. Adds `deleted_at` and changes delete behavior to mark rows deleted. |
@@ -150,6 +153,7 @@ polepos add module customers --template crud
 polepos add module customers --template crud --pagination --timestamps
 polepos add module customers --template crud --soft-delete --tenant-scoped --auth-required
 polepos add module webhooks --api-only
+polepos add module notifications --service-only
 polepos add module assistant --template ai-prompt
 ```
 

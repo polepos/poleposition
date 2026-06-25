@@ -61,17 +61,18 @@ def _validate_add_module_preflight(
         MODULE_EXPORTS_MARKER,
     )
     _collect_python_parse_error(problems, modules_init_path)
-    _collect_missing_marker(
-        problems,
-        router_path,
-        ROUTER_IMPORTS_MARKER,
-    )
-    _collect_missing_marker(
-        problems,
-        router_path,
-        ROUTER_INCLUDES_MARKER,
-    )
-    _collect_python_parse_error(problems, router_path)
+    if template_spec.update_api_router:
+        _collect_missing_marker(
+            problems,
+            router_path,
+            ROUTER_IMPORTS_MARKER,
+        )
+        _collect_missing_marker(
+            problems,
+            router_path,
+            ROUTER_INCLUDES_MARKER,
+        )
+        _collect_python_parse_error(problems, router_path)
     _collect_existing_managed_module_references(
         problems=problems,
         package_root=package_root,

@@ -48,14 +48,26 @@ def _detect_module_template(
         if unit_test.exists():
             return DetectedModuleTemplate(contract=contract)
 
-        if any(
-            (module_root / file_name).exists()
-            for file_name in contract.detection_file_names_for(module_name)
-        ):
+        if _contract_detection_files_match(contract, module_root, module_name):
             return DetectedModuleTemplate(contract=contract)
 
     return DetectedModuleTemplate(
         contract=get_module_template_contract(DEFAULT_MODULE_TEMPLATE),
+    )
+
+
+def _contract_detection_files_match(
+    contract: ModuleTemplateContract,
+    module_root: Path,
+    module_name: str,
+) -> bool:
+    blocking = contract.requires_absent_file_names_for(module_name)
+    if any((module_root / file_name).exists() for file_name in blocking):
+        return False
+
+    return any(
+        (module_root / file_name).exists()
+        for file_name in contract.detection_file_names_for(module_name)
     )
 
 

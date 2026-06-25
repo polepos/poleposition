@@ -104,10 +104,11 @@ def add_module(
 
     _update_modules_init(modules_root / "__init__.py", module_name)
     updated_files.append(modules_root / "__init__.py")
-    _update_api_router(
-        package_root / "api" / "router.py", package_name, module_name
-    )
-    updated_files.append(package_root / "api" / "router.py")
+    if template_spec.update_api_router:
+        _update_api_router(
+            package_root / "api" / "router.py", package_name, module_name
+        )
+        updated_files.append(package_root / "api" / "router.py")
     if template_spec.update_db_models:
         _update_db_models(
             package_root / "db" / "models.py", package_name, module_name

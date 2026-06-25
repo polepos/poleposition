@@ -43,6 +43,48 @@ def test_remove_module_shows_usage_without_name(tmp_path: Path):
     assert "--wiring-only" in result.stdout
 
 
+def test_remove_service_only_module_cleans_generated_wiring(tmp_path: Path):
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    add_result = run_cli(
+        project_root, "add", "module", "notifications", "--service-only"
+    )
+    assert add_result.returncode == 0
+
+    result = run_cli(project_root, "remove", "module", "notifications")
+
+    assert result.returncode == 0
+    assert "Removed module: notifications" in result.stdout
+    assert "Template: service-only" in result.stdout
+
+    package_root = project_root / "src" / "myapp"
+    assert not (package_root / "modules" / "notifications").exists()
+    assert not (
+        project_root / "tests" / "integration" / "test_notifications.py"
+    ).exists()
+    assert not (
+        project_root / "tests" / "unit" / "test_notifications_service_only.py"
+    ).exists()
+
+    db_models_content = (package_root / "db" / "models.py").read_text(
+        encoding="utf-8"
+    )
+    modules_init_content = (package_root / "modules" / "__init__.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "modules.notifications" not in db_models_content
+    assert '"notifications"' not in modules_init_content
+    assert "notifications =" not in (
+        project_root / ".poleposition.toml"
+    ).read_text(encoding="utf-8")
+
+    check_result = run_cli(project_root, "check")
+    assert check_result.returncode == 0
+
+
 def test_remove_standard_module_cleans_generated_wiring(tmp_path: Path):
     create_result = run_cli(tmp_path, "start", "myapp")
     assert create_result.returncode == 0

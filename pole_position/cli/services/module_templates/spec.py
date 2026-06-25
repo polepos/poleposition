@@ -8,9 +8,11 @@ class ModuleTemplateContract:
     integration_test_name_template: str
     unit_test_name_template: str
     update_db_models: bool = True
+    update_api_router: bool = True
     ensure_llm_integrations: bool = False
     ensure_llm_settings: bool = False
     detection_file_names: tuple[str, ...] = ()
+    requires_absent_file_names: tuple[str, ...] = ()
 
     def integration_test_name(self, module_name: str) -> str:
         return self.integration_test_name_template.format(
@@ -32,6 +34,14 @@ class ModuleTemplateContract:
             for file_name in self.detection_file_names
         )
 
+    def requires_absent_file_names_for(
+        self, module_name: str
+    ) -> tuple[str, ...]:
+        return tuple(
+            file_name.format(module_name=module_name)
+            for file_name in self.requires_absent_file_names
+        )
+
 
 @dataclass(frozen=True)
 class ModuleTemplate:
@@ -42,6 +52,7 @@ class ModuleTemplate:
     unit_test_content: str
     features: tuple[str, ...] = ()
     update_db_models: bool = True
+    update_api_router: bool = True
     ensure_llm_integrations: bool = False
     ensure_llm_settings: bool = False
 
@@ -114,4 +125,20 @@ API_ONLY_MODULE_TEMPLATE_CONTRACT = ModuleTemplateContract(
         "service.py",
         "services/{module_name}_service.py",
     ),
+)
+
+SERVICE_ONLY_MODULE_TEMPLATE_CONTRACT = ModuleTemplateContract(
+    name="service-only",
+    file_names=(
+        "__init__.py",
+        "model.py",
+        "repository.py",
+        "services/__init__.py",
+        "services/{module_name}_service.py",
+    ),
+    integration_test_name_template="test_{module_name}.py",
+    unit_test_name_template="test_{module_name}_service_only.py",
+    update_api_router=False,
+    detection_file_names=("model.py", "repository.py"),
+    requires_absent_file_names=("router.py",),
 )

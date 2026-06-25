@@ -94,7 +94,7 @@ COMMAND_HELP: dict[tuple[str, ...], CommandHelp] = {
         path=("add", "module"),
         usage=(
             "Usage: polepos add module <module_name> "
-            "[--template <template_name>] [--api-only] "
+            "[--template <template_name>] [--api-only] [--service-only] "
             "[--pagination] [--timestamps] [--soft-delete] "
             "[--tenant-scoped] [--auth-required]"
         ),
@@ -114,6 +114,11 @@ COMMAND_HELP: dict[tuple[str, ...], CommandHelp] = {
                 "--api-only",
                 "Shortcut for --template api-only; no model, repository, "
                 "or db wiring.",
+            ),
+            OptionHelp(
+                "--service-only",
+                "Shortcut for --template service-only; internal module with "
+                "model, repository, and db wiring but no router or API.",
             ),
             OptionHelp(
                 "--pagination",
@@ -146,6 +151,7 @@ COMMAND_HELP: dict[tuple[str, ...], CommandHelp] = {
             "polepos add module customers --template crud --pagination "
             "--timestamps",
             "polepos add module webhooks --api-only",
+            "polepos add module notifications --service-only",
             "polepos add module assistant --template ai-prompt",
         ),
         notes=(

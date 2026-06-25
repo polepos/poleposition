@@ -50,6 +50,44 @@ def test_check_passes_for_generated_project(tmp_path: Path) -> None:
     assert "Package: myapp" in result.stdout
 
 
+def test_check_passes_for_service_only_module(tmp_path: Path) -> None:
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    add_result = run_cli(
+        project_root, "add", "module", "notifications", "--service-only"
+    )
+    assert add_result.returncode == 0
+
+    result = run_cli(project_root, "check")
+
+    assert result.returncode == 0
+    assert "PolePosition project check passed." in result.stdout
+
+
+def test_check_detects_service_only_module_without_manifest(
+    tmp_path: Path,
+) -> None:
+    # Without the manifest, the checker must detect the router-less module as
+    # service-only from its files and not demand router wiring.
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    add_result = run_cli(
+        project_root, "add", "module", "notifications", "--service-only"
+    )
+    assert add_result.returncode == 0
+    (project_root / ".poleposition.toml").unlink()
+
+    result = run_cli(project_root, "check")
+
+    assert result.returncode == 0, result.stdout
+    assert "is missing router" not in result.stdout
+    assert "PolePosition project check passed." in result.stdout
+
+
 def test_check_json_passes_for_generated_project(tmp_path: Path) -> None:
     create_result = run_cli(tmp_path, "start", "myapp")
     assert create_result.returncode == 0

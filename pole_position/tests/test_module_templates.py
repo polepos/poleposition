@@ -22,6 +22,7 @@ def test_supported_module_templates_are_stable() -> None:
         "crud",
         "ai-prompt",
         "api-only",
+        "service-only",
     )
 
 
@@ -224,6 +225,36 @@ def test_api_only_template_contract() -> None:
     )
 
 
+def test_service_only_template_contract() -> None:
+    contract = get_module_template_contract("service-only")
+    template = build_module_template(
+        template="service-only",
+        package_name="shop_api",
+        module_name="notifications",
+    )
+
+    assert set(template.files) == set(contract.file_names_for("notifications"))
+    assert template.integration_test_name == contract.integration_test_name(
+        "notifications"
+    )
+    assert template.unit_test_name == contract.unit_test_name("notifications")
+    assert template.unit_test_name == "test_notifications_service_only.py"
+    assert template.update_db_models is True
+    assert template.update_api_router is False
+    assert "router.py" not in template.files
+    assert "schemas.py" not in template.files
+    assert "model.py" in template.files
+    assert "repository.py" in template.files
+    assert '"router"' not in template.files["__init__.py"]
+    assert '"schemas"' not in template.files["__init__.py"]
+    service_content = template.files["services/notifications_service.py"]
+    assert "schemas" not in service_content
+    assert "def create_notifications(self, *, name: str)" in service_content
+    # The service-only integration test exercises the DB, not HTTP routes.
+    assert "TestClient" not in template.integration_test_content
+    assert "NotificationsService" in template.integration_test_content
+
+
 def test_unknown_module_template_raises_clear_error() -> None:
     with pytest.raises(ValueError) as exc_info:
         build_module_template(
@@ -233,7 +264,9 @@ def test_unknown_module_template_raises_clear_error() -> None:
         )
 
     assert "Unsupported module template 'unknown'" in str(exc_info.value)
-    assert "standard, crud, ai-prompt, api-only" in str(exc_info.value)
+    assert "standard, crud, ai-prompt, api-only, service-only" in str(
+        exc_info.value
+    )
 
 
 def test_llm_integration_files_contract() -> None:
