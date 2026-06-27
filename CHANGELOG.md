@@ -5,7 +5,7 @@ Notable PolePosition changes are tracked here.
 PolePosition follows Conventional Commits in repository history. This changelog
 summarizes user-facing behavior, release readiness work, and known beta scope.
 
-## Unreleased
+## 0.0.46 - 2026-06-27
 
 ### Added
 
