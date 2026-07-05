@@ -54,17 +54,23 @@ def complete(prior_words: list[str], cwd: Path | None = None) -> list[str]:
 
 
 def _complete(prior: list[str], cwd: Path | None) -> list[str]:
-    if prior:
-        value_provider = _VALUE_FLAG_CANDIDATES.get(prior[-1])
-        if value_provider is not None:
-            return _dedupe(value_provider(cwd))
+    path, node, positional_count = _resolve(prior)
 
-    path, node = _resolve(prior)
+    # Completing the value after a flag: only offer values when the flag is
+    # actually declared for the resolved command, so e.g. `check --template`
+    # (check has no --template) offers nothing instead of template names.
+    if prior and prior[-1] in _VALUE_FLAG_CANDIDATES:
+        if prior[-1] in _flags_for(path):
+            return _dedupe(_VALUE_FLAG_CANDIDATES[prior[-1]](cwd))
+        return []
 
     candidates: list[str] = []
     if node is not None:
         candidates.extend(_subcommand_names(node))
-    else:
+    elif positional_count == 0:
+        # Only offer positional values while the single positional slot is
+        # still empty; once it is filled, re-offering would produce an
+        # argument the command rejects.
         candidates.extend(_positional_candidates(path, cwd))
 
     if path:
@@ -76,35 +82,37 @@ def _complete(prior: list[str], cwd: Path | None) -> list[str]:
 
 def _resolve(
     prior: list[str],
-) -> tuple[tuple[str, ...], CommandRegistry | None]:
+) -> tuple[tuple[str, ...], CommandRegistry | None, int]:
     """Walk completed words through the command tree.
 
-    Returns the resolved command path and the subcommand registry still open at
-    that path (``None`` once a leaf command is reached). Flags and their values
-    are skipped so they do not interfere with command resolution.
+    Returns the resolved command path (canonical names, so aliases like
+    ``startproject`` resolve to ``start``), the subcommand registry still open
+    at that path (``None`` once a leaf command is reached), and the number of
+    positional arguments already supplied after the command. Flags and their
+    values are skipped so they do not interfere with command resolution.
     """
     node: CommandRegistry | None = registry
     path: list[str] = []
+    positional_count = 0
 
-    index = 0
-    while index < len(prior):
-        word = prior[index]
+    for word in prior:
         if word.startswith("-"):
-            index += 1
             continue
         if node is None:
-            break
+            # The command path is already resolved to a leaf; this is a
+            # positional argument (or trailing garbage).
+            positional_count += 1
+            continue
         command = node.get(word)
         if command is None:
-            # An unrecognized command word closes the context: there is
-            # nothing meaningful to complete after it.
+            # Unrecognized command word closes the context.
             node = None
-            break
-        path.append(word)
+            positional_count += 1
+            continue
+        path.append(command.name)
         node = command.subcommands
-        index += 1
 
-    return tuple(path), node
+    return tuple(path), node, positional_count
 
 
 def _subcommand_names(node: CommandRegistry) -> list[str]:
@@ -182,21 +190,32 @@ _BASH_SCRIPT = """\
 _poleposition_complete() {
     local prior candidates
     prior=("${COMP_WORDS[@]:1:COMP_CWORD-1}")
-    candidates="$(polepos __complete "${prior[@]}" 2>/dev/null)"
+    # Expand a possibly-empty array safely so completion does not error under
+    # `set -u` on bash < 4.4 (e.g. the macOS system bash).
+    candidates="$(polepos __complete ${prior[@]+"${prior[@]}"} 2>/dev/null)"
     COMPREPLY=( $(compgen -W "${candidates}" -- "${COMP_WORDS[COMP_CWORD]}") )
 }
 complete -F _poleposition_complete polepos poleposition
 """
 
+# Named `_polepos` to match the documented autoload filename
+# (~/.zfunc/_polepos). The trailing guard makes the same script work both ways:
+# when autoloaded from $fpath (#compdef), $funcstack[1] is the function name, so
+# it runs immediately and the first Tab completes; when sourced, it registers
+# via compdef instead.
 _ZSH_SCRIPT = """\
 #compdef polepos poleposition
-_poleposition_complete() {
+_polepos() {
     local -a prior candidates
     prior=(${words[2,CURRENT-1]})
     candidates=(${(f)"$(polepos __complete $prior 2>/dev/null)"})
     compadd -a candidates
 }
-compdef _poleposition_complete polepos poleposition
+if [ "$funcstack[1]" = "_polepos" ]; then
+    _polepos "$@"
+else
+    compdef _polepos polepos poleposition
+fi
 """
 
 _FISH_SCRIPT = """\

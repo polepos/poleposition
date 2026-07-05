@@ -15,7 +15,7 @@ from pole_position.cli.services.completion import (
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
-def run_cli(cwd, *args):
+def run_cli(cwd: Path, *args: str) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     existing_pythonpath = env.get("PYTHONPATH")
     env["PYTHONPATH"] = (
@@ -213,3 +213,91 @@ def test_generated_bash_script_is_syntactically_valid(tmp_path: Path) -> None:
     )
 
     assert check.returncode == 0, check.stderr
+
+
+# --- Regression tests for the 0.0.47 completion review fixes ---------------
+
+
+def test_alias_completes_canonical_command_flags() -> None:
+    # #5: `startproject` is an alias for `start`; COMMAND_HELP is keyed by the
+    # canonical name, so the alias must resolve to it and keep its flags.
+    assert complete(["startproject"]) == complete(["start"])
+    assert "--db" in complete(["startproject"])
+
+
+def test_value_flag_offered_only_when_declared_for_the_command() -> None:
+    # #6: --template is not a flag of `check`, so its value must not complete.
+    assert complete(["check", "--template"]) == []
+    # ...but it still completes where it is valid.
+    assert "standard" in complete(["add", "module", "--template"])
+    assert complete(["start", "--db"]) == ["sqlite", "postgres", "none"]
+
+
+def test_filled_positional_slot_is_not_reoffered() -> None:
+    # #7: after the single positional is supplied, do not re-offer it.
+    assert complete(["completion"])[: len(SUPPORTED_SHELLS)] == list(
+        SUPPORTED_SHELLS
+    )
+    filled = complete(["completion", "bash"])
+    assert "bash" not in filled
+    assert "zsh" not in filled
+
+
+def test_add_integration_positional_not_reoffered_when_filled() -> None:
+    # #7: same for `add integration <name>`.
+    assert "redis" in complete(["add", "integration"])
+    assert "redis" not in complete(["add", "integration", "redis"])
+
+
+def test_zsh_script_runs_completer_for_fpath_autoload() -> None:
+    # #4: when autoloaded from $fpath the script must invoke the completer so
+    # the first Tab completes, not just register it via compdef.
+    script = completion_script("zsh")
+    assert 'if [ "$funcstack[1]" = "_polepos" ]; then' in script
+    assert '_polepos "$@"' in script
+    assert "compdef _polepos polepos poleposition" in script
+
+
+def test_bash_script_guards_empty_array_under_set_u() -> None:
+    # #8: an empty prior array must expand safely under `set -u`.
+    script = completion_script("bash")
+    assert '${prior[@]+"${prior[@]}"}' in script
+
+
+@pytest.mark.skipif(
+    __import__("shutil").which("bash") is None,
+    reason="bash is required to exercise the completion under set -u.",
+)
+def test_bash_first_arg_completion_survives_set_u(tmp_path: Path) -> None:
+    # #8: drive the generated function under `set -u` for the first argument
+    # (empty prior array) and confirm it does not abort with 'unbound variable'.
+    script_path = tmp_path / "polepos.bash"
+    script_path.write_text(completion_script("bash"), encoding="utf-8")
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    stub = bin_dir / "polepos"
+    stub.write_text(
+        "#!/usr/bin/env bash\n"
+        f'exec "{sys.executable}" -m pole_position.cli.main "$@"\n',
+        encoding="utf-8",
+    )
+    stub.chmod(0o755)
+
+    driver = (
+        "set -u\n"
+        f'export PATH="{bin_dir}:$PATH"\n'
+        f'export PYTHONPATH="{REPO_ROOT}"\n'
+        f'source "{script_path}"\n'
+        "COMP_WORDS=(polepos ''); COMP_CWORD=1; COMPREPLY=()\n"
+        "_poleposition_complete\n"
+        'printf "%s\\n" "${COMPREPLY[@]}"\n'
+    )
+    result = subprocess.run(
+        ["bash", "--noprofile", "--norc", "-c", driver],
+        capture_output=True,
+        text=True,
+    )
+
+    assert "unbound variable" not in result.stderr
+    assert result.returncode == 0
+    assert "start" in result.stdout

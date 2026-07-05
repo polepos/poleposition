@@ -3,12 +3,13 @@ from pathlib import Path
 
 from pole_position.cli.services.module_templates import (
     DEFAULT_CRUD_FEATURES,
-    DEFAULT_MODULE_TEMPLATE,
     SUPPORTED_MODULE_TEMPLATES,
     CrudFeatureSet,
     ModuleTemplateContract,
     get_module_template_contract,
-    module_template_detection_contracts,
+)
+from pole_position.cli.services.module_templates.detection import (
+    detect_module_template_name,
 )
 from pole_position.cli.services.project_manifest import (
     ManifestModuleTemplate,
@@ -29,45 +30,31 @@ def _detect_module_template(
     module_name: str,
 ) -> DetectedModuleTemplate:
     manifest = read_project_manifest(project_root)
+    manifest_parsed = None
     if manifest.exists:
-        template = manifest.module_templates.get(module_name)
-        parsed_template = _supported_manifest_module_template(template)
-        if parsed_template is not None and parsed_template.name != "starter":
-            return DetectedModuleTemplate(
-                contract=get_module_template_contract(parsed_template.name),
-                crud_features=parsed_template.crud_features,
-            )
-
-    for contract in module_template_detection_contracts():
-        unit_test = (
-            project_root
-            / "tests"
-            / "unit"
-            / contract.unit_test_name(module_name)
+        manifest_parsed = _supported_manifest_module_template(
+            manifest.module_templates.get(module_name)
         )
-        if unit_test.exists():
-            return DetectedModuleTemplate(contract=contract)
+        if manifest_parsed is not None and manifest_parsed.name == "starter":
+            manifest_parsed = None
 
-        if _contract_detection_files_match(contract, module_root, module_name):
-            return DetectedModuleTemplate(contract=contract)
-
-    return DetectedModuleTemplate(
-        contract=get_module_template_contract(DEFAULT_MODULE_TEMPLATE),
+    template_name = detect_module_template_name(
+        tests_root=project_root / "tests",
+        module_root=module_root,
+        module_name=module_name,
+        manifest_template_name=(
+            manifest_parsed.name if manifest_parsed is not None else None
+        ),
     )
 
-
-def _contract_detection_files_match(
-    contract: ModuleTemplateContract,
-    module_root: Path,
-    module_name: str,
-) -> bool:
-    blocking = contract.requires_absent_file_names_for(module_name)
-    if any((module_root / file_name).exists() for file_name in blocking):
-        return False
-
-    return any(
-        (module_root / file_name).exists()
-        for file_name in contract.detection_file_names_for(module_name)
+    crud_features = (
+        manifest_parsed.crud_features
+        if manifest_parsed is not None and manifest_parsed.name == template_name
+        else DEFAULT_CRUD_FEATURES
+    )
+    return DetectedModuleTemplate(
+        contract=get_module_template_contract(template_name),
+        crud_features=crud_features,
     )
 
 

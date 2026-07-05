@@ -250,6 +250,7 @@ polepos add module customers --template crud --pagination --timestamps
 polepos add module accounts --template crud --tenant-scoped --auth-required
 polepos add module assistant --template ai-prompt
 polepos add module webhook --api-only
+polepos add module notifications --service-only
 ```
 
 `standard` is the default template for REST and domain modules.
@@ -261,6 +262,11 @@ prompt orchestration and shared `integrations/llm` adapters.
 `api-only` generates router, schemas, a module-local `services/` package, and
 tests without model, repository, or database wiring. Use `--api-only` as a
 shortcut for `--template api-only`.
+`service-only` generates an internal, database-backed module (model,
+repository, service, and tests) with no router or API wiring, for domain
+services, event handlers, background jobs, or integrations that should not
+expose HTTP routes. Use `--service-only` as a shortcut for
+`--template service-only`.
 
 Generated module routes are local to their module router. For example, the
 standard and API-only starters use `@router.get("/")` inside the module, then
@@ -639,7 +645,7 @@ The JSON formatter includes:
 PolePosition is a lifecycle CLI, so the commands are meant to be used over time, not only on day one:
 
 * `polepos start` when you want to create a new FastAPI project with the PolePosition structure
-* `polepos add module` when you want to add a new REST/domain module, CRUD module, API-only module, or AI prompt module to an existing project
+* `polepos add module` when you want to add a new REST/domain module, CRUD module, API-only module, service-only (internal, no-API) module, or AI prompt module to an existing project
 * `polepos add auth` when you want to add the optional database-backed registration and token workflow
 * `polepos remove module` when you want to remove a generated module and its managed wiring
 * `polepos delete` when you want to delete a whole generated project directory and start over
@@ -654,6 +660,7 @@ PolePosition is a lifecycle CLI, so the commands are meant to be used over time,
 * `polepos db revision -m "..."` when you changed models and need a new migration
 * `polepos db downgrade` when you need to roll back a migration
 * `polepos upgrade` when you want a read-only project upgrade readiness report
+* `polepos completion bash|zsh|fish` when you want a shell tab-completion script for commands, subcommands, flags, and the current project's module names
 
 ### Examples
 
@@ -696,6 +703,7 @@ polepos add module <name> --template crud [--soft-delete] [--tenant-scoped]
 polepos add module <name> --template crud [--auth-required]
 polepos add module <name> --template ai-prompt
 polepos add module <name> --api-only
+polepos add module <name> --service-only
 polepos add auth
 polepos remove module <name> [--force] [--trace] [--wiring-only]
 polepos delete <name> [--force] [--trace]
@@ -712,6 +720,7 @@ polepos db revision -m "<message>"
 polepos db downgrade <target>
 polepos upgrade
 polepos version
+polepos completion bash|zsh|fish
 ```
 
 For option-by-option behavior, examples, and lifecycle notes, see the

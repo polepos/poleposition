@@ -5,11 +5,11 @@ import re
 from pathlib import Path
 
 from pole_position.cli.services.module_templates import (
-    DEFAULT_MODULE_TEMPLATE,
-    SUPPORTED_MODULE_TEMPLATES,
     ModuleTemplateContract,
     get_module_template_contract,
-    module_template_detection_contracts,
+)
+from pole_position.cli.services.module_templates.detection import (
+    detect_module_template_name,
 )
 from pole_position.cli.services.project_checker.constants import (
     IGNORED_MODULE_DIRECTORIES,
@@ -202,45 +202,17 @@ def _detect_module_kind(
 ) -> str:
     module_name = module_root.name
     manifest = manifest or read_project_manifest(project_root)
+    manifest_template_name = None
     if manifest.exists:
-        module_kind = _supported_manifest_module_template_name(
+        manifest_template_name = _supported_manifest_module_template_name(
             manifest.module_templates.get(module_name)
         )
-        if (
-            module_kind
-            and module_kind != "starter"
-            and module_kind in SUPPORTED_MODULE_TEMPLATES
-        ):
-            return module_kind
 
-    for contract in module_template_detection_contracts():
-        unit_test = (
-            project_root
-            / "tests"
-            / "unit"
-            / contract.unit_test_name(module_name)
-        )
-        if unit_test.exists():
-            return contract.name
-
-        if _contract_detection_files_match(contract, module_root, module_name):
-            return contract.name
-
-    return DEFAULT_MODULE_TEMPLATE
-
-
-def _contract_detection_files_match(
-    contract: ModuleTemplateContract,
-    module_root: Path,
-    module_name: str,
-) -> bool:
-    blocking = contract.requires_absent_file_names_for(module_name)
-    if any((module_root / file_name).exists() for file_name in blocking):
-        return False
-
-    return any(
-        (module_root / file_name).exists()
-        for file_name in contract.detection_file_names_for(module_name)
+    return detect_module_template_name(
+        tests_root=project_root / "tests",
+        module_root=module_root,
+        module_name=module_name,
+        manifest_template_name=manifest_template_name,
     )
 
 
@@ -546,6 +518,7 @@ def _module_name_from_generated_test_path(path: Path) -> str | None:
     unit_suffixes = (
         "_api_service.py",
         "_orchestrator.py",
+        "_service_only.py",
         "_service.py",
     )
 
