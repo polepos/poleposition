@@ -50,11 +50,27 @@ class ModuleTemplate:
     integration_test_content: str
     unit_test_name: str
     unit_test_content: str
+    contract: ModuleTemplateContract
     features: tuple[str, ...] = ()
-    update_db_models: bool = True
-    update_api_router: bool = True
-    ensure_llm_integrations: bool = False
-    ensure_llm_settings: bool = False
+
+    # The wiring flags always come from the contract, so a builder can never
+    # forget to mirror one (which would silently wire a module against stale
+    # defaults).
+    @property
+    def update_db_models(self) -> bool:
+        return self.contract.update_db_models
+
+    @property
+    def update_api_router(self) -> bool:
+        return self.contract.update_api_router
+
+    @property
+    def ensure_llm_integrations(self) -> bool:
+        return self.contract.ensure_llm_integrations
+
+    @property
+    def ensure_llm_settings(self) -> bool:
+        return self.contract.ensure_llm_settings
 
 
 STANDARD_MODULE_TEMPLATE_CONTRACT = ModuleTemplateContract(

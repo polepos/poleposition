@@ -1,7 +1,6 @@
 from pole_position.cli import console
 from pole_position.cli.command import Command
 from pole_position.cli.services.completion import (
-    SUPPORTED_SHELLS,
     complete,
     completion_script,
 )
@@ -57,4 +56,4 @@ complete_command = Command(
 )
 
 
-__all__ = ["command", "complete_command", "SUPPORTED_SHELLS"]
+__all__ = ["command", "complete_command"]

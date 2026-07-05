@@ -17,7 +17,7 @@ from pole_position.cli.services.module_templates import (
     SUPPORTED_MODULE_TEMPLATES,
 )
 from pole_position.cli.services.project_locator import (
-    find_package_root,
+    _find_package_root_in,
     find_project_root,
 )
 from pole_position.cli.services.project_manifest import read_project_manifest
@@ -163,9 +163,9 @@ def _module_names(cwd: Path | None) -> list[str]:
     if names:
         return sorted(names)
 
-    try:
-        package_root = find_package_root(cwd)
-    except Exception:
+    # Reuse the already-resolved project root instead of re-walking parents.
+    package_root = _find_package_root_in(project_root)
+    if package_root is None:
         return []
 
     modules_root = package_root / "modules"

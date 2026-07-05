@@ -55,10 +55,8 @@ def build_crud_template(
             "crud/tests/unit.py.tpl",
             context,
         ),
+        contract=CRUD_MODULE_TEMPLATE_CONTRACT,
         features=resolved_features.enabled_labels,
-        update_db_models=CRUD_MODULE_TEMPLATE_CONTRACT.update_db_models,
-        ensure_llm_integrations=CRUD_MODULE_TEMPLATE_CONTRACT.ensure_llm_integrations,
-        ensure_llm_settings=CRUD_MODULE_TEMPLATE_CONTRACT.ensure_llm_settings,
     )
 
 

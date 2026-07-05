@@ -50,9 +50,5 @@ def build_ai_prompt_template(
             "ai_prompt/tests/unit.py.tpl",
             context,
         ),
-        update_db_models=AI_PROMPT_MODULE_TEMPLATE_CONTRACT.update_db_models,
-        ensure_llm_integrations=(
-            AI_PROMPT_MODULE_TEMPLATE_CONTRACT.ensure_llm_integrations
-        ),
-        ensure_llm_settings=AI_PROMPT_MODULE_TEMPLATE_CONTRACT.ensure_llm_settings,
+        contract=AI_PROMPT_MODULE_TEMPLATE_CONTRACT,
     )

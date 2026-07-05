@@ -48,9 +48,5 @@ def build_standard_template(
             "standard/tests/unit.py.tpl",
             context,
         ),
-        update_db_models=STANDARD_MODULE_TEMPLATE_CONTRACT.update_db_models,
-        ensure_llm_integrations=(
-            STANDARD_MODULE_TEMPLATE_CONTRACT.ensure_llm_integrations
-        ),
-        ensure_llm_settings=STANDARD_MODULE_TEMPLATE_CONTRACT.ensure_llm_settings,
+        contract=STANDARD_MODULE_TEMPLATE_CONTRACT,
     )

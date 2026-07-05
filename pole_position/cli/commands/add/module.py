@@ -18,6 +18,13 @@ from pole_position.cli.usage import print_command_help
 
 HELP_OPTIONS = {"-h", "--help"}
 
+# Convenience flags that select a module template; each maps to its template
+# name. Adding a new shortcut is a single entry here.
+SHORTCUT_TEMPLATE_FLAGS = {
+    "--api-only": "api-only",
+    "--service-only": "service-only",
+}
+
 
 def _print_usage() -> None:
     print_command_help("add", "module")
@@ -35,8 +42,7 @@ def run(args: list[str]) -> None:
     raw_name: str | None = None
     template = "standard"
     template_was_set = False
-    api_only = False
-    service_only = False
+    shortcut_templates: list[str] = []
     crud_feature_names: set[str] = set()
     index = 0
 
@@ -63,13 +69,8 @@ def run(args: list[str]) -> None:
             index += 1
             continue
 
-        if argument == "--api-only":
-            api_only = True
-            index += 1
-            continue
-
-        if argument == "--service-only":
-            service_only = True
+        if argument in SHORTCUT_TEMPLATE_FLAGS:
+            shortcut_templates.append(SHORTCUT_TEMPLATE_FLAGS[argument])
             index += 1
             continue
 
@@ -96,29 +97,22 @@ def run(args: list[str]) -> None:
         _print_usage()
         raise SystemExit(1)
 
-    if api_only and service_only:
-        console.error("Choose either --api-only or --service-only, not both.")
+    chosen_shortcuts = list(dict.fromkeys(shortcut_templates))
+    if len(chosen_shortcuts) > 1:
+        flags = ", ".join(f"--{name}" for name in chosen_shortcuts)
+        console.error(f"Choose only one module template shortcut: {flags}.")
         _print_usage()
         raise SystemExit(1)
 
-    if api_only:
-        if template_was_set and template != "api-only":
+    if chosen_shortcuts:
+        shortcut = chosen_shortcuts[0]
+        if template_was_set and template != shortcut:
             console.error(
-                "--api-only cannot be combined with another module template."
+                f"--{shortcut} cannot be combined with another module template."
             )
             _print_usage()
             raise SystemExit(1)
-        template = "api-only"
-
-    if service_only:
-        if template_was_set and template != "service-only":
-            console.error(
-                "--service-only cannot be combined with another module "
-                "template."
-            )
-            _print_usage()
-            raise SystemExit(1)
-        template = "service-only"
+        template = shortcut
 
     if crud_feature_names and template != "crud":
         flags = ", ".join(sorted(CRUD_FEATURE_FLAGS))
