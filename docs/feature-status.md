@@ -28,6 +28,7 @@ Instead, it clarifies whether a feature is:
 | `polepos add module` with `crud` | Growing | Database-backed CRUD skeleton with list/create/get/update/delete routes, repository/service layers, generated tests, and opt-in pagination, timestamps, soft delete, tenant scoping, and auth-required route protection. |
 | `polepos add module` with `ai-prompt` | Growing | Good provider-agnostic foundation; adapters are scaffold-level boundaries for real provider integration. |
 | `polepos add module` with `api-only` | Growing | Useful lightweight module archetype for routes that do not need model, repository, or database wiring. |
+| `polepos add module` with `service-only` | Growing | Internal, database-backed module archetype (model, repository, service, and tests) that intentionally exposes no HTTP routes, for domain services, event handlers, background jobs, or integrations. |
 | `polepos add auth` | Growing | Optional database-backed registration and token workflow with generated model, router, service, tests, and check coverage. |
 | `polepos remove module` | Growing | Removes generated module scaffolds and managed wiring; supports `--wiring-only` for detaching managed references while preserving customized module files. |
 | `polepos add integration kafka` | Growing | First messaging integration; producer, consumer factory, settings, env, and test double support are scaffolded. |
@@ -37,6 +38,7 @@ Instead, it clarifies whether a feature is:
 | `polepos check` | Stable foundation | Runs core checks for project identity, generated structure, Alembic config, managed markers, starter routing, added module lifecycle wiring, orphan remnants, opt-in integration wiring, JSON output, and safe marker fixes. |
 | `polepos db ...` commands | Stable foundation | Good migration lifecycle wrapper around Alembic, including read-only status reporting. |
 | `polepos upgrade` | Growing | Read-only project upgrade readiness report that summarizes CLI version, manifest state, integrations, modules, and check status. |
+| `polepos completion` | Growing | Prints a `bash`, `zsh`, or `fish` completion script derived from the live command tree, completing commands, subcommands, flags, template/database values, integration names, and the current project's module names. |
 | `polepos.data` runtime structures | Growing | Provides dependency-free in-memory structures such as caches, sorted containers, trie, graph, priority queue, and union-find. |
 | Alembic migration support | Stable foundation | Generated projects are migration-first. |
 | Docker and PostgreSQL workflow | Growing | Good local runtime story; Docker e2e exists as opt-in smoke coverage. |

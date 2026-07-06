@@ -231,6 +231,7 @@ Current templates:
 - `crud`
 - `ai-prompt`
 - `api-only`
+- `service-only`
 
 Project patching lives in:
 
@@ -261,6 +262,14 @@ without model, repository, or database model wiring.
 
 The `crud` template stays database-backed like `standard`, but generates
 detail, update, and delete routes plus CRUD-specific service and test names.
+
+The `--service-only` CLI option is a shortcut for the `service-only` template.
+It is the inverse of `api-only`: it generates model, repository, a module-local
+`services/` package, and tests, and updates `db/models.py` wiring, but no
+router, no schemas, and no `api/router.py` registration. `module_creator`
+gates the router wiring on the template's `update_api_router` flag, and
+`polepos check` gates its router-wiring validation on the same flag, so a
+service-only module is internal by construction.
 
 ## `remove module` Architecture
 
