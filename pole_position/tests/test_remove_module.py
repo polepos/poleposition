@@ -1126,3 +1126,56 @@ def test_remove_module_works_from_nested_directory(tmp_path: Path):
 
     assert result.returncode == 0
     assert not nested_dir.exists()
+
+
+def test_remove_service_only_module_when_router_markers_missing(
+    tmp_path: Path,
+) -> None:
+    # Regression: a service-only module never touches api/router.py, so it must
+    # stay removable even when the router markers are absent (hand-edited
+    # project). Before the fix, add succeeded but remove failed preflight.
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    router_path = project_root / "src" / "myapp" / "api" / "router.py"
+    router_path.write_text(
+        router_path.read_text(encoding="utf-8").replace(
+            "# polepos:router-includes", ""
+        ),
+        encoding="utf-8",
+    )
+
+    add_result = run_cli(project_root, "add", "module", "svc", "--service-only")
+    assert add_result.returncode == 0
+
+    remove_result = run_cli(project_root, "remove", "module", "svc")
+
+    assert remove_result.returncode == 0, remove_result.stdout
+    assert "Removed module: svc" in remove_result.stdout
+    assert not (project_root / "src" / "myapp" / "modules" / "svc").exists()
+
+
+def test_remove_standard_module_still_requires_router_markers(
+    tmp_path: Path,
+) -> None:
+    # Guard against over-relaxing the fix: a router-backed template must still
+    # require the managed router markers.
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    assert run_cli(project_root, "add", "module", "garage").returncode == 0
+
+    router_path = project_root / "src" / "myapp" / "api" / "router.py"
+    router_path.write_text(
+        router_path.read_text(encoding="utf-8").replace(
+            "# polepos:router-includes", ""
+        ),
+        encoding="utf-8",
+    )
+
+    result = run_cli(project_root, "remove", "module", "garage")
+
+    assert result.returncode != 0
+    assert "router-includes" in result.stdout

@@ -379,6 +379,22 @@ For an `api-only` module, `check` expects:
 `api-only` modules are intentionally not required to have model, repository, or
 `db/models.py` wiring.
 
+For a `service-only` module, `check` expects:
+
+- module files: `__init__.py`, `model.py`, `repository.py`,
+  `services/__init__.py`, `services/<module>_service.py`
+- export in `src/<package>/modules/__init__.py`
+- model import in `src/<package>/db/models.py`
+- integration test under `tests/integration/test_<module>.py`
+- unit test under `tests/unit/test_<module>_service_only.py`
+
+`service-only` modules are internal and expose no HTTP routes, so `check`
+intentionally does **not** require `router.py`, `schemas.py`, or
+`api/router.py` wiring for them. When a project has no manifest entry for a
+module, `check` distinguishes a service-only module from a standard one by its
+generated unit test first, and falls back to the absence of `router.py` only
+when no unit test is present.
+
 ### Module Dependency Check
 
 Lifecycle check also validates the dependency graph between added modules and

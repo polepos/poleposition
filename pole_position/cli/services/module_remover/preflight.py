@@ -78,8 +78,6 @@ def _validate_remove_module_preflight(
         _collect_missing_marker(
             problems, modules_init_path, MODULE_EXPORTS_MARKER
         )
-        _collect_missing_marker(problems, router_path, ROUTER_IMPORTS_MARKER)
-        _collect_missing_marker(problems, router_path, ROUTER_INCLUDES_MARKER)
 
         package_name = package_root.name
         _collect_unsupported_reference(
@@ -89,12 +87,22 @@ def _validate_remove_module_preflight(
             reference_tokens=[f'"{module_name}"', f"'{module_name}'"],
             description="module export",
         )
-        _collect_unsupported_router_wiring(
-            problems=problems,
-            path=router_path,
-            package_name=package_name,
-            module_name=module_name,
-        )
+        # Templates that never wire a router (service-only) must not require
+        # the api/router.py markers, so a router-less module stays removable
+        # even when api/router.py is hand-edited.
+        if template_contract.update_api_router:
+            _collect_missing_marker(
+                problems, router_path, ROUTER_IMPORTS_MARKER
+            )
+            _collect_missing_marker(
+                problems, router_path, ROUTER_INCLUDES_MARKER
+            )
+            _collect_unsupported_router_wiring(
+                problems=problems,
+                path=router_path,
+                package_name=package_name,
+                module_name=module_name,
+            )
 
         if template_contract.update_db_models:
             _collect_missing_marker(problems, models_path, MODEL_IMPORTS_MARKER)

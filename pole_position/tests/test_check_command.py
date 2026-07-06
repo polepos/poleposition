@@ -1699,3 +1699,73 @@ def test_check_reports_circular_module_dependency(tmp_path: Path) -> None:
     assert issues["PPCHK060"] == (
         "Circular module dependency detected: billing -> customers -> billing"
     )
+
+
+def test_check_detects_router_less_standard_module_without_manifest(
+    tmp_path: Path,
+) -> None:
+    # Regression: a manifest-less standard module whose router.py was deleted
+    # must NOT be misdetected as service-only; check must still flag the
+    # missing router.py (before the fix it reported a bogus missing unit test).
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    assert run_cli(project_root, "add", "module", "billing").returncode == 0
+
+    (
+        project_root / "src" / "myapp" / "modules" / "billing" / "router.py"
+    ).unlink()
+    manifest = project_root / ".poleposition.toml"
+    manifest.write_text(
+        "\n".join(
+            line
+            for line in manifest.read_text(encoding="utf-8").splitlines()
+            if not line.strip().startswith("billing")
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    result = run_cli(project_root, "check")
+
+    assert result.returncode != 0
+    assert "modules/billing/router.py" in result.stdout
+    assert "test_billing_service_only.py" not in result.stdout
+
+
+def test_check_flags_orphaned_service_only_unit_test(tmp_path: Path) -> None:
+    # Regression: an orphaned service-only unit test (module directory gone)
+    # must be reported like any other template's orphan generated test.
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    assert (
+        run_cli(
+            project_root, "add", "module", "notify", "--service-only"
+        ).returncode
+        == 0
+    )
+
+    package_root = project_root / "src" / "myapp"
+    shutil.rmtree(package_root / "modules" / "notify")
+    for managed in (
+        package_root / "modules" / "__init__.py",
+        package_root / "db" / "models.py",
+    ):
+        managed.write_text(
+            "\n".join(
+                line
+                for line in managed.read_text(encoding="utf-8").splitlines()
+                if "notify" not in line
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+    (project_root / "tests" / "integration" / "test_notify.py").unlink()
+
+    result = run_cli(project_root, "check")
+
+    assert result.returncode != 0
+    assert "test_notify_service_only.py" in result.stdout

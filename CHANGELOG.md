@@ -5,6 +5,37 @@ Notable PolePosition changes are tracked here.
 PolePosition follows Conventional Commits in repository history. This changelog
 summarizes user-facing behavior, release readiness work, and known beta scope.
 
+## 0.0.47 - 2026-06-27
+
+### Fixed
+
+- `polepos check` and `polepos remove module` no longer misclassify a
+  manifest-less `standard` module whose `router.py` was deleted as
+  `service-only`. Template detection now trusts a module's generated unit test
+  before the file heuristic, so `check` again reports the missing router and
+  wiring instead of passing silently, and `remove module` deletes the correct
+  files. Detection now lives in one shared place so `check` and `remove` cannot
+  disagree.
+- `polepos check` now flags an orphaned `service-only` unit test
+  (`test_<module>_service_only.py`) left behind when a module directory is
+  deleted, matching the behavior for other templates.
+- `polepos remove module` can now remove a `service-only` module even when
+  `api/router.py` has been hand-edited, since a router-less module never
+  touches the router; router-backed templates still require the managed router
+  markers.
+- Shell completion fixes: the generated `zsh` script now completes on the first
+  Tab when installed via `$fpath` autoload; command aliases (for example
+  `startproject`) now complete their flags; `--template`/`--db` values are only
+  offered for commands that declare those flags; an already-filled positional
+  argument is no longer re-offered; and the generated `bash` script no longer
+  aborts under `set -u` on the first argument.
+
+### Documentation
+
+- Documented the `service-only` template and the `polepos completion` command
+  in the README and documented the `service-only` check contract in the project
+  checks reference.
+
 ## 0.0.46 - 2026-06-27
 
 ### Added
