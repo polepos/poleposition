@@ -225,13 +225,20 @@ Template selection lives in:
 pole_position/cli/services/module_templates/
 ```
 
-Current templates:
+Current templates span two axes, interface (does it expose HTTP routes?) and
+persistence (does it own a database model?):
 
-- `standard`
-- `crud`
-- `ai-prompt`
-- `api-only`
-- `service-only`
+| Template | Interface | Database | Notes |
+| --- | --- | --- | --- |
+| `api` | HTTP routes | yes | default; full module (model, repository, router, schemas, service) |
+| `crud` | HTTP routes | yes | `api` variant with full CRUD routes |
+| `ai-prompt` | HTTP routes | no | `api-only` variant with LLM integration |
+| `api-only` | HTTP routes | no | router, schemas, service; no model or repository |
+| `service` | none (internal) | yes | model, repository, service, `db/models.py` wiring; no router or schemas |
+| `service-only` | none (internal) | no | stateless service exposing a plain method; no database |
+
+`api` is the default template. `standard` is still accepted as a back-compat
+alias that resolves to `api`.
 
 Project patching lives in:
 
@@ -249,7 +256,7 @@ submodules such as `preflight.py`, `files.py`, `wiring.py`, and `llm.py`):
 - optionally adds LLM integration files
 - optionally patches settings and `.env.example`
 
-Module routers use local paths. A generated standard module can define
+Module routers use local paths. A generated api module can define
 `@router.get("/")` and `@router.post("/")` inside
 `src/<package>/modules/<name>/router.py`; `module_creator` then registers the
 router once in `src/<package>/api/router.py` with `prefix="/<name>"`. The
@@ -260,16 +267,25 @@ The `--api-only` CLI option is a shortcut for the `api-only` template. It
 generates router, schemas, a module-local `services/` package, and tests
 without model, repository, or database model wiring.
 
-The `crud` template stays database-backed like `standard`, but generates
+The `crud` template stays database-backed like `api`, but generates
 detail, update, and delete routes plus CRUD-specific service and test names.
 
-The `--service-only` CLI option is a shortcut for the `service-only` template.
-It is the inverse of `api-only`: it generates model, repository, a module-local
-`services/` package, and tests, and updates `db/models.py` wiring, but no
-router, no schemas, and no `api/router.py` registration. `module_creator`
-gates the router wiring on the template's `update_api_router` flag, and
-`polepos check` gates its router-wiring validation on the same flag, so a
-service-only module is internal by construction.
+The `service` template is the database-backed inverse of `api-only`: it
+generates model, repository, a module-local `services/` package, and tests, and
+updates `db/models.py` wiring, but no router, no schemas, and no `api/router.py`
+registration. It has no dedicated CLI shortcut; select it with
+`--template service`.
+
+The `--service-only` CLI option is a shortcut for the `service-only` template,
+an internal, stateless module with neither HTTP routes nor a database. It
+generates only `__init__.py`, a module-local `services/` package whose service
+class exposes a plain method such as `process(message)`, and tests. It updates
+neither `db/models.py` nor `api/router.py`.
+
+For both internal shapes, `module_creator` gates the router wiring on the
+template's `update_api_router` flag, and `polepos check` gates its router-wiring
+validation on the same flag, so a `service` or `service-only` module is internal
+by construction.
 
 ## `remove module` Architecture
 

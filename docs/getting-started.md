@@ -55,8 +55,8 @@ The command creates a module under `src/shop_api/modules/customers/`, adds
 starter tests, wires the router, and registers model imports for Alembic
 metadata discovery.
 
-Generated module endpoint paths are relative to the module router. The standard
-starter uses collection handlers such as `@router.get("/")` and
+Generated module endpoint paths are relative to the module router. The default
+`api` starter uses collection handlers such as `@router.get("/")` and
 `@router.post("/")`, while `api/router.py` includes that router with a
 module-specific prefix:
 
@@ -84,13 +84,17 @@ Use a different module template when the boundary is clearer:
 ```bash
 polepos add module customers --template crud
 polepos add module webhooks --api-only
-polepos add module notifications --service-only
+polepos add module notifications --template service
+polepos add module dispatcher --service-only
 polepos add module assistant --template ai-prompt
 ```
 
-`--service-only` generates an internal module (model, repository, service, and
-tests) that owns data but exposes no HTTP routes, for domain services, event
-handlers, background jobs, or integrations.
+`--template service` generates a database-backed internal module (model,
+repository, service, and tests) that owns data but exposes no HTTP routes, for
+domain services, event handlers, background jobs, or integrations.
+`--service-only` generates a stateless internal module (a single service class
+with a `process()` method, plus tests) that has neither HTTP routes nor a
+database.
 
 See [Module Templates](module-templates.md) for the generated file layouts and
 tradeoffs.

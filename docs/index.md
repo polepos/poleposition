@@ -45,7 +45,8 @@ example, the `customers` module starter exposes collection handlers at
 
 - FastAPI-native application structure
 - Module-oriented organization for domain growth, including internal
-  `service-only` modules that own logic and data but expose no HTTP routes
+  `service` modules that own logic and data but expose no HTTP routes, and
+  stateless `service-only` modules that expose no HTTP routes and use no database
 - Module removal that cleans up generated wiring without mutating database schema
 - Settings, logging, middleware, and exception wiring
 - SQLAlchemy and Alembic migration foundations
@@ -78,7 +79,7 @@ helps teams and agents keep FastAPI projects consistent as they grow.
 
 - [Getting Started](getting-started.md): create and run a project.
 - [CLI Reference](cli.md): command usage, options, examples, and help topics.
-- [Module Templates](module-templates.md): standard, CRUD, API-only, service-only, and AI prompt module choices.
+- [Module Templates](module-templates.md): api, CRUD, API-only, service, service-only, and AI prompt module choices.
 - [Auth Workflow](auth-workflow.md): optional database-backed registration and token workflow.
 - [Configuration Reference](configuration.md): generated `.env` and runtime settings.
 - [Data Structures](data-structures.md): runtime helpers under `polepos.data`.

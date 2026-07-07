@@ -250,10 +250,13 @@ polepos add module customers --template crud --pagination --timestamps
 polepos add module accounts --template crud --tenant-scoped --auth-required
 polepos add module assistant --template ai-prompt
 polepos add module webhook --api-only
+polepos add module inventory --template service
 polepos add module notifications --service-only
 ```
 
-`standard` is the default template for REST and domain modules.
+`api` is the default template for REST and domain modules, generating HTTP
+routes backed by a model, repository, and database wiring. The former
+`standard` name is still accepted as a back-compat alias that resolves to `api`.
 `crud` generates list/create/get/update/delete routes and can opt into
 enterprise CRUD concerns such as pagination, timestamps, soft delete, explicit
 tenant scoping, and bearer-auth protection.
@@ -262,14 +265,17 @@ prompt orchestration and shared `integrations/llm` adapters.
 `api-only` generates router, schemas, a module-local `services/` package, and
 tests without model, repository, or database wiring. Use `--api-only` as a
 shortcut for `--template api-only`.
-`service-only` generates an internal, database-backed module (model,
-repository, service, and tests) with no router or API wiring, for domain
-services, event handlers, background jobs, or integrations that should not
-expose HTTP routes. Use `--service-only` as a shortcut for
-`--template service-only`.
+`service` generates an internal, database-backed module (model, repository,
+service, and tests) with no router or API wiring, for domain services, event
+handlers, background jobs, or integrations that should not expose HTTP routes.
+Use `--template service`.
+`service-only` generates an internal, stateless service with no HTTP routes and
+no database wiring: just a module-local `services/` package whose service class
+exposes a plain method such as `process(message)`. Use `--service-only` as a
+shortcut for `--template service-only`.
 
 Generated module routes are local to their module router. For example, the
-standard and API-only starters use `@router.get("/")` inside the module, then
+`api` and API-only starters use `@router.get("/")` inside the module, then
 PolePosition registers that router in `src/<package>/api/router.py` with a
 module prefix:
 
@@ -645,7 +651,7 @@ The JSON formatter includes:
 PolePosition is a lifecycle CLI, so the commands are meant to be used over time, not only on day one:
 
 * `polepos start` when you want to create a new FastAPI project with the PolePosition structure
-* `polepos add module` when you want to add a new REST/domain module, CRUD module, API-only module, service-only (internal, no-API) module, or AI prompt module to an existing project
+* `polepos add module` when you want to add a new REST/domain module, CRUD module, API-only module, database-backed `service` module (internal, no HTTP routes), `service-only` module (internal, no HTTP routes, no database), or AI prompt module to an existing project
 * `polepos add auth` when you want to add the optional database-backed registration and token workflow
 * `polepos remove module` when you want to remove a generated module and its managed wiring
 * `polepos delete` when you want to delete a whole generated project directory and start over
@@ -703,6 +709,7 @@ polepos add module <name> --template crud [--soft-delete] [--tenant-scoped]
 polepos add module <name> --template crud [--auth-required]
 polepos add module <name> --template ai-prompt
 polepos add module <name> --api-only
+polepos add module <name> --template service
 polepos add module <name> --service-only
 polepos add auth
 polepos remove module <name> [--force] [--trace] [--wiring-only]
