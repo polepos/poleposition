@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 from pole_position.cli.services.module_templates import (
@@ -7,6 +7,7 @@ from pole_position.cli.services.module_templates import (
     CrudFeatureSet,
     ModuleTemplateContract,
     get_module_template_contract,
+    resolve_module_template_name,
 )
 from pole_position.cli.services.module_templates.detection import (
     detect_module_template_name,
@@ -79,7 +80,9 @@ def _supported_manifest_module_template(
     except ValueError:
         return None
 
-    if parsed_template.name not in SUPPORTED_MODULE_TEMPLATES:
+    # Resolve back-compat aliases (e.g. a `standard` manifest -> `api`).
+    canonical = resolve_module_template_name(parsed_template.name)
+    if canonical not in SUPPORTED_MODULE_TEMPLATES:
         return None
 
-    return parsed_template
+    return replace(parsed_template, name=canonical)

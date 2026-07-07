@@ -73,8 +73,17 @@ class ModuleTemplate:
         return self.contract.ensure_llm_settings
 
 
-STANDARD_MODULE_TEMPLATE_CONTRACT = ModuleTemplateContract(
-    name="standard",
+# The four base archetypes span two axes: interface (api* exposes HTTP routes,
+# service* is internal) and persistence (owns a database model, or none):
+#
+#   api           HTTP + database    (alias: standard)
+#   api-only      HTTP, no database
+#   service       database, no HTTP
+#   service-only  no HTTP, no database
+#
+# `crud` is an `api` variant and `ai-prompt` is an `api-only` variant.
+API_MODULE_TEMPLATE_CONTRACT = ModuleTemplateContract(
+    name="api",
     file_names=(
         "__init__.py",
         "model.py",
@@ -88,6 +97,9 @@ STANDARD_MODULE_TEMPLATE_CONTRACT = ModuleTemplateContract(
     unit_test_name_template="test_{module_name}_service.py",
     detection_file_names=("model.py", "repository.py"),
 )
+
+# `standard` is a back-compat alias name for `api`.
+STANDARD_MODULE_TEMPLATE_CONTRACT = API_MODULE_TEMPLATE_CONTRACT
 
 CRUD_MODULE_TEMPLATE_CONTRACT = ModuleTemplateContract(
     name="crud",
@@ -141,10 +153,13 @@ API_ONLY_MODULE_TEMPLATE_CONTRACT = ModuleTemplateContract(
         "service.py",
         "services/{module_name}_service.py",
     ),
+    requires_absent_file_names=("model.py",),
 )
 
-SERVICE_ONLY_MODULE_TEMPLATE_CONTRACT = ModuleTemplateContract(
-    name="service-only",
+# `service`: internal, database-backed module with no HTTP routes (this is the
+# pre-0.0.48 `service-only` shape).
+SERVICE_MODULE_TEMPLATE_CONTRACT = ModuleTemplateContract(
+    name="service",
     file_names=(
         "__init__.py",
         "model.py",
@@ -153,8 +168,24 @@ SERVICE_ONLY_MODULE_TEMPLATE_CONTRACT = ModuleTemplateContract(
         "services/{module_name}_service.py",
     ),
     integration_test_name_template="test_{module_name}.py",
-    unit_test_name_template="test_{module_name}_service_only.py",
+    unit_test_name_template="test_{module_name}_internal_service.py",
     update_api_router=False,
     detection_file_names=("model.py", "repository.py"),
     requires_absent_file_names=("router.py",),
+)
+
+# `service-only`: internal module with neither HTTP routes nor a database table.
+SERVICE_ONLY_MODULE_TEMPLATE_CONTRACT = ModuleTemplateContract(
+    name="service-only",
+    file_names=(
+        "__init__.py",
+        "services/__init__.py",
+        "services/{module_name}_service.py",
+    ),
+    integration_test_name_template="test_{module_name}.py",
+    unit_test_name_template="test_{module_name}_service_only.py",
+    update_db_models=False,
+    update_api_router=False,
+    detection_file_names=("services/{module_name}_service.py",),
+    requires_absent_file_names=("router.py", "model.py"),
 )

@@ -1769,3 +1769,28 @@ def test_check_flags_orphaned_service_only_unit_test(tmp_path: Path) -> None:
 
     assert result.returncode != 0
     assert "test_notify_service_only.py" in result.stdout
+
+
+def test_check_accepts_standard_alias_in_manifest(tmp_path: Path) -> None:
+    # Regression: projects created before 0.0.48 record `standard` in the
+    # manifest. It is a back-compat alias for `api` and must not be flagged as
+    # an unsupported module template.
+    create_result = run_cli(tmp_path, "start", "myapp")
+    assert create_result.returncode == 0
+
+    project_root = tmp_path / "myapp"
+    assert run_cli(project_root, "add", "module", "garage").returncode == 0
+
+    manifest = project_root / ".poleposition.toml"
+    manifest.write_text(
+        manifest.read_text(encoding="utf-8").replace(
+            'garage = "api"', 'garage = "standard"'
+        ),
+        encoding="utf-8",
+    )
+
+    result = run_cli(project_root, "check")
+
+    assert result.returncode == 0, result.stdout
+    assert "unsupported module template" not in result.stdout
+    assert "PolePosition project check passed." in result.stdout

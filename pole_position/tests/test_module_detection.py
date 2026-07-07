@@ -33,9 +33,10 @@ def test_manifest_template_is_authoritative(tmp_path: Path) -> None:
 
 
 def test_unit_test_beats_file_heuristic(tmp_path: Path) -> None:
-    # Regression for the misdetection bug: a standard module whose router.py
-    # was deleted (so it looks like service-only by files) must still be
-    # detected as standard from its distinctive unit test, not service-only.
+    # Regression for the misdetection bug: an api module whose router.py
+    # was deleted (so by files alone it looks like the db-backed `service`
+    # template) must still be detected as api from its distinctive unit test,
+    # not service.
     module_root = tmp_path / "src" / "app" / "modules" / "billing"
     _make(module_root, ("model.py", "repository.py"))  # no router.py
     _unit_test(tmp_path / "tests", "test_billing_service.py")
@@ -46,7 +47,7 @@ def test_unit_test_beats_file_heuristic(tmp_path: Path) -> None:
         module_name="billing",
     )
 
-    assert name == "standard"
+    assert name == "api"
 
 
 def test_service_only_detected_from_its_unit_test(tmp_path: Path) -> None:
@@ -63,10 +64,12 @@ def test_service_only_detected_from_its_unit_test(tmp_path: Path) -> None:
     assert name == "service-only"
 
 
-def test_router_absent_service_only_fallback_when_no_unit_test(
+def test_router_absent_service_fallback_when_no_unit_test(
     tmp_path: Path,
 ) -> None:
-    # With no unit test at all, the file heuristic (router absent) applies.
+    # With no unit test at all, the file heuristic applies: a db-backed module
+    # (model + repository) with the router absent is the internal `service`
+    # template.
     module_root = tmp_path / "src" / "app" / "modules" / "notify"
     _make(module_root, ("model.py", "repository.py"))  # no router.py, no test
 
@@ -76,10 +79,10 @@ def test_router_absent_service_only_fallback_when_no_unit_test(
         module_name="notify",
     )
 
-    assert name == "service-only"
+    assert name == "service"
 
 
-def test_standard_router_present_fallback_when_no_unit_test(
+def test_api_router_present_fallback_when_no_unit_test(
     tmp_path: Path,
 ) -> None:
     module_root = tmp_path / "src" / "app" / "modules" / "billing"
@@ -91,4 +94,4 @@ def test_standard_router_present_fallback_when_no_unit_test(
         module_name="billing",
     )
 
-    assert name == "standard"
+    assert name == "api"

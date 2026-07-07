@@ -97,7 +97,7 @@ def test_remove_standard_module_cleans_generated_wiring(tmp_path: Path):
 
     assert result.returncode == 0
     assert "Removed module: garage" in result.stdout
-    assert "Template: standard" in result.stdout
+    assert "Template: api" in result.stdout
     assert (
         "Create a migration if removing the module also removes database tables"
         in (result.stdout)
@@ -381,7 +381,7 @@ def test_remove_module_trace_reports_plan_without_changing_files(
 
     assert result.returncode == 0
     assert "Removal trace: garage" in result.stdout
-    assert "Template: standard" in result.stdout
+    assert "Template: api" in result.stdout
     assert "Would remove:" in result.stdout
     assert "src/myapp/modules/garage" in result.stdout
     assert "tests/integration/test_garage.py" in result.stdout

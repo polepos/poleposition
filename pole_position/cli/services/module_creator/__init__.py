@@ -39,6 +39,7 @@ from pole_position.cli.services.module_templates import (
     SUPPORTED_MODULE_TEMPLATES,
     CrudFeatureSet,
     build_module_template,
+    resolve_module_template_name,
 )
 from pole_position.cli.services.project_locator import (
     find_package_root,
@@ -66,10 +67,13 @@ __all__ = [
 
 def add_module(
     module_name: str,
-    template: str = "standard",
+    template: str = "api",
     cwd: Path | None = None,
     crud_features: CrudFeatureSet = DEFAULT_CRUD_FEATURES,
 ) -> AddedModuleResult:
+    # Accept back-compat aliases (e.g. `standard`) and record the canonical
+    # name everywhere downstream.
+    template = resolve_module_template_name(template)
     if template not in SUPPORTED_MODULE_TEMPLATES:
         supported = ", ".join(SUPPORTED_MODULE_TEMPLATES)
         raise ValueError(

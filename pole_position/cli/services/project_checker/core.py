@@ -4,6 +4,7 @@ from pathlib import Path
 
 from pole_position.cli.services.module_templates import (
     SUPPORTED_MODULE_TEMPLATES,
+    resolve_module_template_name,
 )
 from pole_position.cli.services.project_checker.constants import (
     ALEMBIC_PATHS,
@@ -98,7 +99,8 @@ def _check_project_manifest(
 
         if (
             parsed_template is not None
-            and parsed_template.name in supported_module_templates
+            and resolve_module_template_name(parsed_template.name)
+            in supported_module_templates
         ):
             continue
         problems.append(

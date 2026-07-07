@@ -5,7 +5,36 @@ Notable PolePosition changes are tracked here.
 PolePosition follows Conventional Commits in repository history. This changelog
 summarizes user-facing behavior, release readiness work, and known beta scope.
 
-## 0.0.47 - 2026-06-27
+## 0.0.48 - 2026-07-06
+
+### Added
+
+- A no-HTTP, no-database `service-only` module template for internal, stateless
+  services such as domain logic, event handlers, and background jobs. It
+  generates only a service class and tests (no model, repository, router, or
+  schemas).
+
+### Changed
+
+- **Renamed the module templates to a consistent two-axis naming scheme.** The
+  axes are interface (`api*` exposes HTTP routes, `service*` is internal) and
+  persistence (with or without a database model):
+  - `api` is the new canonical name for the default HTTP + database template;
+    `standard` is still accepted as a back-compat alias and resolves to `api`.
+  - `api-only` (HTTP, no database) is unchanged.
+  - `service` is a database-backed module with no HTTP routes. This is the
+    module shape that shipped as `service-only` in 0.0.46.
+  - `service-only` now means an internal module with **neither** HTTP routes
+    **nor** a database (see Added).
+
+  `crud` and `ai-prompt` are unchanged (`api` and `api-only` variants). The
+  manifest records the canonical name (`api`, `service`, ...).
+
+  Migration: a module created on 0.0.46 with `--service-only` was
+  database-backed and is now the `service` template. Its manifest entry still
+  reads `service-only`, which now denotes the no-database shape, so re-create it
+  with `--template service` (or `polepos remove module <name> --wiring-only`
+  then re-add) to realign.
 
 ### Fixed
 

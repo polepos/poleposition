@@ -1,12 +1,12 @@
 from pole_position.cli.services.module_templates.naming import to_class_name
 from pole_position.cli.services.module_templates.renderer import render_template
 from pole_position.cli.services.module_templates.spec import (
-    STANDARD_MODULE_TEMPLATE_CONTRACT,
+    SERVICE_MODULE_TEMPLATE_CONTRACT,
     ModuleTemplate,
 )
 
 
-def build_standard_template(
+def build_service_template(
     *, package_name: str, module_name: str
 ) -> ModuleTemplate:
     class_name = to_class_name(module_name)
@@ -18,35 +18,33 @@ def build_standard_template(
 
     return ModuleTemplate(
         files={
-            "__init__.py": render_template("standard/__init__.py.tpl", context),
-            "model.py": render_template("standard/model.py.tpl", context),
+            "__init__.py": render_template("service/__init__.py.tpl", context),
+            "model.py": render_template("service/model.py.tpl", context),
             "repository.py": render_template(
-                "standard/repository.py.tpl", context
+                "service/repository.py.tpl", context
             ),
-            "schemas.py": render_template("standard/schemas.py.tpl", context),
             "services/__init__.py": render_template(
-                "standard/services/__init__.py.tpl",
+                "service/services/__init__.py.tpl",
                 context,
             ),
             f"services/{module_name}_service.py": render_template(
-                "standard/services/module_service.py.tpl",
+                "service/services/module_service.py.tpl",
                 context,
             ),
-            "router.py": render_template("standard/router.py.tpl", context),
         },
-        integration_test_name=STANDARD_MODULE_TEMPLATE_CONTRACT.integration_test_name(
+        integration_test_name=SERVICE_MODULE_TEMPLATE_CONTRACT.integration_test_name(
             module_name
         ),
         integration_test_content=render_template(
-            "standard/tests/integration.py.tpl",
+            "service/tests/integration.py.tpl",
             context,
         ),
-        unit_test_name=STANDARD_MODULE_TEMPLATE_CONTRACT.unit_test_name(
+        unit_test_name=SERVICE_MODULE_TEMPLATE_CONTRACT.unit_test_name(
             module_name
         ),
         unit_test_content=render_template(
-            "standard/tests/unit.py.tpl",
+            "service/tests/unit.py.tpl",
             context,
         ),
-        contract=STANDARD_MODULE_TEMPLATE_CONTRACT,
+        contract=SERVICE_MODULE_TEMPLATE_CONTRACT,
     )
