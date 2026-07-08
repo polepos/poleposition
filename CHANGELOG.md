@@ -38,6 +38,10 @@ summarizes user-facing behavior, release readiness work, and known beta scope.
 
 ### Fixed
 
+- `polepos.data.Trie.delete` and `Trie.keys()`/`items()` no longer raise
+  `RecursionError` on keys longer than the interpreter recursion limit. Both
+  now walk the trie iteratively (matching the earlier `UnionFind.find` and
+  `Graph.dfs` treatment); behavior is unchanged for normal-length keys.
 - `polepos check` and `polepos remove module` no longer misclassify a
   manifest-less `standard` module whose `router.py` was deleted as
   `service-only`. Template detection now trusts a module's generated unit test
