@@ -125,6 +125,27 @@ def test_trie_supports_prefix_lookup_and_delete() -> None:
     assert trie.keys("car") == ["car"]
 
 
+def test_trie_handles_long_keys_without_recursion_error() -> None:
+    from polepos.data import Trie
+
+    # A key far longer than the recursion limit is a valid trie input (paths,
+    # URLs, tokens). delete() and keys()/items() must walk it iteratively.
+    trie = Trie[int]()
+    long_key = "a" * 5000
+    trie.insert(long_key, 1)
+    trie.insert("b", 2)
+
+    assert trie.keys() == [long_key, "b"]  # ascending: "a..." < "b"
+    assert trie.get(long_key) == 1
+
+    trie.delete(long_key)
+
+    assert long_key not in trie
+    assert trie.keys() == ["b"]
+    # The entire 5000-node "a" chain is pruned, leaving only the "b" branch.
+    assert set(trie._root.children) == {"b"}
+
+
 def test_union_find_groups_components() -> None:
     from polepos.data import UnionFind
 
