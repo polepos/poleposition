@@ -100,7 +100,7 @@ class SortedList(Generic[T]):
         return list(self._items)
 
 
-class SortedSet(MutableSet[T], Generic[T]):
+class SortedSet(MutableSet[T]):
     """A set that iterates in sorted order."""
 
     def __init__(self, values: Iterable[T] = ()) -> None:
@@ -152,7 +152,7 @@ class SortedSet(MutableSet[T], Generic[T]):
         yield from self._items[start:stop]
 
 
-class SortedDict(MutableMapping[K, V], Generic[K, V]):
+class SortedDict(MutableMapping[K, V]):
     """A dictionary that iterates keys in sorted order."""
 
     def __init__(self, values: Iterable[tuple[K, V]] = ()) -> None:

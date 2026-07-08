@@ -10,7 +10,7 @@ K = TypeVar("K")
 V = TypeVar("V")
 
 
-class LRUCache(MutableMapping[K, V], Generic[K, V]):
+class LRUCache(MutableMapping[K, V]):
     """A small least-recently-used cache.
 
     The cache is in-memory and process-local. Reads through ``__getitem__`` and
@@ -54,13 +54,13 @@ class LRUCache(MutableMapping[K, V], Generic[K, V]):
         return self._items[key]
 
 
-@dataclass
+@dataclass(slots=True)
 class _TTLItem(Generic[V]):
     value: V
     expires_at: float
 
 
-class TTLCache(MutableMapping[K, V], Generic[K, V]):
+class TTLCache(MutableMapping[K, V]):
     """A lazy-expiring in-memory cache."""
 
     def __init__(

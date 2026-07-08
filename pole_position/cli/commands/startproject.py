@@ -48,7 +48,7 @@ def run(args: list[str]) -> None:
             database = args[index + 1]
             index += 1
         elif arg.startswith("--db="):
-            database = arg.split("=", 1)[1]
+            database = arg.removeprefix("--db=")
         elif arg.startswith("-"):
             console.error(f"Unexpected option: {arg}")
             print(USAGE)

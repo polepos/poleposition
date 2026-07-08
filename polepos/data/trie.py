@@ -7,7 +7,7 @@ V = TypeVar("V")
 _MISSING = object()
 
 
-@dataclass
+@dataclass(slots=True)
 class _TrieNode(Generic[V]):
     children: dict[str, _TrieNode[V]] = field(default_factory=dict)
     value: V | object = _MISSING
