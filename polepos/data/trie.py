@@ -41,9 +41,30 @@ class Trie(Generic[V]):
         return node.value
 
     def delete(self, key: str) -> None:
-        if not self._delete(self._root, key, 0):
+        # Walk down iteratively, recording the path, then prune now-empty nodes
+        # on the way back up. Recursion would risk RecursionError on a long key
+        # (stack depth grew with len(key)), the same class of bug that made
+        # UnionFind.find iterative.
+        path: list[tuple[_TrieNode[V], str]] = []
+        node = self._root
+        for char in key:
+            child = node.children.get(char)
+            if child is None:
+                raise KeyError(key)
+            path.append((node, char))
+            node = child
+
+        if node.value is _MISSING:
             raise KeyError(key)
+        node.value = _MISSING
         self._size -= 1
+
+        for parent, char in reversed(path):
+            child = parent.children[char]
+            if child.value is _MISSING and not child.children:
+                del parent.children[char]
+            else:
+                break
 
     def starts_with(self, prefix: str) -> bool:
         return self._find_node(prefix) is not None
@@ -84,24 +105,14 @@ class Trie(Generic[V]):
         node: _TrieNode[V],
         items: list[tuple[str, V]],
     ) -> None:
-        if node.value is not _MISSING:
-            items.append((prefix, node.value))  # type: ignore[arg-type]
-        for char in sorted(node.children):
-            self._collect(prefix + char, node.children[char], items)
-
-    def _delete(self, node: _TrieNode[V], key: str, index: int) -> bool:
-        if index == len(key):
-            if node.value is _MISSING:
-                return False
-            node.value = _MISSING
-            return True
-
-        char = key[index]
-        child = node.children.get(char)
-        if child is None:
-            return False
-
-        deleted = self._delete(child, key, index + 1)
-        if deleted and child.value is _MISSING and not child.children:
-            del node.children[char]
-        return deleted
+        # Iterative pre-order walk. Children are pushed in reverse-sorted order
+        # so they pop in ascending order, keeping keys() lexicographically
+        # sorted. Recursion would risk RecursionError on a deep trie (one frame
+        # per character), so keys()/items() stay iterative like Graph.dfs.
+        stack: list[tuple[str, _TrieNode[V]]] = [(prefix, node)]
+        while stack:
+            current_prefix, current = stack.pop()
+            if current.value is not _MISSING:
+                items.append((current_prefix, current.value))  # type: ignore[arg-type]
+            for char in sorted(current.children, reverse=True):
+                stack.append((current_prefix + char, current.children[char]))
