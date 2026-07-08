@@ -44,9 +44,5 @@ def build_api_only_template(
             "api_only/tests/unit.py.tpl",
             context,
         ),
-        update_db_models=API_ONLY_MODULE_TEMPLATE_CONTRACT.update_db_models,
-        ensure_llm_integrations=(
-            API_ONLY_MODULE_TEMPLATE_CONTRACT.ensure_llm_integrations
-        ),
-        ensure_llm_settings=API_ONLY_MODULE_TEMPLATE_CONTRACT.ensure_llm_settings,
+        contract=API_ONLY_MODULE_TEMPLATE_CONTRACT,
     )

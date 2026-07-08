@@ -1846,12 +1846,9 @@ def test_add_module_rejects_service_only_with_other_template(tmp_path: Path):
 def test_add_module_rejects_api_only_and_service_only_together(
     tmp_path: Path,
 ):
-    create_result = run_cli(tmp_path, "start", "myapp")
-    assert create_result.returncode == 0
-
-    project_root = tmp_path / "myapp"
+    # Pure argument validation, so no project is needed.
     result = run_cli(
-        project_root,
+        tmp_path,
         "add",
         "module",
         "events",
@@ -1861,5 +1858,6 @@ def test_add_module_rejects_api_only_and_service_only_together(
 
     assert result.returncode != 0
     assert (
-        "Choose either --api-only or --service-only, not both." in result.stdout
+        "Choose only one module template shortcut: --api-only, --service-only."
+        in result.stdout
     )

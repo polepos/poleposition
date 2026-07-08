@@ -48,14 +48,5 @@ def build_service_only_template(
             "service_only/tests/unit.py.tpl",
             context,
         ),
-        update_db_models=SERVICE_ONLY_MODULE_TEMPLATE_CONTRACT.update_db_models,
-        update_api_router=(
-            SERVICE_ONLY_MODULE_TEMPLATE_CONTRACT.update_api_router
-        ),
-        ensure_llm_integrations=(
-            SERVICE_ONLY_MODULE_TEMPLATE_CONTRACT.ensure_llm_integrations
-        ),
-        ensure_llm_settings=(
-            SERVICE_ONLY_MODULE_TEMPLATE_CONTRACT.ensure_llm_settings
-        ),
+        contract=SERVICE_ONLY_MODULE_TEMPLATE_CONTRACT,
     )

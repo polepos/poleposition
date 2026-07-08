@@ -9,6 +9,8 @@ from pole_position.cli.services.module_creator import (
     _validate_add_module_preflight,
 )
 from pole_position.cli.services.module_templates import (
+    AI_PROMPT_MODULE_TEMPLATE_CONTRACT,
+    STANDARD_MODULE_TEMPLATE_CONTRACT,
     ModuleTemplate,
     llm_env_block,
     llm_settings_block,
@@ -119,6 +121,7 @@ def test_preflight_reports_existing_generated_test_files(
                 integration_test_content="",
                 unit_test_name="test_garage_service.py",
                 unit_test_content="",
+                contract=STANDARD_MODULE_TEMPLATE_CONTRACT,
             ),
         )
 
@@ -153,9 +156,7 @@ def test_ai_preflight_allows_existing_llm_settings_without_markers(
             integration_test_content="",
             unit_test_name="test_assistant_orchestrator.py",
             unit_test_content="",
-            update_db_models=False,
-            ensure_llm_integrations=True,
-            ensure_llm_settings=True,
+            contract=AI_PROMPT_MODULE_TEMPLATE_CONTRACT,
         ),
     )
 
@@ -188,9 +189,7 @@ def test_ai_preflight_reports_partial_llm_settings_without_markers(
                 integration_test_content="",
                 unit_test_name="test_assistant_orchestrator.py",
                 unit_test_content="",
-                update_db_models=False,
-                ensure_llm_integrations=True,
-                ensure_llm_settings=True,
+                contract=AI_PROMPT_MODULE_TEMPLATE_CONTRACT,
             ),
         )
 
