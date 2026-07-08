@@ -45,6 +45,15 @@ summarizes user-facing behavior, release readiness work, and known beta scope.
   wiring instead of passing silently, and `remove module` deletes the correct
   files. Detection now lives in one shared place so `check` and `remove` cannot
   disagree.
+- A database-backed module created on 0.0.46 with `--service-only` is no longer
+  silently reclassified as the new no-database `service-only` template after
+  upgrading. Its manifest entry and generated unit test both read
+  `service-only`, a name 0.0.48 reuses for a different shape, so detection now
+  ignores that reused name when the module still owns a `model.py` (which the
+  no-database template forbids) and reclassifies it as `service`. `check` then
+  reports the module accurately instead of passing green on unmanaged database
+  wiring, and `remove module` cleans up the model import instead of leaving an
+  orphan reference behind.
 - `polepos check` now flags an orphaned `service-only` unit test
   (`test_<module>_service_only.py`) left behind when a module directory is
   deleted, matching the behavior for other templates.
