@@ -26,18 +26,24 @@ is for the generator and command implementation.
 
 ## Available Structures
 
-Current exports:
+Current exports, with the operations you reach for most and their typical
+cost. `n` is the number of stored items; `k` is a key's length.
 
-- `LRUCache`: bounded least-recently-used cache
-- `TTLCache`: lazy-expiring in-memory cache
-- `OrderedSet`: insertion-ordered set
-- `SortedList`: sorted list with bisect helpers
-- `SortedSet`: unique sorted values
-- `SortedDict`: mapping that iterates keys in sorted order
-- `IndexedPriorityQueue`: min-priority queue with update/remove by key
-- `Trie`: prefix tree for string keys
-- `UnionFind`: disjoint-set union
-- `Graph`: adjacency-set graph with BFS, DFS, shortest path, and topological sort
+| Structure | Purpose | Key operations | Typical cost |
+| --- | --- | --- | --- |
+| `LRUCache` | Bounded least-recently-used cache | `cache[key]`, `set`, `peek` | O(1) get/set |
+| `TTLCache` | Lazy-expiring in-memory cache | `cache[key]`, `set`, `expire` | O(1) get/set, amortized expiry |
+| `OrderedSet` | Insertion-ordered set | `add`, `discard`, `in`, iterate | O(1) add/lookup |
+| `SortedList` | Sorted list with bisect helpers | `add`, `bisect_left`, `irange`, index | O(log n) search, O(n) insert |
+| `SortedSet` | Unique values kept in sorted order | `add`, `discard`, `irange` | O(log n) search, O(n) insert |
+| `SortedDict` | Mapping that iterates keys in sorted order | `d[key]`, `peekitem`, `irange` | O(log n) search, O(n) insert |
+| `IndexedPriorityQueue` | Min-priority queue with update/remove by key | `push`, `pop`, `update`, `remove` | O(log n) push/pop |
+| `Trie` | Prefix tree for string keys | `insert`, `get`, `keys(prefix)`, `longest_prefix_of` | O(k) lookup |
+| `UnionFind` | Disjoint-set union | `union`, `find`, `connected`, `components` | near O(1) amortized |
+| `Graph` | Adjacency-set graph | `bfs`, `dfs`, `shortest_path`, `topological_sort` | O(V + E) traversal |
+
+All operations are iterative (no recursion depth limits), and traversals are
+deterministic regardless of `PYTHONHASHSEED`.
 
 ## Examples
 

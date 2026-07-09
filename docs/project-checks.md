@@ -565,13 +565,65 @@ Issue text still names the layer by implication:
 - `Integration ...`: opt-in integration wiring drift
 
 Issue codes are intended to stay stable enough for humans, coding agents, CI
-logs, and future machine-readable output. The current code families are:
+logs, and future machine-readable output. The code families are:
 
-- `PPCHK00x`: project identity
-- `PPCHK01x`: generated structure, Alembic, and database-mode drift
-- `PPCHK02x`: managed file and marker drift
-- `PPCHK03x`: module lifecycle drift
-- `PPCHK04x`: integration drift
+| Family | Area |
+| --- | --- |
+| `PPCHK00x` | Project identity |
+| `PPCHK01x` | Generated structure, Alembic, and manifest drift |
+| `PPCHK02x` | Managed file and marker drift |
+| `PPCHK03x` | Module lifecycle drift |
+| `PPCHK04x`–`PPCHK05x` | Integration drift (`040`–`043`), auth workflow drift (`044`–`051`) |
+| `PPCHK06x` | Module dependency graph |
+
+### Check Code Reference
+
+Every code the checker can emit, with the condition that triggers it. The
+remediation is always to restore the file, marker, import, dependency, setting,
+env value, or wiring the message names.
+
+| Code | Area | Condition |
+| --- | --- | --- |
+| `PPCHK000` | Other | Uncategorized check failure |
+| `PPCHK001` | Identity | `pyproject.toml` project identity file is missing |
+| `PPCHK002` | Identity | `src/` directory is missing |
+| `PPCHK003` | Identity | Application package is not under `src/` |
+| `PPCHK004` | Identity | Application package name is not a valid Python identifier |
+| `PPCHK005` | Identity | Manifest package name does not match the discovered package |
+| `PPCHK010` | Structure | A required generated path is missing |
+| `PPCHK011` | Structure | A required Alembic path is missing |
+| `PPCHK012` | Structure | A database-free project contains database-specific content |
+| `PPCHK013` | Manifest | Manifest records an unsupported database mode |
+| `PPCHK014` | Manifest | Manifest records an unsupported module template |
+| `PPCHK015` | Manifest | Manifest records an unsupported integration value |
+| `PPCHK016` | Manifest | Manifest is not readable as UTF-8 |
+| `PPCHK020` | Managed files | A managed file is missing |
+| `PPCHK021` | Managed files | A managed marker was removed |
+| `PPCHK022` | Managed files | Starter `status` module wiring is missing |
+| `PPCHK023` | Managed files | A generated text file is not readable as UTF-8 |
+| `PPCHK030` | Module lifecycle | A module directory name is not a valid Python identifier |
+| `PPCHK031` | Module lifecycle | A module is missing a generated path |
+| `PPCHK032` | Module lifecycle | A module is missing its export in `modules/__init__.py` |
+| `PPCHK033` | Module lifecycle | A module is missing its router import |
+| `PPCHK034` | Module lifecycle | A module is missing its API router include |
+| `PPCHK035` | Module lifecycle | A module is missing its model import |
+| `PPCHK036` | Module lifecycle | A module is missing its integration test |
+| `PPCHK037` | Module lifecycle | A module is missing its unit test |
+| `PPCHK038` | Module lifecycle | A Python file could not be parsed for lifecycle checks |
+| `PPCHK039` | Module lifecycle | An orphan reference points at a missing module |
+| `PPCHK040` | Integration | An integration is missing a generated file |
+| `PPCHK041` | Integration | An integration is missing a dependency |
+| `PPCHK042` | Integration | An integration is missing a setting |
+| `PPCHK043` | Integration | An integration is missing an env value |
+| `PPCHK044` | Auth workflow | Auth workflow requires generated database wiring |
+| `PPCHK045` | Auth workflow | Auth workflow is missing a generated file |
+| `PPCHK046` | Auth workflow | Auth workflow is missing an integration test |
+| `PPCHK047` | Auth workflow | Auth workflow is missing a unit test |
+| `PPCHK048` | Auth workflow | Auth workflow is missing a dependency |
+| `PPCHK049` | Auth workflow | Auth workflow is missing a router import |
+| `PPCHK050` | Auth workflow | Auth workflow is missing an API router include |
+| `PPCHK051` | Auth workflow | Auth workflow is missing a model import |
+| `PPCHK060` | Dependencies | A circular module dependency was detected |
 
 Fix the project by restoring the expected file, marker, import, dependency,
 setting, or env value. If a team intentionally opts out of PolePosition-managed
