@@ -1771,6 +1771,35 @@ def test_check_flags_orphaned_service_only_unit_test(tmp_path: Path) -> None:
     assert "test_notify_service_only.py" in result.stdout
 
 
+def test_check_attributes_orphan_test_to_suffix_colliding_module(
+    tmp_path: Path,
+) -> None:
+    # Regression: `test_payments_api_service.py` is ambiguous by filename -- it
+    # is the api unit test for module `payments_api` and also matches the
+    # api-only unit-test shape (`test_<m>_api_service.py`) for a module
+    # `payments`. Orphan detection must attribute it to the module the test
+    # actually references (`payments_api`), not a suffix-stripped guess
+    # (`payments`); otherwise, with a real `payments` module present, the
+    # orphaned test is silently missed.
+    assert run_cli(tmp_path, "start", "myapp").returncode == 0
+
+    project_root = tmp_path / "myapp"
+    assert run_cli(project_root, "add", "module", "payments").returncode == 0
+    assert (
+        run_cli(project_root, "add", "module", "payments_api").returncode == 0
+    )
+
+    package_root = project_root / "src" / "myapp"
+    shutil.rmtree(package_root / "modules" / "payments_api")
+
+    result = run_cli(project_root, "check")
+
+    assert result.returncode != 0
+    assert "tests/unit/test_payments_api_service.py" in result.stdout
+    assert "missing module 'payments_api'" in result.stdout
+    assert "missing module 'payments'" not in result.stdout
+
+
 def test_check_accepts_standard_alias_in_manifest(tmp_path: Path) -> None:
     # Regression: projects created before 0.0.48 record `standard` in the
     # manifest. It is a back-compat alias for `api` and must not be flagged as

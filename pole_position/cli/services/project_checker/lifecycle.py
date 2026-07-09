@@ -506,48 +506,33 @@ def _collect_orphan_generated_tests(
         if not test_root.is_dir():
             continue
         for path in sorted(test_root.glob("test_*.py")):
-            module_name = _module_name_from_generated_test_path(path)
+            module_name = _module_name_from_generated_test_content(
+                path, package_name
+            )
             if module_name is None or module_name in ignored_modules:
                 continue
-            if _test_file_references_module(path, package_name, module_name):
-                references.append((module_name, path, "generated test"))
+            references.append((module_name, path, "generated test"))
 
     return references
 
 
-def _module_name_from_generated_test_path(path: Path) -> str | None:
-    name = path.name
-    unit_suffixes = (
-        "_api_service.py",
-        "_orchestrator.py",
-        "_service_only.py",
-        "_internal_service.py",
-        "_service.py",
-    )
-
-    if not name.startswith("test_") or not name.endswith(".py"):
-        return None
-
-    stem = name[len("test_") : -len(".py")]
-    for suffix in unit_suffixes:
-        if stem.endswith(suffix[: -len(".py")]):
-            stem = stem[: -len(suffix[: -len(".py")])]
-            break
-    if stem.endswith("_crud"):
-        stem = stem[: -len("_crud")]
-
-    return stem if stem.isidentifier() else None
-
-
-def _test_file_references_module(
-    path: Path, package_name: str, module_name: str
-) -> bool:
+def _module_name_from_generated_test_content(
+    path: Path, package_name: str
+) -> str | None:
+    # Derive the module a generated test targets from its content, not its
+    # filename. A filename like `test_payments_api_service.py` is ambiguous
+    # (module `payments_api` with the `api` template, or module `payments` with
+    # the `api-only` template, whose unit test is `test_<m>_api_service.py`), so
+    # stripping suffixes guesses the wrong module and can misreport or silently
+    # miss an orphan. The body unambiguously names the module via
+    # `<pkg>.modules.<name>` or `/api/v1/<name>/`.
     content = _read_file_text(path)
     if content is None:
-        return False
+        return None
 
-    return (
-        f"{package_name}.modules.{module_name}" in content
-        or f"/api/v1/{module_name}" in content
-        or f"test_{module_name}" in content
+    match = re.search(
+        rf"(?:{re.escape(package_name)}\.modules\.|/api/v1/)"
+        r"([A-Za-z_][A-Za-z0-9_]*)",
+        content,
     )
+    return match.group(1) if match else None
