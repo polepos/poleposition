@@ -11,14 +11,14 @@ V = TypeVar("V")
 _MISSING = object()
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PriorityItem(Generic[K, P, V]):
     key: K
     priority: P
     value: V
 
 
-@dataclass
+@dataclass(slots=True)
 class _Record(Generic[P, V]):
     priority: P
     sequence: int

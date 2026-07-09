@@ -60,7 +60,7 @@ def run(args: list[str]) -> None:
             continue
 
         if argument.startswith("--template="):
-            template = argument.split("=", 1)[1].strip()
+            template = argument.removeprefix("--template=").strip()
             if not template:
                 console.error("Missing value for --template.")
                 _print_usage()

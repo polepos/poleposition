@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Iterator, MutableSet
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 T = TypeVar("T")
 
 
-class OrderedSet(MutableSet[T], Generic[T]):
+class OrderedSet(MutableSet[T]):
     """A set that preserves insertion order."""
 
     def __init__(self, values: Iterable[T] = ()) -> None:
