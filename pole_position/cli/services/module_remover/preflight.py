@@ -1,4 +1,5 @@
 import ast
+import re
 from pathlib import Path
 
 from pole_position.cli.services.module_creator import (
@@ -198,12 +199,22 @@ def _collect_unsupported_reference(
             continue
         if line.strip().startswith("#"):
             continue
-        if any(token in line for token in reference_tokens):
+        if any(
+            _reference_token_in_line(token, line) for token in reference_tokens
+        ):
             problems.append(
                 f"Module {description} for removal is not in a managed "
                 f"layout: {path}"
             )
             return
+
+
+def _reference_token_in_line(token: str, line: str) -> bool:
+    # Match the module reference token only when it is not immediately followed
+    # by an identifier character, so a token like `pkg.modules.order` does not
+    # substring-match `pkg.modules.orders` and wrongly block removing `order`
+    # while a sibling `orders` module exists.
+    return re.search(re.escape(token) + r"(?![A-Za-z0-9_])", line) is not None
 
 
 def _collect_unsupported_router_wiring(

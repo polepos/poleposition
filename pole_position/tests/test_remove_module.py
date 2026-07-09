@@ -329,6 +329,36 @@ def test_remove_module_does_not_touch_prefix_sharing_module(tmp_path: Path):
     assert run_cli(project_root, "check").returncode == 0
 
 
+def test_remove_existing_module_not_blocked_by_prefix_sharing_module(
+    tmp_path: Path,
+):
+    # Regression: removing an existing db-backed `order` module must not be
+    # blocked by the in-place preflight just because the sibling `orders`
+    # module's model import (`...modules.orders import model`) shares the
+    # `modules.order` prefix. The module directory is intentionally left in
+    # place so the preflight runs (the orphan-cleanup path bypasses it).
+    assert run_cli(tmp_path, "start", "myapp").returncode == 0
+
+    project_root = tmp_path / "myapp"
+    package_root = project_root / "src" / "myapp"
+    assert run_cli(project_root, "add", "module", "order").returncode == 0
+    assert run_cli(project_root, "add", "module", "orders").returncode == 0
+
+    result = run_cli(project_root, "remove", "module", "order")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+
+    models = (package_root / "db" / "models.py").read_text(encoding="utf-8")
+    assert "modules.orders import model" in models
+    assert "modules.order import model" not in models
+    assert not (package_root / "modules" / "order").is_dir()
+    assert (package_root / "modules" / "orders").is_dir()
+    assert '"orders"' in (package_root / "modules" / "__init__.py").read_text(
+        encoding="utf-8"
+    )
+    assert run_cli(project_root, "check").returncode == 0
+
+
 def test_remove_api_only_module_cleans_remnants_when_dir_missing(
     tmp_path: Path,
 ):
