@@ -6,13 +6,24 @@ domain.
 
 ## Template Summary
 
-| Template | Command | Use when |
-|---|---|---|
-| `standard` | `polepos add module customers` | You need a database-backed REST module with model, repository, service, router, and tests. |
-| `crud` | `polepos add module customers --template crud` | You want a fuller CRUD starting point with list, create, get, update, and delete routes. |
-| `api-only` | `polepos add module webhooks --api-only` | You need routes and service code but no database model or repository. |
-| `ai-prompt` | `polepos add module assistant --template ai-prompt` | You need an LLM-oriented module boundary and provider-agnostic adapter stubs. |
-| `service-only` | `polepos add module notifications --service-only` | You need an internal, database-backed module (domain service, event handler, background job, integration) with no HTTP routes. |
+The core templates follow a two-axis naming scheme: the interface axis
+(`api*` exposes HTTP routes, `service*` is internal) crossed with persistence
+(the plain `api` and `service` names are database-backed; the `-only` suffix
+drops the database). `crud` is a fuller variant of `api`, and `ai-prompt` is a
+variant of `api-only`.
+
+| Template | Command | Interface | Persistence | Use when |
+|---|---|---|---|---|
+| `api` | `polepos add module customers` | HTTP routes | Database | You need a database-backed REST module with model, repository, service, router, and tests. This is the default template. |
+| `crud` | `polepos add module customers --template crud` | HTTP routes | Database | You want a fuller CRUD starting point with list, create, get, update, and delete routes. |
+| `ai-prompt` | `polepos add module assistant --template ai-prompt` | HTTP routes | No database | You need an LLM-oriented module boundary and provider-agnostic adapter stubs. |
+| `api-only` | `polepos add module webhooks --api-only` | HTTP routes | No database | You need routes and service code but no database model or repository. |
+| `service` | `polepos add module notifications --template service` | Internal (no routes) | Database | You need an internal, database-backed module (domain service, event handler, background job, integration) with no HTTP routes. |
+| `service-only` | `polepos add module notifications --service-only` | Internal (no routes) | No database | You need an internal, stateless service with neither HTTP routes nor database state. |
+
+`api` is the default template, so `polepos add module customers` needs no
+`--template` flag. The former name `standard` still works as a back-compat
+alias that resolves to `api`.
 
 All templates update:
 
@@ -21,8 +32,8 @@ All templates update:
 - `.poleposition.toml`
 
 API-facing templates also update `src/<package>/api/router.py` to wire the
-generated router. The `service-only` template is the exception: it exposes no
-routes, so it never touches `api/router.py`.
+generated router. The `service` and `service-only` templates are the exception:
+they expose no routes, so they never touch `api/router.py`.
 
 Database-backed templates also update `src/<package>/db/models.py` so Alembic
 can discover generated SQLAlchemy models.
@@ -42,11 +53,12 @@ does not singularize or pluralize module names.
 | Template | Generated schema classes | Why these names are used |
 |---|---|---|
 | Starter `status` module | `StatusResponse` | The endpoint is read-only and does not accept a request body. |
-| `standard` | `<ClassName>Create`, `<ClassName>Read` | The generated API supports collection list and create. `Create` is the incoming payload; `Read` is the response model returned from SQLAlchemy objects. |
+| `api` | `<ClassName>Create`, `<ClassName>Read` | The generated API supports collection list and create. `Create` is the incoming payload; `Read` is the response model returned from SQLAlchemy objects. |
 | `crud` | `<ClassName>Create`, `<ClassName>Update`, `<ClassName>Read` | Full CRUD needs separate create and patch payloads plus a read response. |
 | `api-only` | `<ClassName>Request`, `<ClassName>Response` | There is no database entity, so generic request and response names fit the lightweight route/service boundary. |
 | `ai-prompt` | `<ClassName>PromptRequest`, `<ClassName>PromptResponse` | The module is prompt-oriented, so the schema names describe the LLM use case instead of a persisted resource. |
-| `service-only` | None | The module exposes no HTTP routes, so it generates no request/response schemas. Its service methods take plain arguments and return SQLAlchemy models. |
+| `service` | None | The module exposes no HTTP routes, so it generates no request/response schemas. Its service methods take plain arguments and return SQLAlchemy models. |
+| `service-only` | None | The module exposes no HTTP routes and owns no database state, so it generates no request/response schemas. Its service method takes a plain argument and returns a plain value. |
 
 The generated fields are intentionally small examples, not domain assumptions.
 Database-backed templates start with `id` and `name` because that produces a
@@ -80,7 +92,7 @@ classes, but treat that as a normal code refactor. For example,
 Update every import and type reference in `router.py`, `services/`, generated
 tests, and any custom code that imports the old class name.
 
-Do not delete generated schema classes in isolation. In the `standard`
+Do not delete generated schema classes in isolation. In the `api`
 template, `router.py` imports `<ClassName>Create` and `<ClassName>Read`, and the
 service imports `<ClassName>Create`. If only the schema classes are removed,
 the app usually fails during import and pytest reports an `ImportError`. If the
@@ -110,10 +122,11 @@ polepos check
 uv run pytest
 ```
 
-## Standard Template
+## API Template
 
 ```bash
 polepos add module customers
+polepos add module customers --template api
 ```
 
 Generated module files:
@@ -137,7 +150,7 @@ tests/integration/test_customers.py
 tests/unit/test_customers_service.py
 ```
 
-The standard template gives you collection endpoints and simple persistence.
+The api template gives you collection endpoints and simple persistence.
 Use it when the domain is not yet fully shaped but you know the module should
 own a table.
 
@@ -155,7 +168,7 @@ polepos check
 polepos add module customers --template crud
 ```
 
-Generated module files are similar to `standard`, but the service and tests use
+Generated module files are similar to `api`, but the service and tests use
 CRUD-specific names:
 
 ```text
@@ -209,7 +222,7 @@ polepos add module customers --template crud \
 ```
 
 These flags intentionally require `--template crud`. They are not accepted for
-`standard`, `api-only`, or `ai-prompt` modules because the generated code
+`api`, `api-only`, or `ai-prompt` modules because the generated code
 touches CRUD-specific router, repository, service, schema, and test contracts.
 
 When a CRUD option is used, `.poleposition.toml` records the selected feature
@@ -310,12 +323,14 @@ API-only modules do not create:
 Use this template for webhooks, health-adjacent routes, proxies, callbacks, or
 other API surfaces whose state lives elsewhere.
 
-## Service-Only Template
+## Service Template
 
 ```bash
-polepos add module notifications --service-only
-polepos add module notifications --template service-only
+polepos add module notifications --template service
 ```
+
+The `service` template has no shortcut flag; select it with `--template
+service`.
 
 Generated module files:
 
@@ -329,14 +344,14 @@ src/<package>/modules/notifications/
     notifications_service.py
 ```
 
-Service-only modules are internal: they own database state through a model and
+Service modules are internal: they own database state through a model and
 repository, but they expose no HTTP routes. The template does not create:
 
 - `router.py`
 - `schemas.py`
 - `api/router.py` wiring
 
-Like the `standard` template, it does update `db/models.py` so Alembic can
+Like the `api` template, it does update `db/models.py` so Alembic can
 discover the model, and the migration note applies after model changes. The
 generated service exposes plain methods (for example `create_notifications`)
 that take ordinary arguments instead of request schemas, so other modules,
@@ -346,8 +361,46 @@ client.
 
 Use this template for domain services, event handlers, background processing,
 or third-party integrations that should follow PolePosition module conventions
-without becoming an API surface. `polepos check` understands that a service-only
+without becoming an API surface. `polepos check` understands that a service
 module has no router and does not flag the missing route wiring.
+
+## Service-Only Template
+
+```bash
+polepos add module notifications --service-only
+polepos add module notifications --template service-only
+```
+
+Generated module files:
+
+```text
+src/<package>/modules/notifications/
+  __init__.py
+  services/
+    __init__.py
+    notifications_service.py
+```
+
+Service-only modules are internal and stateless: they expose no HTTP routes and
+own no database state. The template does not create:
+
+- `router.py`
+- `schemas.py`
+- `model.py`
+- `repository.py`
+- `api/router.py` wiring
+- `db/models.py` wiring
+
+Because there is no model, the migration note does not apply. The generated
+service exposes a plain method (for example `process(message)`) that takes an
+ordinary argument and returns a plain value, with no database access, so other
+modules, lifecycle hooks, or background tasks can call it directly.
+
+Use this template for stateless internal services, message handlers, or
+integration adapters that should follow PolePosition module conventions without
+owning a table or exposing an API surface. `polepos check` understands that a
+service-only module has neither a router nor a model and does not flag the
+missing route or model wiring.
 
 ## AI Prompt Template
 
@@ -385,12 +438,13 @@ after deciding which provider and deployment model the application should use.
 
 ## Choosing a Template
 
-Choose `standard` when persistence matters but the API shape is still small.
+Choose `api` when persistence matters but the API shape is still small.
 Choose `crud` when the first useful version needs full item lifecycle routes.
 Choose `api-only` when the route should not own database state. Choose
-`service-only` when the module owns database state but should never expose HTTP
-routes. Choose `ai-prompt` when orchestration and prompt boundaries are more
-important than a database model.
+`service` when the module owns database state but should never expose HTTP
+routes. Choose `service-only` when the module is an internal, stateless service
+with neither HTTP routes nor database state. Choose `ai-prompt` when
+orchestration and prompt boundaries are more important than a database model.
 
 Do not use generated module templates as final domain design. Treat them as a
 consistent first commit, then refine names, validation, relationships,

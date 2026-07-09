@@ -20,6 +20,7 @@ from pathlib import Path
 from pole_position.cli.services.module_templates.registry import (
     DEFAULT_MODULE_TEMPLATE,
     SUPPORTED_MODULE_TEMPLATES,
+    get_module_template_contract,
     module_template_detection_contracts,
 )
 from pole_position.cli.services.module_templates.spec import (
@@ -46,13 +47,26 @@ def detect_module_template_name(
         and manifest_template_name != "starter"
         and manifest_template_name in SUPPORTED_MODULE_TEMPLATES
     ):
-        return manifest_template_name
+        contract = get_module_template_contract(manifest_template_name)
+        # Trust the manifest only when the module's files are consistent with
+        # the recorded template. A template name can denote a different shape
+        # across releases (0.0.46 `service-only` was database-backed; 0.0.48
+        # `service-only` is not), so a manifest written by an older release can
+        # name a template whose forbidden files are present on disk. Falling
+        # through to the file heuristic reclassifies such a module correctly.
+        if _requires_absent_satisfied(contract, module_root, module_name):
+            return manifest_template_name
 
     contracts = module_template_detection_contracts()
 
     for contract in contracts:
         unit_test = tests_root / "unit" / contract.unit_test_name(module_name)
-        if unit_test.exists():
+        # The unit-test filename is strong evidence, but a name reused across
+        # releases (`test_<m>_service_only.py`) is only trustworthy when the
+        # module's shape matches the template it now denotes.
+        if unit_test.exists() and _requires_absent_satisfied(
+            contract, module_root, module_name
+        ):
             return contract.name
 
     for contract in contracts:
@@ -62,13 +76,21 @@ def detect_module_template_name(
     return DEFAULT_MODULE_TEMPLATE
 
 
-def _detection_files_match(
+def _requires_absent_satisfied(
     contract: ModuleTemplateContract,
     module_root: Path,
     module_name: str,
 ) -> bool:
     blocking = contract.requires_absent_file_names_for(module_name)
-    if any((module_root / file_name).exists() for file_name in blocking):
+    return not any((module_root / file_name).exists() for file_name in blocking)
+
+
+def _detection_files_match(
+    contract: ModuleTemplateContract,
+    module_root: Path,
+    module_name: str,
+) -> bool:
+    if not _requires_absent_satisfied(contract, module_root, module_name):
         return False
 
     return any(

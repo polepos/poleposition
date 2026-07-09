@@ -785,7 +785,7 @@ def test_add_module_creates_module_files_and_updates_router(tmp_path: Path):
 
     assert result.returncode == 0
     assert "Added module: garage" in result.stdout
-    assert "Template: standard" in result.stdout
+    assert "Template: api" in result.stdout
     assert "Created:" in result.stdout
     assert "Updated:" in result.stdout
     assert "Next steps:" in result.stdout
@@ -1736,12 +1736,16 @@ def test_add_module_rejects_unknown_template(tmp_path: Path):
     assert result.returncode != 0
     assert "Unsupported module template 'unknown'" in result.stdout
     assert (
-        "Templates: standard, crud, ai-prompt, api-only, service-only"
+        "Expected one of: api, crud, ai-prompt, api-only, service, "
+        "service-only" in result.stdout
+    )
+    assert (
+        "Templates: api, crud, ai-prompt, api-only, service, service-only"
         in result.stdout
     )
 
 
-def test_add_module_with_service_only_option_creates_internal_module(
+def test_add_module_with_service_template_creates_internal_db_module(
     tmp_path: Path,
 ):
     create_result = run_cli(tmp_path, "start", "myapp")
@@ -1749,13 +1753,13 @@ def test_add_module_with_service_only_option_creates_internal_module(
 
     project_root = tmp_path / "myapp"
     result = run_cli(
-        project_root, "add", "module", "notifications", "--service-only"
+        project_root, "add", "module", "notifications", "--template", "service"
     )
 
     assert result.returncode == 0
     assert "Added module: notifications" in result.stdout
-    assert "Template: service-only" in result.stdout
-    # Service-only modules are database-backed, so the migration hint shows.
+    assert "Template: service" in result.stdout
+    # Service modules are database-backed, so the migration hint shows.
     assert "polepos db revision" in result.stdout
 
     package_root = project_root / "src" / "myapp"
@@ -1768,11 +1772,14 @@ def test_add_module_with_service_only_option_creates_internal_module(
         module_root / "services" / "__init__.py",
         module_root / "services" / "notifications_service.py",
         project_root / "tests" / "integration" / "test_notifications.py",
-        project_root / "tests" / "unit" / "test_notifications_service_only.py",
+        project_root
+        / "tests"
+        / "unit"
+        / "test_notifications_internal_service.py",
     ]
     for path in expected_files:
         assert path.exists(), (
-            f"Expected generated service-only file is missing: {path}"
+            f"Expected generated service file is missing: {path}"
         )
 
     # No HTTP layer is generated for an internal module.

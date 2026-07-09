@@ -7,6 +7,7 @@ from pathlib import Path
 from pole_position.cli.services.module_templates import (
     ModuleTemplateContract,
     get_module_template_contract,
+    resolve_module_template_name,
 )
 from pole_position.cli.services.module_templates.detection import (
     detect_module_template_name,
@@ -225,7 +226,8 @@ def _supported_manifest_module_template_name(value: str | None) -> str | None:
     except ValueError:
         return None
 
-    return parsed_template.name
+    # Resolve back-compat aliases (e.g. a `standard` manifest -> `api`).
+    return resolve_module_template_name(parsed_template.name)
 
 
 def _check_module_export(
@@ -519,6 +521,7 @@ def _module_name_from_generated_test_path(path: Path) -> str | None:
         "_api_service.py",
         "_orchestrator.py",
         "_service_only.py",
+        "_internal_service.py",
         "_service.py",
     )
 

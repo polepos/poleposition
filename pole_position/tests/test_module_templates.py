@@ -18,10 +18,11 @@ from pole_position.cli.services.module_templates.renderer import render_template
 
 def test_supported_module_templates_are_stable() -> None:
     assert SUPPORTED_MODULE_TEMPLATES == (
-        "standard",
+        "api",
         "crud",
         "ai-prompt",
         "api-only",
+        "service",
         "service-only",
     )
 
@@ -33,7 +34,7 @@ def test_to_class_name_normalizes_module_names() -> None:
 
 def test_render_template_replaces_context_values() -> None:
     rendered = render_template(
-        "standard/model.py.tpl",
+        "api/model.py.tpl",
         {
             "package_name": "shop_api",
             "module_name": "customers",
@@ -225,6 +226,36 @@ def test_api_only_template_contract() -> None:
     )
 
 
+def test_service_template_contract() -> None:
+    contract = get_module_template_contract("service")
+    template = build_module_template(
+        template="service",
+        package_name="shop_api",
+        module_name="notifications",
+    )
+
+    assert set(template.files) == set(contract.file_names_for("notifications"))
+    assert template.integration_test_name == contract.integration_test_name(
+        "notifications"
+    )
+    assert template.unit_test_name == contract.unit_test_name("notifications")
+    assert template.unit_test_name == "test_notifications_internal_service.py"
+    assert template.update_db_models is True
+    assert template.update_api_router is False
+    assert "router.py" not in template.files
+    assert "schemas.py" not in template.files
+    assert "model.py" in template.files
+    assert "repository.py" in template.files
+    assert '"router"' not in template.files["__init__.py"]
+    assert '"schemas"' not in template.files["__init__.py"]
+    service_content = template.files["services/notifications_service.py"]
+    assert "schemas" not in service_content
+    assert "def create_notifications(self, *, name: str)" in service_content
+    # The service integration test exercises the DB, not HTTP routes.
+    assert "TestClient" not in template.integration_test_content
+    assert "NotificationsService" in template.integration_test_content
+
+
 def test_service_only_template_contract() -> None:
     contract = get_module_template_contract("service-only")
     template = build_module_template(
@@ -239,20 +270,31 @@ def test_service_only_template_contract() -> None:
     )
     assert template.unit_test_name == contract.unit_test_name("notifications")
     assert template.unit_test_name == "test_notifications_service_only.py"
-    assert template.update_db_models is True
+    # service-only owns neither an HTTP interface nor a database table.
+    assert template.update_db_models is False
     assert template.update_api_router is False
     assert "router.py" not in template.files
     assert "schemas.py" not in template.files
-    assert "model.py" in template.files
-    assert "repository.py" in template.files
+    assert "model.py" not in template.files
+    assert "repository.py" not in template.files
+    assert set(template.files) == {
+        "__init__.py",
+        "services/__init__.py",
+        "services/notifications_service.py",
+    }
     assert '"router"' not in template.files["__init__.py"]
     assert '"schemas"' not in template.files["__init__.py"]
+    assert '"model"' not in template.files["__init__.py"]
+    assert '"repository"' not in template.files["__init__.py"]
     service_content = template.files["services/notifications_service.py"]
     assert "schemas" not in service_content
-    assert "def create_notifications(self, *, name: str)" in service_content
-    # The service-only integration test exercises the DB, not HTTP routes.
+    assert "Session" not in service_content
+    assert "def process(self, message: str) -> str:" in service_content
+    # The service-only integration test drives the service directly, not HTTP
+    # routes or the database.
     assert "TestClient" not in template.integration_test_content
     assert "NotificationsService" in template.integration_test_content
+    assert ".process(" in template.integration_test_content
 
 
 def test_unknown_module_template_raises_clear_error() -> None:
@@ -264,7 +306,7 @@ def test_unknown_module_template_raises_clear_error() -> None:
         )
 
     assert "Unsupported module template 'unknown'" in str(exc_info.value)
-    assert "standard, crud, ai-prompt, api-only, service-only" in str(
+    assert "api, crud, ai-prompt, api-only, service, service-only" in str(
         exc_info.value
     )
 

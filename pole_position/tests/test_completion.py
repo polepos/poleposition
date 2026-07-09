@@ -68,7 +68,7 @@ def test_add_module_completes_flags() -> None:
 def test_template_flag_completes_template_values() -> None:
     candidates = complete(["add", "module", "--template"])
 
-    assert "standard" in candidates
+    assert "api" in candidates
     assert "crud" in candidates
     # No flags are offered while completing a flag's value.
     assert "--api-only" not in candidates
@@ -229,7 +229,7 @@ def test_value_flag_offered_only_when_declared_for_the_command() -> None:
     # #6: --template is not a flag of `check`, so its value must not complete.
     assert complete(["check", "--template"]) == []
     # ...but it still completes where it is valid.
-    assert "standard" in complete(["add", "module", "--template"])
+    assert "api" in complete(["add", "module", "--template"])
     assert complete(["start", "--db"]) == ["sqlite", "postgres", "none"]
 
 

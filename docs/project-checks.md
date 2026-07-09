@@ -333,7 +333,7 @@ Custom references are not guessed away. If the project intentionally replaced
 the generated router include or model import with a custom line, remove or
 rewrite that custom line explicitly before expecting `check` to pass.
 
-For a standard module, `check` expects:
+For an `api` module, `check` expects:
 
 - module files: `__init__.py`, `model.py`, `repository.py`, `router.py`,
   `schemas.py`, `services/__init__.py`, `services/<module>_service.py`
@@ -344,7 +344,7 @@ For a standard module, `check` expects:
 - integration test under `tests/integration/test_<module>.py`
 - unit test under `tests/unit/test_<module>_service.py`
 
-For a `crud` module, `check` expects the standard database-backed wiring plus:
+For a `crud` module, `check` expects the `api` database-backed wiring plus:
 
 - module service file: `services/<module>_crud_service.py`
 - integration test under `tests/integration/test_<module>_crud.py`
@@ -379,21 +379,33 @@ For an `api-only` module, `check` expects:
 `api-only` modules are intentionally not required to have model, repository, or
 `db/models.py` wiring.
 
-For a `service-only` module, `check` expects:
+For a `service` module, `check` expects:
 
 - module files: `__init__.py`, `model.py`, `repository.py`,
   `services/__init__.py`, `services/<module>_service.py`
 - export in `src/<package>/modules/__init__.py`
 - model import in `src/<package>/db/models.py`
 - integration test under `tests/integration/test_<module>.py`
-- unit test under `tests/unit/test_<module>_service_only.py`
+- unit test under `tests/unit/test_<module>_internal_service.py`
 
-`service-only` modules are internal and expose no HTTP routes, so `check`
+`service` modules are database-backed but expose no HTTP routes, so `check`
 intentionally does **not** require `router.py`, `schemas.py`, or
 `api/router.py` wiring for them. When a project has no manifest entry for a
-module, `check` distinguishes a service-only module from a standard one by its
+module, `check` distinguishes a `service` module from an `api` one by its
 generated unit test first, and falls back to the absence of `router.py` only
 when no unit test is present.
+
+For a `service-only` module, `check` expects:
+
+- module files: `__init__.py`, `services/__init__.py`,
+  `services/<module>_service.py`
+- export in `src/<package>/modules/__init__.py`
+- unit test under `tests/unit/test_<module>_service_only.py`
+
+`service-only` modules are internal, stateless services that expose no HTTP
+routes and use no database, so `check` intentionally does **not** require
+`router.py`, `schemas.py`, `model.py`, `repository.py`, `api/router.py`
+wiring, or a `db/models.py` model import for them.
 
 ### Module Dependency Check
 

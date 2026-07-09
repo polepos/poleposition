@@ -13,17 +13,21 @@ from pole_position.cli.services.module_templates.llm import (
 )
 from pole_position.cli.services.module_templates.registry import (
     DEFAULT_MODULE_TEMPLATE,
+    MODULE_TEMPLATE_ALIASES,
     MODULE_TEMPLATE_CONTRACTS,
     MODULE_TEMPLATE_DETECTION_ORDER,
     SUPPORTED_MODULE_TEMPLATES,
     build_module_template,
     get_module_template_contract,
     module_template_detection_contracts,
+    resolve_module_template_name,
 )
 from pole_position.cli.services.module_templates.spec import (
     AI_PROMPT_MODULE_TEMPLATE_CONTRACT,
+    API_MODULE_TEMPLATE_CONTRACT,
     API_ONLY_MODULE_TEMPLATE_CONTRACT,
     CRUD_MODULE_TEMPLATE_CONTRACT,
+    SERVICE_MODULE_TEMPLATE_CONTRACT,
     SERVICE_ONLY_MODULE_TEMPLATE_CONTRACT,
     STANDARD_MODULE_TEMPLATE_CONTRACT,
     ModuleTemplate,
@@ -33,6 +37,7 @@ from pole_position.cli.services.module_templates.spec import (
 __all__ = [
     "ModuleTemplate",
     "ModuleTemplateContract",
+    "API_MODULE_TEMPLATE_CONTRACT",
     "API_ONLY_MODULE_TEMPLATE_CONTRACT",
     "AI_PROMPT_MODULE_TEMPLATE_CONTRACT",
     "CRUD_FEATURE_FLAGS",
@@ -43,8 +48,10 @@ __all__ = [
     "CrudFeatureSet",
     "DEFAULT_CRUD_FEATURES",
     "DEFAULT_MODULE_TEMPLATE",
+    "MODULE_TEMPLATE_ALIASES",
     "MODULE_TEMPLATE_CONTRACTS",
     "MODULE_TEMPLATE_DETECTION_ORDER",
+    "SERVICE_MODULE_TEMPLATE_CONTRACT",
     "SERVICE_ONLY_MODULE_TEMPLATE_CONTRACT",
     "STANDARD_MODULE_TEMPLATE_CONTRACT",
     "SUPPORTED_MODULE_TEMPLATES",
@@ -54,4 +61,5 @@ __all__ = [
     "llm_integration_files",
     "llm_settings_block",
     "module_template_detection_contracts",
+    "resolve_module_template_name",
 ]

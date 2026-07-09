@@ -112,13 +112,14 @@ COMMAND_HELP: dict[tuple[str, ...], CommandHelp] = {
             ),
             OptionHelp(
                 "--api-only",
-                "Shortcut for --template api-only; no model, repository, "
-                "or db wiring.",
+                "Shortcut for --template api-only; HTTP routes and service "
+                "but no model, repository, or db wiring.",
             ),
             OptionHelp(
                 "--service-only",
                 "Shortcut for --template service-only; internal module with "
-                "model, repository, and db wiring but no router or API.",
+                "only a service (no HTTP routes and no database). Use "
+                "--template service for the database-backed internal module.",
             ),
             OptionHelp(
                 "--pagination",

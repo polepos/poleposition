@@ -24,11 +24,12 @@ Instead, it clarifies whether a feature is:
 | Template rendering | Stable foundation | Supporting mechanism for lifecycle workflows; placeholder replacement and template packaging are in good shape. |
 | Generated FastAPI structure | Stable foundation | `auth`, `bootstrap`, `api`, `db`, `domain`, `integrations`, `modules` layout is now part of the product identity. |
 | Lifecycle manifest | Growing | New projects include `.poleposition.toml` so package, database mode, module templates, CRUD feature options, and generated integrations do not depend only on inference. |
-| `polepos add module` with `standard` | Growing | Strong differentiator; works well, but still depends on managed marker blocks. |
+| `polepos add module` with `api` | Growing | Default module template and strong differentiator; generates HTTP routes with database-backed model, repository, and service layers. Works well, but still depends on managed marker blocks. `standard` remains an accepted back-compat alias that resolves to `api`. |
 | `polepos add module` with `crud` | Growing | Database-backed CRUD skeleton with list/create/get/update/delete routes, repository/service layers, generated tests, and opt-in pagination, timestamps, soft delete, tenant scoping, and auth-required route protection. |
 | `polepos add module` with `ai-prompt` | Growing | Good provider-agnostic foundation; adapters are scaffold-level boundaries for real provider integration. |
 | `polepos add module` with `api-only` | Growing | Useful lightweight module archetype for routes that do not need model, repository, or database wiring. |
-| `polepos add module` with `service-only` | Growing | Internal, database-backed module archetype (model, repository, service, and tests) that intentionally exposes no HTTP routes, for domain services, event handlers, background jobs, or integrations. |
+| `polepos add module` with `service` | Growing | Internal, database-backed module archetype (model, repository, service, and tests) that intentionally exposes no HTTP routes, for domain services, event handlers, background jobs, or integrations. Select it with `--template service`. |
+| `polepos add module` with `service-only` | Growing | Internal, stateless module archetype (service and tests only) with no database and no HTTP routes, for message processing, transformations, or other pure domain logic. Select it with `--service-only`. |
 | `polepos add auth` | Growing | Optional database-backed registration and token workflow with generated model, router, service, tests, and check coverage. |
 | `polepos remove module` | Growing | Removes generated module scaffolds and managed wiring; supports `--wiring-only` for detaching managed references while preserving customized module files. |
 | `polepos add integration kafka` | Growing | First messaging integration; producer, consumer factory, settings, env, and test double support are scaffolded. |
@@ -66,6 +67,23 @@ editable.
 Generated modules keep workflow code in a module-local `services/` package
 instead of a single root `service.py` file. That leaves room for additional
 service classes as a module grows without pushing logic into global folders.
+
+Module templates are organized along two axes: the interface they expose
+(HTTP routes for the `api*` templates, internal-only for the `service*`
+templates) and whether they include database persistence.
+
+| Template | Interface | Persistence | Notes |
+|---|---|---|---|
+| `api` | HTTP routes | Database | Default template; `standard` is a back-compat alias. |
+| `crud` | HTTP routes | Database | Full CRUD variant of `api`. |
+| `ai-prompt` | HTTP routes | No database | LLM variant of `api-only`. |
+| `api-only` | HTTP routes | No database | Routes without model, repository, or database wiring. |
+| `service` | No HTTP routes | Database | Internal module with model, repository, and service. |
+| `service-only` | No HTTP routes | No database | Internal, stateless service with no persistence. |
+
+Select `api` with the default (or `--template api`, or the `standard` alias),
+`api-only` with `--api-only`, `service` with `--template service`, and
+`service-only` with `--service-only`.
 
 ### `remove module`
 

@@ -128,16 +128,23 @@ polepos add module <module_name> --template crud [--auth-required]
 
 The command creates module files, generated tests, module exports, API router
 wiring, and database model discovery wiring when the selected template has a
-model. The `service-only` template is internal and skips the API router wiring
-while still updating database model discovery.
+model. The `service` template is internal and skips the API router wiring while
+still updating database model discovery. The `service-only` template is internal
+with no database, so it skips both the API router wiring and database model
+discovery.
+
+Templates vary along two axes: interface (`api*` templates expose HTTP routes;
+`service*` templates are internal with no router) and persistence (with or
+without a database).
 
 | Option | Behavior |
 | --- | --- |
-| `--template standard` | Default REST-friendly module with model, repository, schemas, service, router, and tests. |
+| `--template api` | Default REST-friendly module with model, repository, schemas, service, router, and tests (HTTP routes plus a database). `standard` is accepted as a back-compat alias for `api`. |
 | `--template crud` | Fuller CRUD module with collection, detail, create, update, delete, repository, service, and tests. |
-| `--template api-only` | Router, schemas, service, and tests without model, repository, or database wiring. |
 | `--template ai-prompt` | LLM-oriented module skeleton plus shared provider-agnostic `integrations/llm` files when missing. |
-| `--template service-only` | Internal database-backed module with model, repository, service, and tests but no router, schemas, or API wiring. |
+| `--template api-only` | Router, schemas, service, and tests without model, repository, or database wiring (HTTP routes, no database). |
+| `--template service` | Internal database-backed module with model, repository, service, and tests but no router, schemas, or API wiring (a database, no HTTP routes). |
+| `--template service-only` | Internal stateless service module with just a service class and tests, without router, schemas, model, repository, or database wiring (no HTTP routes, no database). |
 | `--api-only` | Shortcut for `--template api-only`. |
 | `--service-only` | Shortcut for `--template service-only`. |
 | `--pagination` | CRUD-only. Adds `limit`/`offset` query params and a `<ClassName>Page` response envelope. |
@@ -154,6 +161,7 @@ polepos add module customers --template crud
 polepos add module customers --template crud --pagination --timestamps
 polepos add module customers --template crud --soft-delete --tenant-scoped --auth-required
 polepos add module webhooks --api-only
+polepos add module ledger --template service
 polepos add module notifications --service-only
 polepos add module assistant --template ai-prompt
 ```

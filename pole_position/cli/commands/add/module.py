@@ -40,7 +40,7 @@ def run(args: list[str]) -> None:
         return
 
     raw_name: str | None = None
-    template = "standard"
+    template = "api"
     template_was_set = False
     shortcut_templates: list[str] = []
     crud_feature_names: set[str] = set()

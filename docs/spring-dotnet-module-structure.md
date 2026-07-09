@@ -164,7 +164,10 @@ This is similar to keeping app composition separate from process hosting in
 Spring Boot or ASP.NET Core. It also prevents settings and logging from being
 initialized merely by importing `app.py`.
 
-## Standard Module Shape
+## API Module Shape
+
+The `api` template is the default: HTTP routes plus a database model. The former
+name `standard` still works as a back-compat alias that resolves to `api`.
 
 When you run:
 
