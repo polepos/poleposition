@@ -2,6 +2,12 @@ import ast
 from pathlib import Path
 
 from pole_position.cli.services.module_remover.io import _read_optional_text
+from pole_position.cli.services.project_wiring import (
+    include_router_keywords_match,
+    is_api_router_include_call,
+    is_name,
+    literal_keyword_value,
+)
 
 
 def _router_wiring_ranges(
@@ -144,13 +150,11 @@ def _find_router_include_range(
             continue
         if not isinstance(node.value, ast.Call):
             continue
-        if not _is_api_router_include_call(node.value):
+        if not is_api_router_include_call(node.value):
             continue
-        if not node.value.args or not _is_name(
-            node.value.args[0], router_alias
-        ):
+        if not node.value.args or not is_name(node.value.args[0], router_alias):
             continue
-        if _include_router_keywords_match(node.value, module_name):
+        if include_router_keywords_match(node.value, module_name):
             return _node_line_range(node)
 
     return None
@@ -183,14 +187,14 @@ def _router_include_references_module(
     router_aliases: set[str],
     module_name: str,
 ) -> bool:
-    if not _is_api_router_include_call(node):
+    if not is_api_router_include_call(node):
         return False
     if node.args and isinstance(node.args[0], ast.Name):
         if node.args[0].id in router_aliases:
             return True
-    if _literal_keyword_value(node, "prefix") == f"/{module_name}":
+    if literal_keyword_value(node, "prefix") == f"/{module_name}":
         return True
-    return _literal_keyword_value(node, "tags") in (
+    return literal_keyword_value(node, "tags") in (
         [module_name],
         (module_name,),
     )
@@ -202,41 +206,3 @@ def _node_line_range(node: ast.AST) -> tuple[int, int] | None:
         return None
 
     return node.lineno, end_lineno
-
-
-def _is_api_router_include_call(node: ast.Call) -> bool:
-    return (
-        isinstance(node.func, ast.Attribute)
-        and node.func.attr == "include_router"
-        and isinstance(node.func.value, ast.Name)
-        and node.func.value.id == "api_router"
-    )
-
-
-def _is_name(node: ast.AST, expected_name: str) -> bool:
-    return isinstance(node, ast.Name) and node.id == expected_name
-
-
-def _include_router_keywords_match(node: ast.Call, module_name: str) -> bool:
-    prefix = _literal_keyword_value(node, "prefix")
-    tags = _literal_keyword_value(node, "tags")
-
-    return prefix == f"/{module_name}" and tags in (
-        [module_name],
-        (module_name,),
-    )
-
-
-def _literal_keyword_value(node: ast.Call, keyword_name: str) -> object:
-    for keyword in node.keywords:
-        if keyword.arg == keyword_name:
-            return _literal_value(keyword.value)
-
-    return None
-
-
-def _literal_value(node: ast.AST) -> object:
-    try:
-        return ast.literal_eval(node)
-    except (ValueError, TypeError):
-        return None

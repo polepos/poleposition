@@ -1,6 +1,12 @@
 import ast
 from pathlib import Path
 
+from pole_position.cli.services.project_wiring import (
+    is_api_router_include_call,
+    is_name,
+    literal_keyword_value,
+)
+
 
 def _line_exists(path: Path, line: str) -> bool:
     if not path.is_file():
@@ -35,35 +41,11 @@ def _has_router_reference(
             return True
         if not isinstance(node, ast.Call):
             continue
-        if not _is_api_router_include_call(node):
+        if not is_api_router_include_call(node):
             continue
-        if node.args and _is_name(node.args[0], router_alias):
+        if node.args and is_name(node.args[0], router_alias):
             return True
-        if _literal_keyword_value(node, "prefix") == f"/{module_name}":
+        if literal_keyword_value(node, "prefix") == f"/{module_name}":
             return True
 
     return False
-
-
-def _is_api_router_include_call(node: ast.Call) -> bool:
-    return (
-        isinstance(node.func, ast.Attribute)
-        and node.func.attr == "include_router"
-        and isinstance(node.func.value, ast.Name)
-        and node.func.value.id == "api_router"
-    )
-
-
-def _is_name(node: ast.AST, expected_name: str) -> bool:
-    return isinstance(node, ast.Name) and node.id == expected_name
-
-
-def _literal_keyword_value(node: ast.Call, keyword_name: str) -> object:
-    for keyword in node.keywords:
-        if keyword.arg == keyword_name:
-            try:
-                return ast.literal_eval(keyword.value)
-            except (ValueError, TypeError):
-                return None
-
-    return None
