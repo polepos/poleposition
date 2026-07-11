@@ -1,7 +1,9 @@
-from pathlib import Path
-
 from pole_position.cli import console
 from pole_position.cli.command import Command
+from pole_position.cli.commands.output import (
+    print_next_steps,
+    print_path_section,
+)
 from pole_position.cli.services.module_creator import (
     AddedModuleResult,
     add_module,
@@ -148,21 +150,13 @@ def _print_success(result: AddedModuleResult) -> None:
     if result.features:
         console.field("Features", ", ".join(result.features))
 
-    console.heading("Created:")
-    for path in (*result.module_files, *result.test_files):
-        console.item(_relative_path(result, path))
-
-    console.heading("Updated:")
-    for path in result.updated_files:
-        console.item(_relative_path(result, path))
-
-    console.heading("Next steps:")
-    for step in result.next_steps:
-        console.step(step)
-
-
-def _relative_path(result: AddedModuleResult, path: Path) -> str:
-    return path.relative_to(result.project_root).as_posix()
+    print_path_section(
+        "Created:",
+        result.project_root,
+        (*result.module_files, *result.test_files),
+    )
+    print_path_section("Updated:", result.project_root, result.updated_files)
+    print_next_steps(result.next_steps)
 
 
 command = Command(
