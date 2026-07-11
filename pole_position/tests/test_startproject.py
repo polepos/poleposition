@@ -1,12 +1,11 @@
 import ast
-import os
 import py_compile
-import subprocess
 import sys
 from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+from conftest import run_cli
 
 from pole_position.cli.services.project_creator import (
     _remove_lifespan_model_imports,
@@ -29,24 +28,6 @@ START_USAGE = (
     "Usage: polepos start <project_name> "
     "[--install] [--no-bytecode] [--db sqlite|postgres|none]"
 )
-
-
-def run_cli(cwd, *args):
-    env = os.environ.copy()
-    existing_pythonpath = env.get("PYTHONPATH")
-    env["PYTHONPATH"] = (
-        f"{REPO_ROOT}{os.pathsep}{existing_pythonpath}"
-        if existing_pythonpath
-        else str(REPO_ROOT)
-    )
-
-    return subprocess.run(
-        [sys.executable, "-m", "pole_position.cli.main", *args],
-        cwd=cwd,
-        capture_output=True,
-        text=True,
-        env=env,
-    )
 
 
 def _assert_python_files_compile(project_root: Path) -> None:
