@@ -1,54 +1,29 @@
-from pole_position.cli.services.module_templates.naming import to_class_name
-from pole_position.cli.services.module_templates.renderer import render_template
+from pole_position.cli.services.module_templates.simple import (
+    build_simple_template,
+)
 from pole_position.cli.services.module_templates.spec import (
     AI_PROMPT_MODULE_TEMPLATE_CONTRACT,
     ModuleTemplate,
 )
 
+_FILE_TEMPLATES = {
+    "__init__.py": "__init__.py.tpl",
+    "schemas.py": "schemas.py.tpl",
+    "prompts.py": "prompts.py.tpl",
+    "orchestrator.py": "orchestrator.py.tpl",
+    "services/__init__.py": "services/__init__.py.tpl",
+    "services/{module_name}_service.py": "services/module_service.py.tpl",
+    "router.py": "router.py.tpl",
+}
+
 
 def build_ai_prompt_template(
     *, package_name: str, module_name: str
 ) -> ModuleTemplate:
-    class_name = to_class_name(module_name)
-    context = {
-        "package_name": package_name,
-        "module_name": module_name,
-        "class_name": class_name,
-    }
-
-    return ModuleTemplate(
-        files={
-            "__init__.py": render_template(
-                "ai_prompt/__init__.py.tpl", context
-            ),
-            "schemas.py": render_template("ai_prompt/schemas.py.tpl", context),
-            "prompts.py": render_template("ai_prompt/prompts.py.tpl", context),
-            "orchestrator.py": render_template(
-                "ai_prompt/orchestrator.py.tpl", context
-            ),
-            "services/__init__.py": render_template(
-                "ai_prompt/services/__init__.py.tpl",
-                context,
-            ),
-            f"services/{module_name}_service.py": render_template(
-                "ai_prompt/services/module_service.py.tpl",
-                context,
-            ),
-            "router.py": render_template("ai_prompt/router.py.tpl", context),
-        },
-        integration_test_name=AI_PROMPT_MODULE_TEMPLATE_CONTRACT.integration_test_name(
-            module_name
-        ),
-        integration_test_content=render_template(
-            "ai_prompt/tests/integration.py.tpl",
-            context,
-        ),
-        unit_test_name=AI_PROMPT_MODULE_TEMPLATE_CONTRACT.unit_test_name(
-            module_name
-        ),
-        unit_test_content=render_template(
-            "ai_prompt/tests/unit.py.tpl",
-            context,
-        ),
+    return build_simple_template(
+        package_name=package_name,
+        module_name=module_name,
         contract=AI_PROMPT_MODULE_TEMPLATE_CONTRACT,
+        template_dir="ai_prompt",
+        file_templates=_FILE_TEMPLATES,
     )
