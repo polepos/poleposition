@@ -1,48 +1,25 @@
-from pole_position.cli.services.module_templates.naming import to_class_name
-from pole_position.cli.services.module_templates.renderer import render_template
+from pole_position.cli.services.module_templates.simple import (
+    build_simple_template,
+)
 from pole_position.cli.services.module_templates.spec import (
     SERVICE_ONLY_MODULE_TEMPLATE_CONTRACT,
     ModuleTemplate,
 )
 
+_FILE_TEMPLATES = {
+    "__init__.py": "__init__.py.tpl",
+    "services/__init__.py": "services/__init__.py.tpl",
+    "services/{module_name}_service.py": "services/module_service.py.tpl",
+}
+
 
 def build_service_only_template(
     *, package_name: str, module_name: str
 ) -> ModuleTemplate:
-    class_name = to_class_name(module_name)
-    context = {
-        "package_name": package_name,
-        "module_name": module_name,
-        "class_name": class_name,
-    }
-
-    return ModuleTemplate(
-        files={
-            "__init__.py": render_template(
-                "service_only/__init__.py.tpl", context
-            ),
-            "services/__init__.py": render_template(
-                "service_only/services/__init__.py.tpl",
-                context,
-            ),
-            f"services/{module_name}_service.py": render_template(
-                "service_only/services/module_service.py.tpl",
-                context,
-            ),
-        },
-        integration_test_name=SERVICE_ONLY_MODULE_TEMPLATE_CONTRACT.integration_test_name(
-            module_name
-        ),
-        integration_test_content=render_template(
-            "service_only/tests/integration.py.tpl",
-            context,
-        ),
-        unit_test_name=SERVICE_ONLY_MODULE_TEMPLATE_CONTRACT.unit_test_name(
-            module_name
-        ),
-        unit_test_content=render_template(
-            "service_only/tests/unit.py.tpl",
-            context,
-        ),
+    return build_simple_template(
+        package_name=package_name,
+        module_name=module_name,
         contract=SERVICE_ONLY_MODULE_TEMPLATE_CONTRACT,
+        template_dir="service_only",
+        file_templates=_FILE_TEMPLATES,
     )
