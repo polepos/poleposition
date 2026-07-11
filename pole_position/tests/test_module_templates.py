@@ -311,6 +311,57 @@ def test_unknown_module_template_raises_clear_error() -> None:
     )
 
 
+def test_generated_logging_avoids_reserved_logrecord_keys() -> None:
+    # A reserved LogRecord attribute passed through `logger.*(..., extra={...})`
+    # raises `KeyError: Attempt to overwrite ...` inside logging.makeRecord at
+    # runtime. The other template tests only render and byte-compile, so they
+    # never execute the logging call; scan every shipped template's `extra=`
+    # dict keys directly. Regression for the `service-only` template logging
+    # under the reserved key `message`.
+    import logging
+    import re
+    from pathlib import Path
+
+    reserved = set(
+        logging.LogRecord("n", logging.INFO, "p", 1, "m", (), None).__dict__
+    ) | {"message", "asctime"}
+
+    repo_root = Path(__file__).resolve().parents[2]
+    template_roots = (
+        repo_root / "pole_position/cli/services/module_templates/files",
+        repo_root / "pole_position/template",
+    )
+
+    violations: list[tuple[str, str]] = []
+    for root in template_roots:
+        for path in root.rglob("*"):
+            if path.suffix not in (".tpl", ".py"):
+                continue
+            text = path.read_text(encoding="utf-8")
+            for match in re.finditer(r"extra=\{", text):
+                depth = 0
+                start = match.end() - 1
+                block = ""
+                for index in range(start, len(text)):
+                    if text[index] == "{":
+                        depth += 1
+                    elif text[index] == "}":
+                        depth -= 1
+                        if depth == 0:
+                            block = text[start : index + 1]
+                            break
+                for key in re.findall(r'"([A-Za-z_]\w*)"\s*:', block):
+                    if key in reserved:
+                        violations.append(
+                            (str(path.relative_to(repo_root)), key)
+                        )
+
+    assert violations == [], (
+        "Generated logging passes a reserved LogRecord key via extra=, which "
+        f"raises KeyError at runtime: {violations}"
+    )
+
+
 def test_llm_integration_files_contract() -> None:
     files = llm_integration_files("shop_api")
 

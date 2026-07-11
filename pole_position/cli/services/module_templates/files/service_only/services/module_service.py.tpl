@@ -13,5 +13,5 @@ class {{class_name}}Service:
     """
 
     def process(self, message: str) -> str:
-        logger.info("Processing {{module_name}}", extra={"message": message})
+        logger.info("Processing {{module_name}}", extra={"text": message})
         return message.strip()
