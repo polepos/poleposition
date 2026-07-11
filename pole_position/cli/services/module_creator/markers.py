@@ -1,14 +1,10 @@
 from pathlib import Path
 
+from pole_position.cli.services.module_creator.io import _read_managed_lines
+
 
 def _insert_line_before_marker(path: Path, line: str, marker: str) -> None:
-    try:
-        lines = path.read_text(encoding="utf-8").splitlines()
-    except UnicodeDecodeError as exc:
-        raise RuntimeError(
-            f"Could not read managed text file for module add: {path}: "
-            f"{exc.reason}"
-        ) from exc
+    lines = _read_managed_lines(path)
     marker_index = _find_marker_index(lines, marker, path)
 
     if line in lines:
@@ -25,13 +21,7 @@ def _insert_sorted_line_before_marker(
     marker: str,
     match_prefix: str,
 ) -> None:
-    try:
-        lines = path.read_text(encoding="utf-8").splitlines()
-    except UnicodeDecodeError as exc:
-        raise RuntimeError(
-            f"Could not read managed text file for module add: {path}: "
-            f"{exc.reason}"
-        ) from exc
+    lines = _read_managed_lines(path)
     marker_index = _find_marker_index(lines, marker, path)
 
     managed_ranges = _collect_managed_block_ranges(
@@ -110,13 +100,7 @@ def _insert_block_before_marker_or_anchor(
     marker: str,
     anchor: str | None,
 ) -> None:
-    try:
-        lines = path.read_text(encoding="utf-8").splitlines()
-    except UnicodeDecodeError as exc:
-        raise RuntimeError(
-            f"Could not read managed text file for module add: {path}: "
-            f"{exc.reason}"
-        ) from exc
+    lines = _read_managed_lines(path)
     insert_at = _find_insert_index(lines=lines, marker=marker, anchor=anchor)
 
     lines[insert_at:insert_at] = block + [""]
