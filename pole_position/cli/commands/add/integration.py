@@ -1,7 +1,9 @@
-from pathlib import Path
-
 from pole_position.cli import console
 from pole_position.cli.command import Command
+from pole_position.cli.commands.output import (
+    print_next_steps,
+    print_path_section,
+)
 from pole_position.cli.services.integration_creator import (
     AddedIntegrationResult,
     add_integration,
@@ -61,21 +63,11 @@ def run(args: list[str]) -> None:
 def _print_success(result: AddedIntegrationResult) -> None:
     console.success(f"Added integration: {result.integration_name}")
 
-    console.heading("Created:")
-    for path in result.integration_files:
-        console.item(_relative_path(result, path))
-
-    console.heading("Updated:")
-    for path in result.updated_files:
-        console.item(_relative_path(result, path))
-
-    console.heading("Next steps:")
-    for step in result.next_steps:
-        console.step(step)
-
-
-def _relative_path(result: AddedIntegrationResult, path: Path) -> str:
-    return path.relative_to(result.project_root).as_posix()
+    print_path_section(
+        "Created:", result.project_root, result.integration_files
+    )
+    print_path_section("Updated:", result.project_root, result.updated_files)
+    print_next_steps(result.next_steps)
 
 
 command = Command(

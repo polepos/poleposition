@@ -1,7 +1,9 @@
-from pathlib import Path
-
 from pole_position.cli import console
 from pole_position.cli.command import Command
+from pole_position.cli.commands.output import (
+    print_next_steps,
+    print_path_section,
+)
 from pole_position.cli.services.module_remover import (
     RemovedModuleResult,
     remove_module,
@@ -93,22 +95,16 @@ def _print_success(result: RemovedModuleResult) -> None:
     console.field("Template", result.template)
 
     if result.removed_paths:
-        console.heading("Removed:")
-        for path in result.removed_paths:
-            console.item(_relative_path(result, path))
+        print_path_section(
+            "Removed:", result.project_root, result.removed_paths
+        )
 
     if result.updated_files:
-        console.heading("Updated:")
-        for path in result.updated_files:
-            console.item(_relative_path(result, path))
+        print_path_section(
+            "Updated:", result.project_root, result.updated_files
+        )
 
-    console.heading("Next steps:")
-    for step in result.next_steps:
-        console.step(step)
-
-
-def _relative_path(result: RemovedModuleResult, path: Path) -> str:
-    return path.relative_to(result.project_root).as_posix()
+    print_next_steps(result.next_steps)
 
 
 def _print_trace(result: RemovedModuleResult) -> None:
@@ -132,14 +128,14 @@ def _print_trace(result: RemovedModuleResult) -> None:
         console.item(change)
 
     if result.removed_paths:
-        console.heading("Would remove:")
-        for path in result.removed_paths:
-            console.item(_relative_path(result, path))
+        print_path_section(
+            "Would remove:", result.project_root, result.removed_paths
+        )
 
     if result.updated_files:
-        console.heading("Would update:")
-        for path in result.updated_files:
-            console.item(_relative_path(result, path))
+        print_path_section(
+            "Would update:", result.project_root, result.updated_files
+        )
 
     console.info("Trace only: no files changed.")
 
