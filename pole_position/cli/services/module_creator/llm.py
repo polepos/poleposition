@@ -7,6 +7,7 @@ from pole_position.cli.services.module_creator.constants import (
 from pole_position.cli.services.module_creator.entries import (
     _missing_block_lines,
 )
+from pole_position.cli.services.module_creator.io import _read_managed_lines
 from pole_position.cli.services.module_creator.markers import (
     _find_insert_index,
 )
@@ -60,13 +61,7 @@ def _ensure_block_entries_before_marker_or_anchor(
     anchor: str | None,
     entry_type: str,
 ) -> bool:
-    try:
-        lines = path.read_text(encoding="utf-8").splitlines()
-    except UnicodeDecodeError as exc:
-        raise RuntimeError(
-            f"Could not read managed text file for module add: {path}: "
-            f"{exc.reason}"
-        ) from exc
+    lines = _read_managed_lines(path)
     missing_lines = _missing_block_lines(
         lines=lines,
         block=block,
