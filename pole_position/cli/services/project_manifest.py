@@ -150,6 +150,18 @@ def read_project_manifest(project_root: Path) -> ProjectManifest:
     )
 
 
+def collect_manifest_read_error(
+    problems: list[str], project_root: Path
+) -> None:
+    """Append the manifest's read error, if any, to ``problems``.
+
+    Shared by the auth, integration, and module preflight checks.
+    """
+    manifest = read_project_manifest(project_root)
+    if manifest.read_error is not None:
+        problems.append(manifest.read_error)
+
+
 def write_project_manifest(
     project_root: Path, manifest: ProjectManifest
 ) -> None:
