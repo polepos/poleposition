@@ -9,7 +9,9 @@ from pole_position.cli.services.integration_creator.constants import (
     SETTINGS_INTEGRATION_MARKER,
 )
 from pole_position.cli.services.integration_specs import IntegrationContract
-from pole_position.cli.services.project_manifest import read_project_manifest
+from pole_position.cli.services.project_manifest import (
+    collect_manifest_read_error,
+)
 from pole_position.cli.services.pyproject_editor import (
     ensure_project_dependency_text,
 )
@@ -25,7 +27,7 @@ def _validate_add_integration_preflight(
     problems: list[str] = []
     pyproject_path = project_root / "pyproject.toml"
 
-    _collect_manifest_read_error(problems, project_root)
+    collect_manifest_read_error(problems, project_root)
 
     if integration_root.exists():
         problems.append(f"Integration already exists: {contract.name}")
@@ -60,14 +62,6 @@ def _validate_add_integration_preflight(
 def _collect_required_file(problems: list[str], path: Path) -> None:
     if not path.is_file():
         problems.append(f"Required managed file is missing: {path}")
-
-
-def _collect_manifest_read_error(
-    problems: list[str], project_root: Path
-) -> None:
-    manifest = read_project_manifest(project_root)
-    if manifest.read_error is not None:
-        problems.append(manifest.read_error)
 
 
 def _collect_patchable_project_dependency(

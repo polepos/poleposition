@@ -12,8 +12,8 @@ from pole_position.cli.services.project_locator import (
     find_project_root,
 )
 from pole_position.cli.services.project_manifest import (
+    collect_manifest_read_error,
     manifest_path,
-    read_project_manifest,
     record_manifest_integration,
 )
 from pole_position.cli.services.pyproject_editor import (
@@ -103,7 +103,7 @@ def _validate_add_auth_preflight(
 ) -> None:
     problems: list[str] = []
 
-    _collect_manifest_read_error(problems, project_root)
+    collect_manifest_read_error(problems, project_root)
 
     if not (package_root / "db" / "models.py").is_file():
         problems.append(
@@ -171,14 +171,6 @@ def _collect_missing_marker(
         problems.append(
             f"Required managed marker '{marker}' is missing in {path}"
         )
-
-
-def _collect_manifest_read_error(
-    problems: list[str], project_root: Path
-) -> None:
-    manifest = read_project_manifest(project_root)
-    if manifest.read_error is not None:
-        problems.append(manifest.read_error)
 
 
 def _collect_patchable_project_dependency(

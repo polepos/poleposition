@@ -23,7 +23,7 @@ from pole_position.cli.services.module_templates import (
     llm_settings_block,
 )
 from pole_position.cli.services.project_manifest import (
-    read_project_manifest,
+    collect_manifest_read_error,
 )
 
 
@@ -39,7 +39,7 @@ def _validate_add_module_preflight(
     problems: list[str] = []
     tests_root = project_root / "tests"
 
-    _collect_manifest_read_error(problems, project_root)
+    collect_manifest_read_error(problems, project_root)
 
     if module_root.exists():
         problems.append(f"Module already exists: {module_name}")
@@ -126,14 +126,6 @@ def _validate_add_module_preflight(
 def _collect_existing_generated_file(problems: list[str], path: Path) -> None:
     if path.exists():
         problems.append(f"Generated file already exists: {path}")
-
-
-def _collect_manifest_read_error(
-    problems: list[str], project_root: Path
-) -> None:
-    manifest = read_project_manifest(project_root)
-    if manifest.read_error is not None:
-        problems.append(manifest.read_error)
 
 
 def _collect_missing_marker(
