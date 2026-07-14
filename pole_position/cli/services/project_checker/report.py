@@ -145,8 +145,8 @@ def _project_check_issue_code(problem: str) -> str:
 
 
 def _project_check_remediation(problem: str) -> str:
-    module_name = _extract_lifecycle_module_name(problem)
-    integration_name = _extract_integration_name(problem)
+    module_name = _extract_quoted_name(problem, "Lifecycle module")
+    integration_name = _extract_quoted_name(problem, "Integration")
 
     if problem.startswith("Project identity file is missing"):
         return (
@@ -286,7 +286,7 @@ def _project_check_remediation(problem: str) -> str:
     if problem.startswith("Could not parse Python file for lifecycle checks"):
         return "Fix the Python syntax error before rerunning polepos check."
     if problem.startswith("Orphan module"):
-        orphan_name = _extract_orphan_module_name(problem)
+        orphan_name = _extract_quoted_name(problem, "missing module")
         if orphan_name is not None:
             return (
                 f"Run `polepos remove module {orphan_name}` to clean generated "
@@ -343,18 +343,8 @@ def _project_check_remediation(problem: str) -> str:
     )
 
 
-def _extract_lifecycle_module_name(problem: str) -> str | None:
-    match = re.search(r"Lifecycle module '([^']+)'", problem)
-    return match.group(1) if match else None
-
-
-def _extract_integration_name(problem: str) -> str | None:
-    match = re.search(r"Integration '([^']+)'", problem)
-    return match.group(1) if match else None
-
-
-def _extract_orphan_module_name(problem: str) -> str | None:
-    match = re.search(r"missing module '([^']+)'", problem)
+def _extract_quoted_name(problem: str, prefix: str) -> str | None:
+    match = re.search(rf"{prefix} '([^']+)'", problem)
     return match.group(1) if match else None
 
 
