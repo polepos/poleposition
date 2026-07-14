@@ -2,6 +2,7 @@ import json
 
 from pole_position.cli import console
 from pole_position.cli.command import Command
+from pole_position.cli.commands.output import relative_to_project
 from pole_position.cli.services.project_checker import (
     ProjectCheckResult,
     check_project,
@@ -79,7 +80,7 @@ def _print_fix_result(result: ProjectFixResult) -> None:
 
     console.heading("Applied fixes:")
     for path in result.fixed_files:
-        console.item(_relative_path(result, path))
+        console.item(relative_to_project(result.project_root, path))
 
 
 def _print_json_result(
@@ -102,7 +103,8 @@ def _print_json_result(
     }
     if fix_result is not None:
         payload["fixed"] = [
-            _relative_path(fix_result, path) for path in fix_result.fixed_files
+            relative_to_project(fix_result.project_root, path)
+            for path in fix_result.fixed_files
         ]
     print(json.dumps(payload, indent=2, sort_keys=True))
 
@@ -124,10 +126,6 @@ def _print_json_error(message: str) -> None:
         ],
     }
     print(json.dumps(payload, indent=2, sort_keys=True))
-
-
-def _relative_path(result: ProjectFixResult, path) -> str:
-    return path.relative_to(result.project_root).as_posix()
 
 
 command = Command(
