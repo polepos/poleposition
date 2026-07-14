@@ -5,6 +5,7 @@ from pole_position.cli.services.integration_creator.dependencies import (
 )
 from pole_position.cli.services.integration_creator.files import (
     _ensure_integration_files,
+    _integration_files,
     _kafka_integration_files,
     _rabbitmq_integration_files,
     _redis_integration_files,
@@ -17,14 +18,8 @@ from pole_position.cli.services.integration_creator.result import (
     AddedIntegrationResult,
 )
 from pole_position.cli.services.integration_creator.settings_env import (
-    _ensure_kafka_env,
-    _ensure_kafka_settings,
-    _ensure_rabbitmq_env,
-    _ensure_rabbitmq_settings,
-    _ensure_redis_env,
-    _ensure_redis_settings,
-    _ensure_rq_env,
-    _ensure_rq_settings,
+    _ensure_integration_env,
+    _ensure_integration_settings,
 )
 from pole_position.cli.services.integration_creator.steps import (
     _integration_next_steps,
@@ -69,37 +64,16 @@ def add_integration(
         contract=contract,
     )
 
-    integration_files: dict[str, str]
-    update_settings = None
-    update_env = None
-    if contract.name == "kafka":
-        integration_files = _kafka_integration_files(package_name)
-        update_settings = _ensure_kafka_settings
-        update_env = _ensure_kafka_env
-    elif contract.name == "rabbitmq":
-        integration_files = _rabbitmq_integration_files(package_name)
-        update_settings = _ensure_rabbitmq_settings
-        update_env = _ensure_rabbitmq_env
-    elif contract.name == "redis":
-        integration_files = _redis_integration_files(package_name)
-        update_settings = _ensure_redis_settings
-        update_env = _ensure_redis_env
-    elif contract.name == "rq":
-        integration_files = _rq_integration_files(package_name)
-        update_settings = _ensure_rq_settings
-        update_env = _ensure_rq_env
-    else:  # pragma: no cover - guarded by get_creatable_integration_contract
-        raise AssertionError(f"Unhandled integration: {contract.name}")
-
+    integration_files = _integration_files(contract, package_name)
     written_files = _ensure_integration_files(package_root, integration_files)
     updated_files: list[Path] = []
 
     settings_path = package_root / "settings.py"
-    if update_settings(settings_path, package_name):
+    if _ensure_integration_settings(contract.name, settings_path, package_name):
         updated_files.append(settings_path)
 
     env_path = project_root / ".env.example"
-    if update_env(env_path, package_name):
+    if _ensure_integration_env(contract.name, env_path, package_name):
         updated_files.append(env_path)
 
     pyproject_path = project_root / "pyproject.toml"
