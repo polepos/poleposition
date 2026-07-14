@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from pathlib import Path
 
 from pole_position.cli.services.integration_creator.blocks import (
@@ -11,13 +12,28 @@ from pole_position.cli.services.integration_creator.constants import (
     SETTINGS_LLM_MARKER,
 )
 
+_SETTINGS_ANCHOR = "    model_config = SettingsConfigDict("
 
-def _ensure_kafka_settings(path: Path, package_name: str) -> bool:
+
+def _ensure_integration_settings(
+    integration_name: str, path: Path, package_name: str
+) -> bool:
     return _ensure_settings_entries_before_marker_or_anchor(
         path=path,
-        block=_kafka_settings_block(package_name),
+        block=_SETTINGS_BLOCK_BUILDERS[integration_name](package_name),
         markers=[SETTINGS_INTEGRATION_MARKER, SETTINGS_LLM_MARKER],
-        anchor="    model_config = SettingsConfigDict(",
+        anchor=_SETTINGS_ANCHOR,
+    )
+
+
+def _ensure_integration_env(
+    integration_name: str, path: Path, package_name: str
+) -> bool:
+    return _ensure_env_entries_before_marker_or_anchor(
+        path=path,
+        block=_ENV_BLOCK_BUILDERS[integration_name](package_name),
+        markers=[ENV_INTEGRATION_MARKER, ENV_LLM_MARKER],
+        anchor=None,
     )
 
 
@@ -35,15 +51,6 @@ def _kafka_settings_block(package_name: str) -> list[str]:
     ]
 
 
-def _ensure_kafka_env(path: Path, package_name: str) -> bool:
-    return _ensure_env_entries_before_marker_or_anchor(
-        path=path,
-        block=_kafka_env_block(package_name),
-        markers=[ENV_INTEGRATION_MARKER, ENV_LLM_MARKER],
-        anchor=None,
-    )
-
-
 def _kafka_env_block(package_name: str) -> list[str]:
     return [
         "KAFKA_ENABLED=false",
@@ -56,15 +63,6 @@ def _kafka_env_block(package_name: str) -> list[str]:
         "# KAFKA_COMPRESSION_TYPE=",
         "KAFKA_REQUEST_TIMEOUT_MS=40000",
     ]
-
-
-def _ensure_rabbitmq_settings(path: Path, package_name: str) -> bool:
-    return _ensure_settings_entries_before_marker_or_anchor(
-        path=path,
-        block=_rabbitmq_settings_block(package_name),
-        markers=[SETTINGS_INTEGRATION_MARKER, SETTINGS_LLM_MARKER],
-        anchor="    model_config = SettingsConfigDict(",
-    )
 
 
 def _rabbitmq_settings_block(package_name: str) -> list[str]:
@@ -82,15 +80,6 @@ def _rabbitmq_settings_block(package_name: str) -> list[str]:
     ]
 
 
-def _ensure_rabbitmq_env(path: Path, package_name: str) -> bool:
-    return _ensure_env_entries_before_marker_or_anchor(
-        path=path,
-        block=_rabbitmq_env_block(package_name),
-        markers=[ENV_INTEGRATION_MARKER, ENV_LLM_MARKER],
-        anchor=None,
-    )
-
-
 def _rabbitmq_env_block(package_name: str) -> list[str]:
     return [
         "RABBITMQ_ENABLED=false",
@@ -106,15 +95,6 @@ def _rabbitmq_env_block(package_name: str) -> list[str]:
     ]
 
 
-def _ensure_redis_settings(path: Path, package_name: str) -> bool:
-    return _ensure_settings_entries_before_marker_or_anchor(
-        path=path,
-        block=_redis_settings_block(package_name),
-        markers=[SETTINGS_INTEGRATION_MARKER, SETTINGS_LLM_MARKER],
-        anchor="    model_config = SettingsConfigDict(",
-    )
-
-
 def _redis_settings_block(package_name: str) -> list[str]:
     return [
         "    redis_enabled: bool = False",
@@ -125,15 +105,6 @@ def _redis_settings_block(package_name: str) -> list[str]:
     ]
 
 
-def _ensure_redis_env(path: Path, package_name: str) -> bool:
-    return _ensure_env_entries_before_marker_or_anchor(
-        path=path,
-        block=_redis_env_block(package_name),
-        markers=[ENV_INTEGRATION_MARKER, ENV_LLM_MARKER],
-        anchor=None,
-    )
-
-
 def _redis_env_block(package_name: str) -> list[str]:
     return [
         "REDIS_ENABLED=false",
@@ -142,15 +113,6 @@ def _redis_env_block(package_name: str) -> list[str]:
         f"REDIS_KEY_PREFIX={package_name}",
         "REDIS_SOCKET_TIMEOUT_SECONDS=5.0",
     ]
-
-
-def _ensure_rq_settings(path: Path, package_name: str) -> bool:
-    return _ensure_settings_entries_before_marker_or_anchor(
-        path=path,
-        block=_rq_settings_block(package_name),
-        markers=[SETTINGS_INTEGRATION_MARKER, SETTINGS_LLM_MARKER],
-        anchor="    model_config = SettingsConfigDict(",
-    )
 
 
 def _rq_settings_block(package_name: str) -> list[str]:
@@ -164,15 +126,6 @@ def _rq_settings_block(package_name: str) -> list[str]:
     ]
 
 
-def _ensure_rq_env(path: Path, package_name: str) -> bool:
-    return _ensure_env_entries_before_marker_or_anchor(
-        path=path,
-        block=_rq_env_block(package_name),
-        markers=[ENV_INTEGRATION_MARKER, ENV_LLM_MARKER],
-        anchor=None,
-    )
-
-
 def _rq_env_block(package_name: str) -> list[str]:
     return [
         "RQ_ENABLED=false",
@@ -182,3 +135,18 @@ def _rq_env_block(package_name: str) -> list[str]:
         "RQ_JOB_TIMEOUT_SECONDS=300",
         "RQ_RESULT_TTL_SECONDS=500",
     ]
+
+
+_SETTINGS_BLOCK_BUILDERS: dict[str, Callable[[str], list[str]]] = {
+    "kafka": _kafka_settings_block,
+    "rabbitmq": _rabbitmq_settings_block,
+    "redis": _redis_settings_block,
+    "rq": _rq_settings_block,
+}
+
+_ENV_BLOCK_BUILDERS: dict[str, Callable[[str], list[str]]] = {
+    "kafka": _kafka_env_block,
+    "rabbitmq": _rabbitmq_env_block,
+    "redis": _redis_env_block,
+    "rq": _rq_env_block,
+}
