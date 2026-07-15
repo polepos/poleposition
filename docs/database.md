@@ -143,7 +143,8 @@ model imports centralized in:
 src/<package>/db/models.py
 ```
 
-Standard modules are wired into this file automatically by:
+Database-backed modules (`api`, `crud`, and `service`) are wired into this file
+automatically by:
 
 ```bash
 polepos add module customers
@@ -156,8 +157,9 @@ table.
 ## Removing a Module With Database State
 
 `polepos remove module <name>` is a code cleanup command. It removes generated
-module files, generated tests, module exports, router wiring, and, for standard
-modules, the generated model import from `src/<package>/db/models.py`. It also
+module files, generated tests, module exports, router wiring, and, for
+database-backed modules, the generated model import from
+`src/<package>/db/models.py`. It also
 removes the module entry from `.poleposition.toml` when present.
 It stops before deleting a module directory that appears to contain custom
 changes unless `--force` is used. Use `--trace` to preview the planned removals

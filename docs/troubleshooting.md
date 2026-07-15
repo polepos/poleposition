@@ -290,9 +290,9 @@ use `polepos db upgrade` from the project root.
 
 ## A New Model Is Not Included in Alembic Autogenerate
 
-Standard modules are wired into `src/<package>/db/models.py` automatically.
-If you manually create a model, import it from `import_models()` so Alembic can
-discover its metadata.
+Database-backed modules (`api`, `crud`, and `service`) are wired into
+`src/<package>/db/models.py` automatically. If you manually create a model,
+import it from `import_models()` so Alembic can discover its metadata.
 
 Do not create tables during application startup. Keep schema changes in Alembic
 migrations.
